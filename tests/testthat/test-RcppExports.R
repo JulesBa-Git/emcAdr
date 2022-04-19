@@ -1,4 +1,6 @@
 library(emcAdr)
 test_that("HelloWorld works", {
-  expect_null(HelloWorld(), "Hello, World !")
+  a = 12
+  expect_snapshot_output(HelloWorld(a), a)
+  expect_equal(renvoieA(),a)
 })

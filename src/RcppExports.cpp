@@ -11,18 +11,36 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// HelloWorld
-void HelloWorld();
-RcppExport SEXP _emcAdr_HelloWorld() {
+// ATCtoNumeric
+void ATCtoNumeric(DataFrame& patients, const DataFrame& tree);
+RcppExport SEXP _emcAdr_ATCtoNumeric(SEXP patientsSEXP, SEXP treeSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    HelloWorld();
+    Rcpp::traits::input_parameter< DataFrame& >::type patients(patientsSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type tree(treeSEXP);
+    ATCtoNumeric(patients, tree);
+    return R_NilValue;
+END_RCPP
+}
+// EMC
+void EMC(int n, const DataFrame& ATCtree, const DataFrame& observations, int nbIndividuals, Rcpp::Nullable<Rcpp::List> startingIndividuals, Rcpp::Nullable<Rcpp::NumericVector> startingTemperatures);
+RcppExport SEXP _emcAdr_EMC(SEXP nSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP nbIndividualsSEXP, SEXP startingIndividualsSEXP, SEXP startingTemperaturesSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
+    Rcpp::traits::input_parameter< int >::type nbIndividuals(nbIndividualsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::List> >::type startingIndividuals(startingIndividualsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type startingTemperatures(startingTemperaturesSEXP);
+    EMC(n, ATCtree, observations, nbIndividuals, startingIndividuals, startingTemperatures);
     return R_NilValue;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_emcAdr_HelloWorld", (DL_FUNC) &_emcAdr_HelloWorld, 0},
+    {"_emcAdr_ATCtoNumeric", (DL_FUNC) &_emcAdr_ATCtoNumeric, 2},
+    {"_emcAdr_EMC", (DL_FUNC) &_emcAdr_EMC, 6},
     {NULL, NULL, 0}
 };
 
