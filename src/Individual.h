@@ -3,7 +3,9 @@
 
 #include <vector>
 #include <iostream>
+#include <algorithm>
 #include "RcppArmadillo.h"
+
 class Individual{
 public:
   Individual() = default;
@@ -29,6 +31,8 @@ public:
   bool matches(const std::vector<int>& observation, const std::vector<int>& upperBound) const;
   double computeRR(const Rcpp::List& medications,const Rcpp::LogicalVector& ADR
                      , const Rcpp::DataFrame& ATCtree) const;
+  std::vector<std::pair<int,int>> getVertexList(const Rcpp::DataFrame& ATCtree) const;
+  
 private:
   std::vector<int> medications_;
   double temperature_;

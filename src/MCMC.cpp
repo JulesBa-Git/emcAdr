@@ -2,6 +2,14 @@
 
 // [[Rcpp::depends(RcppArmadillo)]]
 
+double meanMedications(const Rcpp::List& observations){
+  double sum = 0;
+  for(const std::vector<int> ind : observations){
+    sum += ind.size();
+  }
+  
+  return (sum / observations.size());
+}
 
 std::vector<Individual> DFtoCPP_WOtemp(const Rcpp::List& startingInd){
   std::vector<Individual> returnedVec;
@@ -29,7 +37,7 @@ std::vector<Individual> DFtoCPP_Wtemp(const Rcpp::List& startingInd,const Rcpp::
   
 }
 
-std::vector<Individual> DFtoCPP_WOtempAndIndividual(int treeSize, int nbIndividuals){
+std::vector<Individual> DFtoCPP_WOtempAndIndividual(int treeSize, int nbIndividuals,double meanMedic){
   std::vector<Individual> returnedVec;
   returnedVec.reserve(nbIndividuals);
   int nbMedic,num, itemp = 1;
@@ -37,13 +45,11 @@ std::vector<Individual> DFtoCPP_WOtempAndIndividual(int treeSize, int nbIndividu
   std::vector<int> medicVec(0);
   
   for(int i = 0; i < nbIndividuals; ++i){
-    nbMedic = trunc(Rcpp::rnorm(1,3)[0]);
-    // to avoid 0 medications patient
-    nbMedic = nbMedic == 0 ? 1 : nbMedic;
+    nbMedic = 1 + Rcpp::rpois(1,meanMedic)[0];
     medicVec.reserve(nbMedic);
     
     for(int j = 0; j < nbMedic ; ++j){
-      //Draw every medications for a patient
+      //Draw every medications for a patient -> consider using sample ?
       num = trunc(Rcpp::runif(1,0,treeSize)[0]);
       num = num == treeSize ? treeSize-1 : num;
       medicVec.push_back(num);
@@ -58,18 +64,43 @@ std::vector<Individual> DFtoCPP_WOtempAndIndividual(int treeSize, int nbIndividu
 }
 
 Individual type1Mutation(const Individual& indiv, int treeSize){
-  int mutateMed = trunc(Rcpp::runif(1,0,treeSize)[0]);
-  mutateMed = mutateMed == treeSize ? treeSize-1 : mutateMed;
+  double addAcceptation = (1/indiv.getMedications().size());
+  double draw = Rcpp::runif(1,0,1)[0];
   std::vector<int> newMed = indiv.getMedications();
   
-  std::vector<int>::iterator find = std::find(newMed.begin(), newMed.end(), mutateMed);
-  //the medication is in the vector so we erase it 
-  if( find != newMed.end()){
-    newMed.erase(find);
-  } else{ // the medication is not in the vector so we add it
-    newMed.push_back(mutateMed);
+  if(addAcceptation > draw){
+    int mutateMed = trunc(Rcpp::runif(1,0,treeSize)[0]);
+    mutateMed = mutateMed == treeSize ? treeSize-1 : mutateMed;
+    
+    //note when changing the mutation 1 : do we have to keep that ? 
+    std::vector<int>::iterator find = std::find(newMed.begin(), newMed.end(), mutateMed);
+    //the medication is in the vector so we erase it 
+    if( find != newMed.end()){
+      newMed.erase(find);
+    } else{ // the medication is not in the vector so we add it
+      newMed.push_back(mutateMed);
+    }
   }
+  else{ // here we remove an element from the medications of the individuals
+    int removeIndex = trunc(Rcpp::runif(1,0,indiv.getMedications().size())[0]);
+    removeIndex = removeIndex == indiv.getMedications().size() ? removeIndex-1 : removeIndex;
+    newMed.erase(newMed.begin() + removeIndex);
+  }
+  
   return {newMed,indiv.getTemperature()};
+}
+
+Individual type2Mutation(const Individual& indiv, int treeSize, const std::pair<int,int>& p){
+  // if a patient got every medication
+  if(indiv.getMedications().size() == treeSize)
+    return indiv;
+  
+  std::vector<int> prevMedic = indiv.getMedications();
+  auto rmEnd = std::remove(prevMedic.begin(),prevMedic.end(),p.first);
+  prevMedic.erase(rmEnd,prevMedic.end());
+  prevMedic.push_back(p.second);
+  
+  return {prevMedic,indiv.getTemperature()};
 }
 
 Individual crossoverMutation(const Individual& indiv1, const Individual& indiv2,const Rcpp::DataFrame& ATCtree){

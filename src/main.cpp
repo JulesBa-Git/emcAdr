@@ -29,15 +29,18 @@ void EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, int nbInd
   
   int chosenIndividual_k,chosenIndividual_l;
   double RRx_k,RRx_l, RRy_k,RRy_l, pMutation, pAcceptation, pDraw;
+  std::vector<std::pair<int,int>> vertexX;
+  std::vector<std::pair<int,int>> vertexY;
   
   std::vector<Individual> individualsCpp;
   Individual mutatedIndividual_k{};
   Individual mutatedIndividual_l{};
-  
   //here if the user enter only temperatures the individuals would be initialized randomly 
   if(startingIndividuals.isNull()){
-    //"completely" random initialization
-    individualsCpp = DFtoCPP_WOtempAndIndividual(ATCtree.nrow(),nbIndividuals);
+    //"completely" random initialization using the mean medications per observations
+    // we compute the mean minus 1 because we always want a medication so we will use the mean - 1 
+    double meanMedicationPerObs = meanMedications(observationsMedication) - 1;
+    individualsCpp = DFtoCPP_WOtempAndIndividual(ATCtree.nrow(),nbIndividuals, meanMedicationPerObs);
   }
   else{ 
     Rcpp::List tmpST = startingIndividuals.clone();
@@ -71,8 +74,6 @@ void EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, int nbInd
   //3rd step : compute the RR of the "new population" 
   for(int i = 0; i < n ; ++i){
     pMutation = Rcpp::runif(1,0,1)[0];
-    
-    
     if(pMutation <= 0.25){     
       //type 1 mutation, we take nbIndividuals included because we trunc, there is almost no chance to
       //draw nbIndividuals
@@ -80,7 +81,7 @@ void EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, int nbInd
       chosenIndividual_k = chosenIndividual_k >= nbIndividuals ? nbIndividuals-1 : chosenIndividual_k;
 
       RRx_k = individualsCpp[chosenIndividual_k].computeRR(observationsMedication, observationsADR, ATCtree);
-std::cout << "mutation \n";
+
       mutatedIndividual_k = type1Mutation(individualsCpp[chosenIndividual_k],ATCtree.nrow());
       
       RRy_k = mutatedIndividual_k.computeRR(observationsMedication, observationsADR, ATCtree);
@@ -97,13 +98,38 @@ std::cout << "mutation \n";
     else if(pMutation > 0.25 && pMutation <= 0.50){
       //type 2 mutation
       
+      chosenIndividual_k = trunc(Rcpp::runif(1,0,nbIndividuals)[0]);
+      chosenIndividual_k = chosenIndividual_k >= nbIndividuals ? nbIndividuals-1 : chosenIndividual_k;
+      
+      RRx_k = individualsCpp[chosenIndividual_k].computeRR(observationsMedication, observationsADR, ATCtree);
+      
+      //get every vertex 0/1 for this patient
+      vertexX = individualsCpp[chosenIndividual_k].getVertexList(ATCtree);
+      int chosenVertexidx = trunc(Rcpp::runif(1,0,vertexX.size())[0]);
+      chosenVertexidx = chosenVertexidx == vertexX.size() ? vertexX.size()-1 : chosenVertexidx;
+      
+      std::pair<int,int> chosenVertex = vertexX[chosenVertexidx];
+      
+      mutatedIndividual_k = type2Mutation(individualsCpp[chosenIndividual_k],ATCtree.nrow(),chosenVertex);
+      
+      RRy_k = mutatedIndividual_k.computeRR(observationsMedication, observationsADR, ATCtree);
+      vertexY = mutatedIndividual_k.getVertexList(ATCtree);
+      
+      pAcceptation = exp(((RRy_k - RRx_k) / individualsCpp[chosenIndividual_k].getTemperature()));
+      
+      pDraw = Rcpp::runif(1,0,1)[0];
+      
+      if(pAcceptation > pDraw){
+        individualsCpp[chosenIndividual_k] = mutatedIndividual_k;
+      }
+      
       
     }
     else if(pMutation > 0.50 && pMutation <= 0.75){
       //crossover mutation
       chosenIndividual_k = trunc(Rcpp::runif(1,0,nbIndividuals)[0]);
       chosenIndividual_k = chosenIndividual_k >= nbIndividuals ? nbIndividuals-1 : chosenIndividual_k;
-      std::cout << "crossover \n";
+
       //we chose the second individual he has to be different as the first one so we 
       //do .. while equal to the first one 
       do{
@@ -135,11 +161,34 @@ std::cout << "mutation \n";
     }
     else{
       // Swap mutation
+      chosenIndividual_k = trunc(Rcpp::runif(1,0,nbIndividuals-1)[0]);
+      chosenIndividual_k = chosenIndividual_k == nbIndividuals-1 ? nbIndividuals-2 : chosenIndividual_k;
       
+      chosenIndividual_l = chosenIndividual_k+1;
+      
+      RRx_k = individualsCpp[chosenIndividual_k].computeRR(observationsMedication,observationsADR,ATCtree);
+      RRx_l = individualsCpp[chosenIndividual_l].computeRR(observationsMedication,observationsADR,ATCtree);
+
+      //we just swap medications
+      mutatedIndividual_k = {individualsCpp[chosenIndividual_l].getMedications(),
+                             individualsCpp[chosenIndividual_k].getTemperature()};
+      mutatedIndividual_l = {individualsCpp[chosenIndividual_k].getMedications(),
+                             individualsCpp[chosenIndividual_l].getTemperature()};
+      
+      RRy_k = mutatedIndividual_k.computeRR(observationsMedication,observationsADR,ATCtree);
+      RRy_l = mutatedIndividual_l.computeRR(observationsMedication,observationsADR,ATCtree);
+      
+      pAcceptation = exp(((RRy_k - RRx_k)/individualsCpp[chosenIndividual_k].getTemperature()) 
+                           + ((RRy_l - RRx_l)/individualsCpp[chosenIndividual_l].getTemperature()));
+      
+      pDraw = Rcpp::runif(1,0,1)[0];
+      
+      if(pAcceptation > pDraw){
+        individualsCpp[chosenIndividual_k] = mutatedIndividual_k;
+        individualsCpp[chosenIndividual_l] = mutatedIndividual_l;
+      }
     }
-    
   }
-  
   for(const Individual& ind : individualsCpp){
     ind.printMedications();
     ind.printTemperature();

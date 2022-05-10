@@ -81,3 +81,51 @@ double Individual::computeRR(const Rcpp::List& medications,const Rcpp::LogicalVe
   P_ADR_NotSEQ = P_ADR_NotSEQ == 0 ? 0.00001 : P_ADR_NotSEQ;
   return P_ADR_SEQ / P_ADR_NotSEQ;
 }
+
+std::vector<std::pair<int,int>> Individual::getVertexList(const Rcpp::DataFrame& ATCtree) const{
+  std::vector<std::pair<int,int>> returnedVec{0};
+  
+  std::vector<int> upperBound = ATCtree["upperBound"];
+  std::vector<int> depth = ATCtree["ATC_length"];
+  
+  int idx,depthMed,nextDepth,upperBMed;
+  for(const auto& med : medications_){
+    idx = med;
+    depthMed = depth[med];
+    upperBMed = upperBound[med] -1;
+    //get the next depth
+    if(depthMed == 1 || depthMed == 5)
+      nextDepth = depthMed+2;
+    else if(depthMed < 7)
+      nextDepth = depthMed+1;
+    
+    //find the lower depth medications if we are not on a leaf
+    if(depthMed != 7){
+      
+      while(idx <= upperBMed){
+        //if we are on the lower depth and the medication is not on the current medications vector
+        if(depth[idx] == nextDepth && (std::find(medications_.begin(),medications_.end(),idx) == medications_.end())){
+          returnedVec.emplace_back(med,idx);
+        }
+        ++idx;
+      }
+    
+    }
+    //we come back to the medication
+    idx = med;
+    //now find the upper depth medication (it should only have one because it is a tree), we do it if we are not on the first depth
+    if(depthMed != 1){
+      //the test >=0 may be deleted because we always should land on a lower depth if our current depth is not 1
+      while(idx >= 0 && depthMed <= depth[idx]){
+        idx--;
+      }
+      //we add it if it is not already on the medications vector
+      if(std::find(medications_.begin(),medications_.end(),idx) == medications_.end())
+        returnedVec.emplace_back(med,idx);
+      
+    }
+    
+  }
+
+  return returnedVec;
+}
