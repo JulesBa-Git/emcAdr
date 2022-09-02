@@ -10,18 +10,29 @@ ATCtoNumeric <- function(patients, tree) {
     invisible(.Call(`_emcAdr_ATCtoNumeric`, patients, tree))
 }
 
+#' test data transformation for histogram plot (in)
+#' 
+#' @param RRDistribution : the RR distribution Vector (given by the EMC algorithm)
+#' @param f : the function used to plot, hist by default
+frequencyHist <- function(RRDistribution, f) {
+    invisible(.Call(`_emcAdr_frequencyHist`, RRDistribution, f))
+}
+
 #'The Evolutionary MCMC method that runs the random walk
 #'
 #'@param n : number of step 
-#'@param nbIndividuals : number on individuals in the population 5 by default
+#'@param nbIndividuals : number on individuals in the population, 5 by default
 #'@param startingIndividuals : starting individuals, randomly initialized by default 
 #'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
 #'@param startingTemperatures : starting temperatures, randomly initialized by default
 #'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
 #'@param observation : real observation of the ADR based on the medications of each real patients
 #'(same form as the starting individuals)
+#'@param nbResults : number of results returned (best RR individuals), 5 by default
+#'
+#'@return if no problem return an R List with : the distribution of RR we've met; bests individuals and the corresponding RRs. Otherwise the list is empty
 #'@export
-EMC <- function(n, ATCtree, observations, nbIndividuals = 5L, startingIndividuals = NULL, startingTemperatures = NULL) {
-    invisible(.Call(`_emcAdr_EMC`, n, ATCtree, observations, nbIndividuals, startingIndividuals, startingTemperatures))
+EMC <- function(n, ATCtree, observations, nbIndividuals = 5L, nbResults = 5L, startingIndividuals = NULL, startingTemperatures = NULL) {
+    .Call(`_emcAdr_EMC`, n, ATCtree, observations, nbIndividuals, nbResults, startingIndividuals, startingTemperatures)
 }
 

@@ -33,6 +33,8 @@ public:
                      , const Rcpp::DataFrame& ATCtree) const;
   std::vector<std::pair<int,int>> getVertexList(const Rcpp::DataFrame& ATCtree) const;
   
+  bool operator==(const Individual& ind) const;
+  
 private:
   std::vector<int> medications_;
   double temperature_;

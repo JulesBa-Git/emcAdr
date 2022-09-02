@@ -22,25 +22,39 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
-// EMC
-void EMC(int n, const DataFrame& ATCtree, const DataFrame& observations, int nbIndividuals, Rcpp::Nullable<Rcpp::List> startingIndividuals, Rcpp::Nullable<Rcpp::NumericVector> startingTemperatures);
-RcppExport SEXP _emcAdr_EMC(SEXP nSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP nbIndividualsSEXP, SEXP startingIndividualsSEXP, SEXP startingTemperaturesSEXP) {
+// frequencyHist
+void frequencyHist(const Rcpp::IntegerVector& RRDistribution, Rcpp::Function f);
+RcppExport SEXP _emcAdr_frequencyHist(SEXP RRDistributionSEXP, SEXP fSEXP) {
 BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type RRDistribution(RRDistributionSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Function >::type f(fSEXP);
+    frequencyHist(RRDistribution, f);
+    return R_NilValue;
+END_RCPP
+}
+// EMC
+Rcpp::List EMC(int n, const DataFrame& ATCtree, const DataFrame& observations, int nbIndividuals, int nbResults, Rcpp::Nullable<Rcpp::List> startingIndividuals, Rcpp::Nullable<Rcpp::NumericVector> startingTemperatures);
+RcppExport SEXP _emcAdr_EMC(SEXP nSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP nbIndividualsSEXP, SEXP nbResultsSEXP, SEXP startingIndividualsSEXP, SEXP startingTemperaturesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< int >::type n(nSEXP);
     Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
     Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
     Rcpp::traits::input_parameter< int >::type nbIndividuals(nbIndividualsSEXP);
+    Rcpp::traits::input_parameter< int >::type nbResults(nbResultsSEXP);
     Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::List> >::type startingIndividuals(startingIndividualsSEXP);
     Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type startingTemperatures(startingTemperaturesSEXP);
-    EMC(n, ATCtree, observations, nbIndividuals, startingIndividuals, startingTemperatures);
-    return R_NilValue;
+    rcpp_result_gen = Rcpp::wrap(EMC(n, ATCtree, observations, nbIndividuals, nbResults, startingIndividuals, startingTemperatures));
+    return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_ATCtoNumeric", (DL_FUNC) &_emcAdr_ATCtoNumeric, 2},
-    {"_emcAdr_EMC", (DL_FUNC) &_emcAdr_EMC, 6},
+    {"_emcAdr_frequencyHist", (DL_FUNC) &_emcAdr_frequencyHist, 2},
+    {"_emcAdr_EMC", (DL_FUNC) &_emcAdr_EMC, 7},
     {NULL, NULL, 0}
 };
 

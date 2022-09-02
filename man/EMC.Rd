@@ -9,6 +9,7 @@ EMC(
   ATCtree,
   observations,
   nbIndividuals = 5L,
+  nbResults = 5L,
   startingIndividuals = NULL,
   startingTemperatures = NULL
 )
@@ -18,7 +19,9 @@ EMC(
 
 \item{ATCtree}{: ATC tree with upper bound of the DFS (without the root)}
 
-\item{nbIndividuals}{: number on individuals in the population 5 by default}
+\item{nbIndividuals}{: number on individuals in the population, 5 by default}
+
+\item{nbResults}{: number of results returned (best RR individuals), 5 by default}
 
 \item{startingIndividuals}{: starting individuals, randomly initialized by default 
 (a DataFrame containing the medication on the first column and the ADR (boolean) on the second)}
@@ -27,6 +30,9 @@ EMC(
 
 \item{observation}{: real observation of the ADR based on the medications of each real patients
 (same form as the starting individuals)}
+}
+\value{
+if no problem return an R List with : the distribution of RR we've met; bests individuals and the corresponding RRs. Otherwise the list is empty
 }
 \description{
 The Evolutionary MCMC method that runs the random walk

@@ -11,6 +11,30 @@ double meanMedications(const Rcpp::List& observations){
   return (sum / observations.size());
 }
 
+std::pair<Individual,double> largerRR(const std::pair<Individual,double>& firstRR, const std::pair<Individual,double>& secRR,
+                                      const std::pair<Individual,double>& thirdRR, const std::pair<Individual,double>& fourthRR){
+  if(firstRR.second >= secRR.second && firstRR.second >= thirdRR.second && firstRR.second >= fourthRR.second)
+    return firstRR;
+  else if(secRR.second >= firstRR.second && secRR.second >= thirdRR.second && secRR.second >= fourthRR.second)
+    return secRR;
+  else if(thirdRR.second >= firstRR.second && thirdRR.second >= secRR.second &&thirdRR.second >= fourthRR.second)
+    return thirdRR;
+  else
+    return fourthRR;
+}
+
+void addRRtoDistribution(const double RR,std::vector<unsigned int>& vec){
+  double dIndex = (RR-1) * 10;
+  int index = static_cast<int>(dIndex);
+  vec[index]++;
+}
+
+bool isNotInResultList(const std::vector<std::pair<Individual,double>>& bestResults,
+                       const std::pair<Individual,double>& bestResult){
+  return std::find(bestResults.begin(),bestResults.end(),bestResult) == bestResults.end();
+}
+
+
 std::vector<Individual> DFtoCPP_WOtemp(const Rcpp::List& startingInd){
   std::vector<Individual> returnedVec;
   returnedVec.reserve(startingInd.size());
@@ -115,14 +139,14 @@ Individual crossoverMutation(const Individual& indiv1, const Individual& indiv2,
     selectedNode = selectedNode == ATCtree.nrow() ? ATCtree.nrow()-1 : selectedNode;
   } while (ATClength[selectedNode] == 7);
   
-  upperBound = upperBounds[selectedNode] - 1;
+  upperBound = upperBounds[selectedNode];
   for(int med : indiv1.getMedications()){
-    if(med < selectedNode || med > upperBound){
+    if(med <= selectedNode || med > upperBound){
       newMedi.push_back(med);
     }
   }
   for(int med : indiv2.getMedications()){
-    if(med >= selectedNode && med <= upperBound){
+    if(med > selectedNode && med <= upperBound){
       newMedi.push_back(med);
     }
   }

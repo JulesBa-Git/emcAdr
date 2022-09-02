@@ -12,6 +12,26 @@
 //'@param observations : a list of medications for each patient 
 double meanMedications(const Rcpp::List& observations);
 
+//' return the larger RR and the corresponding individual
+//' 
+//' @param a list of 4 RR to compare
+std::pair<Individual,double> largerRR(const std::pair<Individual,double>& firstRR,const std::pair<Individual,double>& secRR,
+                                      const std::pair<Individual,double>& thirdRR,const std::pair<Individual,double>& fourthRR);
+ 
+ //' add the RR in the right box of the RR distributions array
+ //' 
+ //' @param an RR
+ //' @param the list of RR distribution
+void addRRtoDistribution(const double,std::vector<unsigned int>&);
+ 
+ //' Check if a Result is already in the result vector or not
+ //' 
+ //' @param bestResults : the current list of returned result (on the emc algorithm)
+ //' @param bestResult : the result which needs to be tested
+ //' 
+ //' @return true if the result is already in the results vector, false otherwise
+bool isNotInResultList(const std::vector<std::pair<Individual,double>>& bestResults,
+                       const std::pair<Individual,double>& bestResult);
 //'Create the individuals vector with starting individuals only
 //'
 //'@param startingInd : starting individuals given by the user
