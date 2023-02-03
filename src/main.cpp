@@ -10,21 +10,28 @@ using Rcpp::DataFrame;
 //'The Evolutionary MCMC method that runs the random walk
 //'
 //'@param n : number of step 
-//'@param nbIndividuals : number on individuals in the population, 5 by default
-//'@param startingIndividuals : starting individuals, randomly initialized by default 
-//'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
-//'@param startingTemperatures : starting temperatures, randomly initialized by default
 //'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
 //'@param observation : real observation of the ADR based on the medications of each real patients
-//'(same form as the starting individuals)
-//'@param nbResults : number of results returned (best RR individuals), 5 by default
+//'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
 //'
+//'@param nbResults : number of results returned (best RR individuals), 5 by default
+//'@param nbIndividuals : number on individuals in the population, 5 by default
+//'@param startingIndividuals : starting individuals, randomly initialized by default 
+//'(same form as the observations)
+//'@param startingTemperatures : starting temperatures, randomly initialized by default
+//'@param P_type1/P_type2/P_crossover : probability to operate respectively type1 mutation, type2 mutation and crossover. Note :
+//'the probability to operate the swap is then 1 - sum(P_type1,P_type2,P_crossover). The sum must be less or equal to 1. 
+//'@param alpha : a hyperparameter allowing us to manage to probability of adding a drug to the cocktail. The probability
+//' to add a drug to the cocktail is the following : \eqn{\frac12}{\alpha/n} Where n is the original size of the cocktail. 1 is the default value.
+//' 
 //'@return if no problem return an R List with : the distribution of RR we've met; bests individuals and the corresponding RRs. Otherwise the list is empty
 //'@export
 //[[Rcpp::export]]
-Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, int nbIndividuals = 5, int nbResults = 5,
-         Rcpp::Nullable<Rcpp::List> startingIndividuals = R_NilValue,
-         Rcpp::Nullable<Rcpp::NumericVector> startingTemperatures = R_NilValue ){
+Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, double P_type1 =.25,
+               double P_type2 = .25, double P_crossover =.25, int nbIndividuals = 5, int nbResults = 5,
+               double alpha = 1,
+               Rcpp::Nullable<Rcpp::List> startingIndividuals = R_NilValue,
+               Rcpp::Nullable<Rcpp::NumericVector> startingTemperatures = R_NilValue ){
   const int RRDistSize = 42;
   Rcpp::NumericVector temperatures;
   Rcpp::List observationsMedication = observations["patientATC"];
@@ -35,12 +42,18 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, int
   std::vector<std::pair<int,int>> vertexX;
   std::vector<std::pair<int,int>> vertexY;
   
+  //crossover
+  int selectedNode, upperBound;
+  std::vector<int> ATClength = ATCtree["ATC_length"];
+  std::vector<int> upperBounds = ATCtree["upperBound"];
+  
   std::vector<Individual> individualsCpp;
   Individual mutatedIndividual_k{};
   Individual mutatedIndividual_l{};
   
   int chosenVertexidx;
   int seqLen;
+  
   
   std::vector<unsigned int> RRDistribution{};
   int smallerOneRR = 0;
@@ -50,6 +63,20 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, int
   std::pair<Individual,double> bestResult{};
   bestResults.reserve(nbResults);
   double minRR = 0;
+  
+  //acceptance rate
+  int acceptedMove = 0;
+  int nonZeroRR = 0;
+  
+  double type2Bound;
+  double crossoverBound;
+  if((P_type1 + P_type2 + P_crossover) > 1){
+    std::cerr << "The sum of the 3 probabilities is greater than 1, it must be inferior or equal\n";
+    return Rcpp::List::create();
+  }else{
+    type2Bound = P_type1 + P_type2;
+    crossoverBound = type2Bound + P_crossover;
+  }
   
   if(nbIndividuals < 2){
     std::cerr << "There must be at least 2 individuals.\n";
@@ -65,6 +92,11 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, int
   }
   else{ 
     Rcpp::List tmpST = startingIndividuals.clone();
+    
+    if(tmpST.size() != nbIndividuals){
+      std::cerr << "give the same number of individuals as the value of the parameter nbIndividuals \n";
+      return Rcpp::List::create();
+    }
     
     if(startingTemperatures.isNull()){
       //initialized with random temperatures
@@ -97,7 +129,7 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, int
   //3rd step : compute the RR of the "new population" 
   for(int i = 0; i < n ; ++i){
     pMutation = Rcpp::runif(1,0,1)[0];
-    if( pMutation <=0.25){ // pMutation <=0.25    
+    if( pMutation <= P_type1){ // pMutation <= P_type1    
       //type 1 mutation, we take nbIndividuals included because we trunc, there is almost no chance to
       //draw nbIndividuals
       chosenIndividual_k = trunc(Rcpp::runif(1,0,nbIndividuals)[0]);
@@ -105,10 +137,12 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, int
 
       RRx_k = individualsCpp[chosenIndividual_k].computeRR(observationsMedication, observationsADR, ATCtree);
 
-      mutatedIndividual_k = type1Mutation(individualsCpp[chosenIndividual_k],ATCtree.nrow());
+      mutatedIndividual_k = type1Mutation(individualsCpp[chosenIndividual_k], ATCtree.nrow(), alpha);
       seqLen = individualsCpp[chosenIndividual_k].getMedications().size();
       
       RRy_k = mutatedIndividual_k.computeRR(observationsMedication, observationsADR, ATCtree);
+      if(RRy_k > 0)
+        ++nonZeroRR;
 
       pAcceptation = exp(((RRy_k - RRx_k)/individualsCpp[chosenIndividual_k].getTemperature())) 
         * (((1/seqLen) * (1/(ATCtree.nrow()-seqLen))) / ((1/seqLen) * (1/(seqLen+1))));
@@ -120,10 +154,11 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, int
       
       if(pAcceptation > pDraw){
         individualsCpp[chosenIndividual_k] = mutatedIndividual_k;
+        ++acceptedMove;
       }
       
     }
-    else if(pMutation > 0.25 && pMutation <= 0.50){//pMutation > 0.25 && pMutation <= 0.50
+    else if(pMutation > P_type1 && pMutation <= type2Bound){//pMutation > 0.25 && pMutation <= 0.50 (default parameter)
       //type 2 mutation
 
       chosenIndividual_k = trunc(Rcpp::runif(1,0,nbIndividuals)[0]);
@@ -142,7 +177,9 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, int
 
       RRy_k = mutatedIndividual_k.computeRR(observationsMedication, observationsADR, ATCtree);
       vertexY = mutatedIndividual_k.getVertexList(ATCtree);
-
+      if(RRy_k > 0)
+        ++nonZeroRR;
+      
       pAcceptation = (exp(((RRy_k - RRx_k) / individualsCpp[chosenIndividual_k].getTemperature()))) * 
                       (vertexY.size()/vertexX.size());
       
@@ -153,10 +190,11 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, int
       
       if(pAcceptation > pDraw){
         individualsCpp[chosenIndividual_k] = mutatedIndividual_k;
+        ++acceptedMove;
       }
       
     }
-    else if(pMutation > 0.50 && pMutation <= 0.75){//pMutation > 0.50 && pMutation <= 0.75
+    else if(pMutation > type2Bound && pMutation <= crossoverBound){//pMutation > 0.50 && pMutation <= 0.75
 
       //crossover mutation
       chosenIndividual_k = trunc(Rcpp::runif(1,0,nbIndividuals)[0]);
@@ -171,14 +209,28 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, int
 
       RRx_k = individualsCpp[chosenIndividual_k].computeRR(observationsMedication,observationsADR,ATCtree);
       RRx_l = individualsCpp[chosenIndividual_l].computeRR(observationsMedication,observationsADR,ATCtree);
+      
+      //selection of the node on which we will perform the crossover
+      //while we are on a leaf 
+      do{
+        selectedNode = trunc(Rcpp::runif(1,0,ATCtree.nrow())[0]);
+        selectedNode = selectedNode == ATCtree.nrow() ? ATCtree.nrow()-1 : selectedNode;
+      } while (ATClength[selectedNode] == 7);
+      
+      upperBound = upperBounds[selectedNode];
 
       mutatedIndividual_k = crossoverMutation(individualsCpp[chosenIndividual_k],
-                                              individualsCpp[chosenIndividual_l],ATCtree);
+                                              individualsCpp[chosenIndividual_l], ATCtree,
+                                              selectedNode, upperBound);
       mutatedIndividual_l = crossoverMutation(individualsCpp[chosenIndividual_l],
-                                              individualsCpp[chosenIndividual_k],ATCtree);
+                                              individualsCpp[chosenIndividual_k], ATCtree,
+                                              selectedNode, upperBound);
 
       RRy_k = mutatedIndividual_k.computeRR(observationsMedication,observationsADR,ATCtree);
       RRy_l = mutatedIndividual_l.computeRR(observationsMedication,observationsADR,ATCtree);
+      
+      if((RRy_k + RRy_l) > 0)
+        ++nonZeroRR;
 
       pAcceptation = exp(((RRy_k - RRx_k)/individualsCpp[chosenIndividual_k].getTemperature()) 
                            + ((RRy_l - RRx_l)/individualsCpp[chosenIndividual_l].getTemperature()));
@@ -191,6 +243,7 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, int
       if(pAcceptation > pDraw){
         individualsCpp[chosenIndividual_k] = mutatedIndividual_k;
         individualsCpp[chosenIndividual_l] = mutatedIndividual_l;
+        ++acceptedMove;
       }
       
     }
@@ -213,6 +266,8 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, int
 
       RRy_k = mutatedIndividual_k.computeRR(observationsMedication,observationsADR,ATCtree);
       RRy_l = mutatedIndividual_l.computeRR(observationsMedication,observationsADR,ATCtree);
+      if((RRy_k + RRy_l) > 0)
+        ++nonZeroRR;
 
       pAcceptation = exp(((RRy_k - RRx_k)/individualsCpp[chosenIndividual_k].getTemperature()) 
                            + ((RRy_l - RRx_l)/individualsCpp[chosenIndividual_l].getTemperature()));
@@ -225,19 +280,21 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, int
       if(pAcceptation > pDraw){
         individualsCpp[chosenIndividual_k] = mutatedIndividual_k;
         individualsCpp[chosenIndividual_l] = mutatedIndividual_l;
+        ++acceptedMove;
       }
     }
-    //add the best results to the RR array
+    //add the best results to the RR array -> do we consider the 0 RR in the distribution ? 
     if(bestResult.second >=1 && bestResult.second <= 5){
       addRRtoDistribution(bestResult.second,RRDistribution);
     }
     else{
-      if(bestResult.second < 1 && bestResult.second > 0){
+      if(bestResult.second < 1&& bestResult.second > 0){
         ++smallerOneRR;
       }
       else if(bestResult.second > 5)
         ++largerFiveRR;
     }
+    
     
     //adding the result to the best result if we need to 
     if(isNotInResultList(bestResults,bestResult)){
@@ -275,7 +332,11 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, int
     returnedMed.push_back(pair.first.getMedications());
     returnedRR.push_back(pair.second);
   }
+  double acceptanceRate = static_cast<double>(acceptedMove) / static_cast<double>(n);
+  double acceptedNonZeroRR = static_cast<double>(acceptedMove) / static_cast<double>(nonZeroRR);
+  std::cout << "acceptance rate : " << acceptanceRate << '\n';
+  std::cout << "acceptance rate when a move is on a non zero RR direction : " << acceptedNonZeroRR<< "\n";
   
-  return Rcpp::List::create(Rcpp::Named("bestCockatils") = returnedMed,Rcpp::Named("bestRR") = returnedRR,
+  return Rcpp::List::create(Rcpp::Named("bestCockatils") = returnedMed, Rcpp::Named("bestRR") = returnedRR,
                             Rcpp::Named("RRDistribution") = RRDistribution);
 }

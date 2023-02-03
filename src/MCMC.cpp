@@ -87,8 +87,8 @@ std::vector<Individual> DFtoCPP_WOtempAndIndividual(int treeSize, int nbIndividu
   return returnedVec;
 }
 
-Individual type1Mutation(const Individual& indiv, int treeSize){
-  double addAcceptation = (1/indiv.getMedications().size());
+Individual type1Mutation(const Individual& indiv, int treeSize, double alpha){
+  double addAcceptation = (alpha/indiv.getMedications().size());
   double draw = Rcpp::runif(1,0,1)[0];
   std::vector<int> newMed = indiv.getMedications();
   
@@ -127,32 +127,23 @@ Individual type2Mutation(const Individual& indiv, int treeSize, const std::pair<
   return {prevMedic,indiv.getTemperature()};
 }
 
-Individual crossoverMutation(const Individual& indiv1, const Individual& indiv2,const Rcpp::DataFrame& ATCtree){
-  int selectedNode, upperBound;
-  std::vector<int> ATClength = ATCtree["ATC_length"];
-  std::vector<int> upperBounds = ATCtree["upperBound"];
+Individual crossoverMutation(const Individual& indiv1, const Individual& indiv2,const Rcpp::DataFrame& ATCtree,
+                             int selectedNode, int upperBound){
   std::vector<int> newMedi{};
   newMedi.reserve(indiv1.getMedications().size() + indiv2.getMedications().size());
-  //while we are on a leaf 
-  do{
-    selectedNode = trunc(Rcpp::runif(1,0,ATCtree.nrow())[0]);
-    selectedNode = selectedNode == ATCtree.nrow() ? ATCtree.nrow()-1 : selectedNode;
-  } while (ATClength[selectedNode] == 7);
   
-  upperBound = upperBounds[selectedNode];
   for(int med : indiv1.getMedications()){
-    if(med <= selectedNode || med > upperBound){
+    if(med < selectedNode || med >= upperBound){
       newMedi.push_back(med);
     }
   }
   for(int med : indiv2.getMedications()){
-    if(med > selectedNode && med <= upperBound){
+    if(med >= selectedNode && med < upperBound){
       newMedi.push_back(med);
     }
   }
   newMedi.shrink_to_fit();
   
   return {newMedi, indiv1.getTemperature()};
-  
 }
 

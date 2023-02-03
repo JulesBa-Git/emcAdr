@@ -8,8 +8,12 @@ EMC(
   n,
   ATCtree,
   observations,
+  P_type1 = 0.25,
+  P_type2 = 0.25,
+  P_crossover = 0.25,
   nbIndividuals = 5L,
   nbResults = 5L,
+  alpha = 1,
   startingIndividuals = NULL,
   startingTemperatures = NULL
 )
@@ -23,13 +27,19 @@ EMC(
 
 \item{nbResults}{: number of results returned (best RR individuals), 5 by default}
 
+\item{alpha}{: a hyperparameter allowing us to manage to probability of adding a drug to the cocktail. The probability
+to add a drug to the cocktail is the following : \eqn{\frac12}{\alpha/n} Where n is the original size of the cocktail. 1 is the default value.}
+
 \item{startingIndividuals}{: starting individuals, randomly initialized by default 
-(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)}
+(same form as the observations)}
 
 \item{startingTemperatures}{: starting temperatures, randomly initialized by default}
 
 \item{observation}{: real observation of the ADR based on the medications of each real patients
-(same form as the starting individuals)}
+(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)}
+
+\item{P_type1/P_type2/P_crossover}{: probability to operate respectively type1 mutation, type2 mutation and crossover. Note :
+the probability to operate the swap is then 1 - sum(P_type1,P_type2,P_crossover). The sum must be less or equal to 1.}
 }
 \value{
 if no problem return an R List with : the distribution of RR we've met; bests individuals and the corresponding RRs. Otherwise the list is empty

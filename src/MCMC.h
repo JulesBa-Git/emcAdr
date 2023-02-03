@@ -60,9 +60,11 @@ std::vector<Individual> DFtoCPP_WOtempAndIndividual(int treeSize, int nbIndividu
 //' 
 //' @param indiv : the individual chosen to be mutated
 //' @param treeSize : size of the ATC tree
+//' @param alpha : a hyperparameter allowing us to manage to probability of adding a drug to the cocktail. The probability
+//' to add a drug to the cocktail is the following : $$ \alpha / n$$ Where n is the original size of the cocktail. 
 //' 
 //' @return the mutated individual
-Individual type1Mutation(const Individual& indiv, int treeSize);
+Individual type1Mutation(const Individual& indiv, int treeSize, double alpha);
 
 //' Return a mutated version of the individual in parameter (using the 2nd mutation)
 //'
@@ -78,8 +80,12 @@ Individual type2Mutation(const Individual& indiv, int treeSize, const std::pair<
 //' @param indiv1 : the individual chosen to be mutated
 //' @param indiv2 : the individual with which the indiv1 will be mutated
 //' @param ATCtree : tree with every medication
+//' @param selectedNode : represent the internal node of the tree on which we will perform the crossover
+//' @param upperBound : the upper bound of the set to consider when performing a crossover. Note the interval 
+//' to swap between indiv1 and indiv2 is [selectedNode ; upperBound[
 //' 
 //' @return the mutated individual
-Individual crossoverMutation(const Individual& indiv,const Individual& indiv2,const Rcpp::DataFrame& ATCtree);
+Individual crossoverMutation(const Individual& indiv,const Individual& indiv2,const Rcpp::DataFrame& ATCtree,
+                             int selectedNode, int upperBound);
 
 #endif
