@@ -72,7 +72,7 @@ double Individual::computeRR(const Rcpp::List& medications,const Rcpp::LogicalVe
   }
   sumInDelt = yesInDelt + noInDelt;
   sumNotInDelt = yesNotInDelt + noNotInDelt;
-  //during the test the denominator was frequently 0 so I make it 1 if it is 0 
+  //during the test the denominator was frequently 0 so I make it really small if it is 0 
   //because if the denominator is 0 the numerator has to be 0 so the result would be 0 
   //no matter the denominator, we have 
   sumInDelt = (sumInDelt == 0) ? 1 : sumInDelt;
@@ -138,8 +138,12 @@ bool Individual::operator==(const Individual& ind) const{
   if(ind.medications_.size() != medications_.size())
     return false;
   
-  for(int i = 0; i < medications_.size(); ++i){
-    if(ind.medications_[i] != medications_[i])
+  for(int i : medications_){
+    int j =0;
+    while(j < ind.medications_.size() && ind.medications_[j] != i){
+      ++j;
+    }
+    if(j == ind.medications_.size())
       return false;
   }
   

@@ -26,7 +26,7 @@ for(i in 1:10000){
     for(j in 1:nbMedic){
       medic = append(medic,sample(1:5836,1,replace = TRUE))
     }# given that the patient takes random drugs he's probability to get the ADR will be 20% (may be changed) 
-    if(runif(1) > 0.20){
+    if(runif(1) > 0.05){
       simulPatient$patientADR[i] = F
     }else{
       simulPatient$patientADR[i] = T
@@ -37,6 +37,6 @@ for(i in 1:10000){
   medic = c()
 }
 #transform into a dataFrame
-simulPatient_df = data.frame(patientATC = c(1:10000),patientADR = c(FALSE))
-simulPatient_df$patientATC = c(simulPatient$patientATC)
-simulPatient_df$patientADR = simulPatient$patientADR
+simulPatient_df_2 = data.frame(patientATC = c(1:10000),patientADR = c(FALSE))
+simulPatient_df_2$patientATC = c(simulPatient$patientATC)
+simulPatient_df_2$patientADR = simulPatient$patientADR

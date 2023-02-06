@@ -6,6 +6,7 @@
 #include <memory>
 #include <cmath>
 #include <algorithm>
+#include <set>
 
 //' Get the average number of medications taken by a patient (made for the observations set)
 //'
@@ -23,6 +24,12 @@ std::pair<Individual,double> largerRR(const std::pair<Individual,double>& firstR
  //' @param an RR
  //' @param the list of RR distribution
 void addRRtoDistribution(const double,std::vector<unsigned int>&);
+
+//' Add the pair to the set of explored pair if needed
+//' 
+//' @param i : the individual that may be added
+//' @param the current list of explored pairs
+void addPairToSet(const Individual& i, std::set<std::pair<int,int>>&);
  
  //' Check if a Result is already in the result vector or not
  //' 
@@ -55,6 +62,14 @@ std::vector<Individual> DFtoCPP_Wtemp(const Rcpp::List& startingInd,const Rcpp::
 //'
 //'@return Individual vector which would be use by the emc algorithm
 std::vector<Individual> DFtoCPP_WOtempAndIndividual(int treeSize, int nbIndividuals,double meanMedic);
+
+//'Return the Pairs cocktails causing the ADR (used to check which part of the space is explored)
+//'
+//'@param observationsMed : The List containing the medications taken by the real person
+//'@param ADR : A logical vector containing the ADR associated for each patients of the first array (observationsMed)
+//'
+//'@return the Pairs cocktails causing the ADR 
+std::set<std::pair<int,int>> getADRPairs(const Rcpp::List& observationsMed, const Rcpp::LogicalVector& ADR);
 
 //' Return a Mutated version of the individual in parameter (using the 1st mutation)
 //' 

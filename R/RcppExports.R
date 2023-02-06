@@ -34,7 +34,7 @@ frequencyHist <- function(RRDistribution, f) {
 #'the probability to operate the swap is then 1 - sum(P_type1,P_type2,P_crossover). The sum must be less or equal to 1. 
 #'@param alpha : a hyperparameter allowing us to manage to probability of adding a drug to the cocktail. The probability
 #' to add a drug to the cocktail is the following : \eqn{\frac12}{\alpha/n} Where n is the original size of the cocktail. 1 is the default value.
-#' 
+#'
 #'@return if no problem return an R List with : the distribution of RR we've met; bests individuals and the corresponding RRs. Otherwise the list is empty
 #'@export
 EMC <- function(n, ATCtree, observations, P_type1 = .25, P_type2 = .25, P_crossover = .25, nbIndividuals = 5L, nbResults = 5L, alpha = 1, startingIndividuals = NULL, startingTemperatures = NULL) {

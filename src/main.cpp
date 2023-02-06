@@ -23,7 +23,7 @@ using Rcpp::DataFrame;
 //'the probability to operate the swap is then 1 - sum(P_type1,P_type2,P_crossover). The sum must be less or equal to 1. 
 //'@param alpha : a hyperparameter allowing us to manage to probability of adding a drug to the cocktail. The probability
 //' to add a drug to the cocktail is the following : \eqn{\frac12}{\alpha/n} Where n is the original size of the cocktail. 1 is the default value.
-//' 
+//'
 //'@return if no problem return an R List with : the distribution of RR we've met; bests individuals and the corresponding RRs. Otherwise the list is empty
 //'@export
 //[[Rcpp::export]]
@@ -31,7 +31,7 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, dou
                double P_type2 = .25, double P_crossover =.25, int nbIndividuals = 5, int nbResults = 5,
                double alpha = 1,
                Rcpp::Nullable<Rcpp::List> startingIndividuals = R_NilValue,
-               Rcpp::Nullable<Rcpp::NumericVector> startingTemperatures = R_NilValue ){
+               Rcpp::Nullable<Rcpp::NumericVector> startingTemperatures = R_NilValue){
   const int RRDistSize = 42;
   Rcpp::NumericVector temperatures;
   Rcpp::List observationsMedication = observations["patientATC"];
@@ -67,6 +67,11 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, dou
   //acceptance rate
   int acceptedMove = 0;
   int nonZeroRR = 0;
+  
+  //ADR pairs 
+  std::set<std::pair<int,int>> ADRPairs;
+  std::set<std::pair<int,int>> exploredPairs;
+  std::vector<std::pair<int,int>> interserction; 
   
   double type2Bound;
   double crossoverBound;
@@ -114,6 +119,10 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, dou
       
     }
   }
+  
+
+  ADRPairs = getADRPairs(observationsMedication, observationsADR);
+  
   //test affichage individus /*
   std::cout << "starting cocktails : \n";
   for(const Individual& ind : individualsCpp){
@@ -141,8 +150,14 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, dou
       seqLen = individualsCpp[chosenIndividual_k].getMedications().size();
       
       RRy_k = mutatedIndividual_k.computeRR(observationsMedication, observationsADR, ATCtree);
+      
+      //for acceptance rate -> debug
       if(RRy_k > 0)
         ++nonZeroRR;
+      
+      //to have an overview of the explored space
+      addPairToSet(mutatedIndividual_k, exploredPairs);
+      
 
       pAcceptation = exp(((RRy_k - RRx_k)/individualsCpp[chosenIndividual_k].getTemperature())) 
         * (((1/seqLen) * (1/(ATCtree.nrow()-seqLen))) / ((1/seqLen) * (1/(seqLen+1))));
@@ -177,8 +192,13 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, dou
 
       RRy_k = mutatedIndividual_k.computeRR(observationsMedication, observationsADR, ATCtree);
       vertexY = mutatedIndividual_k.getVertexList(ATCtree);
+      
+      //for acceptance rate -> debug
       if(RRy_k > 0)
         ++nonZeroRR;
+      //to have an overview of the explored space
+      addPairToSet(mutatedIndividual_k, exploredPairs);
+      
       
       pAcceptation = (exp(((RRy_k - RRx_k) / individualsCpp[chosenIndividual_k].getTemperature()))) * 
                       (vertexY.size()/vertexX.size());
@@ -229,8 +249,14 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, dou
       RRy_k = mutatedIndividual_k.computeRR(observationsMedication,observationsADR,ATCtree);
       RRy_l = mutatedIndividual_l.computeRR(observationsMedication,observationsADR,ATCtree);
       
+      //for acceptance rate -> debug
       if((RRy_k + RRy_l) > 0)
         ++nonZeroRR;
+      
+      //to have an overview of the explored space
+      addPairToSet(mutatedIndividual_k, exploredPairs);
+      addPairToSet(mutatedIndividual_l, exploredPairs);
+      
 
       pAcceptation = exp(((RRy_k - RRx_k)/individualsCpp[chosenIndividual_k].getTemperature()) 
                            + ((RRy_l - RRx_l)/individualsCpp[chosenIndividual_l].getTemperature()));
@@ -266,8 +292,14 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, dou
 
       RRy_k = mutatedIndividual_k.computeRR(observationsMedication,observationsADR,ATCtree);
       RRy_l = mutatedIndividual_l.computeRR(observationsMedication,observationsADR,ATCtree);
+      
+      //for acceptance rate
       if((RRy_k + RRy_l) > 0)
         ++nonZeroRR;
+      
+      //to have an overview of the explored space
+      addPairToSet(mutatedIndividual_k, exploredPairs);
+      addPairToSet(mutatedIndividual_l, exploredPairs);
 
       pAcceptation = exp(((RRy_k - RRx_k)/individualsCpp[chosenIndividual_k].getTemperature()) 
                            + ((RRy_l - RRx_l)/individualsCpp[chosenIndividual_l].getTemperature()));
@@ -332,11 +364,22 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, dou
     returnedMed.push_back(pair.first.getMedications());
     returnedRR.push_back(pair.second);
   }
+  
   double acceptanceRate = static_cast<double>(acceptedMove) / static_cast<double>(n);
   double acceptedNonZeroRR = static_cast<double>(acceptedMove) / static_cast<double>(nonZeroRR);
   std::cout << "acceptance rate : " << acceptanceRate << '\n';
   std::cout << "acceptance rate when a move is on a non zero RR direction : " << acceptedNonZeroRR<< "\n";
   
+  std::vector<std::pair<int,int>> inter;
+  //check the intersection between the eplored pairs and the pairs of the observations
+  std::set_intersection(ADRPairs.begin(), ADRPairs.end(), exploredPairs.begin(), exploredPairs.end(),
+                        std::back_inserter(inter));
+  std::vector<std::vector<int>> pairs;
+  pairs.reserve(inter.size());
+  for(const auto& p: inter){
+    pairs.push_back({p.first, p.second});
+  }
+  
   return Rcpp::List::create(Rcpp::Named("bestCockatils") = returnedMed, Rcpp::Named("bestRR") = returnedRR,
-                            Rcpp::Named("RRDistribution") = RRDistribution);
+                            Rcpp::Named("RRDistribution") = RRDistribution, Rcpp::Named("ADRPairs") = pairs); //Rcpp::Named("ADRPairs") = ADRPairsSingleton
 }

@@ -29,6 +29,22 @@ void addRRtoDistribution(const double RR,std::vector<unsigned int>& vec){
   vec[index]++;
 }
 
+void addPairToSet(const Individual& i, std::set<std::pair<int,int>>& p){
+  int minPair,maxPair;
+  
+  std::vector<int> mutIndivTmp = i.getMedications();
+  if(mutIndivTmp.size() == 2){
+    if(mutIndivTmp[0] > mutIndivTmp[1]){
+      maxPair = mutIndivTmp[0];
+      minPair = mutIndivTmp[1];
+    }else{
+      maxPair = mutIndivTmp[1];
+      minPair = mutIndivTmp[0];
+    }
+    p.insert(std::make_pair(minPair, maxPair));
+  }
+}
+
 bool isNotInResultList(const std::vector<std::pair<Individual,double>>& bestResults,
                        const std::pair<Individual,double>& bestResult){
   return std::find(bestResults.begin(),bestResults.end(),bestResult) == bestResults.end();
@@ -85,6 +101,29 @@ std::vector<Individual> DFtoCPP_WOtempAndIndividual(int treeSize, int nbIndividu
     medicVec.clear();
   }
   return returnedVec;
+}
+
+std::set<std::pair<int,int>> getADRPairs(const Rcpp::List& observationsMed, const Rcpp::LogicalVector& ADR){
+  std::set<std::pair<int,int>> retSet;
+  int i = 0;
+  int max, min;
+  for(const std::vector<int> tab : observationsMed){
+    
+    if(tab.size() == 2 && ADR[i]){
+      if(tab[0] > tab[1]){
+        max = tab[0];
+        min = tab[1];
+      }
+      else{
+        max = tab[1];
+        min = tab[0];
+      }
+      retSet.insert(std::make_pair(min,max));
+    }
+    ++i;
+  }
+
+  return retSet;
 }
 
 Individual type1Mutation(const Individual& indiv, int treeSize, double alpha){
