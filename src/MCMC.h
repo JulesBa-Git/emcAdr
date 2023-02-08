@@ -79,7 +79,7 @@ std::set<std::pair<int,int>> getADRPairs(const Rcpp::List& observationsMed, cons
 //' to add a drug to the cocktail is the following : $$ \alpha / n$$ Where n is the original size of the cocktail. 
 //' 
 //' @return the mutated individual
-Individual type1Mutation(const Individual& indiv, int treeSize, double alpha);
+Individual type1Mutation(const Individual& indiv, int treeSize, double alpha, bool emptyCocktail);
 
 //' Return a mutated version of the individual in parameter (using the 2nd mutation)
 //'

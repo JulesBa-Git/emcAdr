@@ -126,28 +126,35 @@ std::set<std::pair<int,int>> getADRPairs(const Rcpp::List& observationsMed, cons
   return retSet;
 }
 
-Individual type1Mutation(const Individual& indiv, int treeSize, double alpha){
-  double addAcceptation = (alpha/indiv.getMedications().size());
-  double draw = Rcpp::runif(1,0,1)[0];
+Individual type1Mutation(const Individual& indiv, int treeSize, double alpha, bool emptyCocktail){
+  //peut optimiser les appels à getMedication()
+  int mutateMed = trunc(Rcpp::runif(1,0,treeSize)[0]);
+  mutateMed = mutateMed == treeSize ? treeSize-1 : mutateMed;
   std::vector<int> newMed = indiv.getMedications();
   
-  if(addAcceptation > draw){
-    int mutateMed = trunc(Rcpp::runif(1,0,treeSize)[0]);
-    mutateMed = mutateMed == treeSize ? treeSize-1 : mutateMed;
+  if(!emptyCocktail){
     
-    //note when changing the mutation 1 : do we have to keep that ? 
-    std::vector<int>::iterator find = std::find(newMed.begin(), newMed.end(), mutateMed);
-    //the medication is in the vector so we erase it 
-    if( find != newMed.end()){
-      newMed.erase(find);
-    } else{ // the medication is not in the vector so we add it
+    double addAcceptation = (alpha/indiv.getMedications().size());
+    double draw = Rcpp::runif(1,0,1)[0];
+    
+    if(addAcceptation >= draw){
+      while (std::find(newMed.begin(), newMed.end(), mutateMed) != std::end(newMed)){
+        // we draw a medication that is not inside the cocktail for the moment
+        mutateMed = trunc(Rcpp::runif(1,0,treeSize)[0]);
+        mutateMed = mutateMed == treeSize ? treeSize-1 : mutateMed;
+      }
+      
       newMed.push_back(mutateMed);
     }
+    else{ // here we remove an element from the medications of the individuals
+      int removeIndex = trunc(Rcpp::runif(1,0,indiv.getMedications().size())[0]);
+      removeIndex = removeIndex == indiv.getMedications().size() ? removeIndex-1 : removeIndex;
+      newMed.erase(newMed.begin() + removeIndex);
+    }
+    
   }
-  else{ // here we remove an element from the medications of the individuals
-    int removeIndex = trunc(Rcpp::runif(1,0,indiv.getMedications().size())[0]);
-    removeIndex = removeIndex == indiv.getMedications().size() ? removeIndex-1 : removeIndex;
-    newMed.erase(newMed.begin() + removeIndex);
+  else{ // here the cocktail is empty so we add a drug with probability 1 
+    newMed.push_back(mutateMed);
   }
   
   return {newMed,indiv.getTemperature()};

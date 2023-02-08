@@ -38,7 +38,7 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, dou
   Rcpp::LogicalVector observationsADR = observations["patientADR"];
   
   int chosenIndividual_k,chosenIndividual_l;
-  double RRx_k,RRx_l, RRy_k,RRy_l, pMutation, pAcceptation, pDraw;
+  double RRx_k,RRx_l, RRy_k,RRy_l, pMutation, pAcceptation, pDraw, q_y_given_x, q_x_given_y;
   std::vector<std::pair<int,int>> vertexX;
   std::vector<std::pair<int,int>> vertexY;
   
@@ -146,8 +146,9 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, dou
 
       RRx_k = individualsCpp[chosenIndividual_k].computeRR(observationsMedication, observationsADR, ATCtree);
 
-      mutatedIndividual_k = type1Mutation(individualsCpp[chosenIndividual_k], ATCtree.nrow(), alpha);
       seqLen = individualsCpp[chosenIndividual_k].getMedications().size();
+      bool emptySeq = (seqLen == 0);
+      mutatedIndividual_k = type1Mutation(individualsCpp[chosenIndividual_k], ATCtree.nrow(), alpha, emptySeq);
       
       RRy_k = mutatedIndividual_k.computeRR(observationsMedication, observationsADR, ATCtree);
       
@@ -158,9 +159,38 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, dou
       //to have an overview of the explored space
       addPairToSet(mutatedIndividual_k, exploredPairs);
       
-
+      
+      //acceptation probability
+      if(mutatedIndividual_k.getMedications().size() > seqLen){
+        //if the Y cocktail size is larger than the X (so the mutation 1 added a medication)
+        if(seqLen > 0){
+          //if the cocktail was not empty
+          double U_p = std::min(1.0, (alpha/static_cast<double>(seqLen)));
+          q_y_given_x = U_p * ( 1.0 / (ATCtree.nrow() - seqLen) );
+          
+        }else if(seqLen == 0){
+          // if it was empty U_p = 1 and seqLen = 0 
+          q_y_given_x = 1.0 / static_cast<double>(ATCtree.nrow());
+        }
+        double U_p_plus = std::min(1.0, (alpha/static_cast<double>(seqLen + 1)));
+        q_x_given_y = ((1 - U_p_plus) * (1.0 / static_cast<double>(seqLen+1)));
+      }
+      else{
+        // if the X cocktail size is larger than the Y (so the mutation 1 removed a medication)
+        double U_p = std::min(1.0, (alpha/static_cast<double>(seqLen)));
+        q_y_given_x = ((1-U_p) * (1.0/static_cast<double>(seqLen)));
+        
+        if(seqLen > 1){
+          // X cocktail had more than a single medication
+          double U_p_minus = std::min(1.0, (alpha/static_cast<double>(seqLen - 1)));
+          q_x_given_y = (U_p_minus * (1.0/static_cast<double>(ATCtree.nrow() - seqLen + 1)));
+        }else if(seqLen == 1){
+          q_x_given_y = (1.0 / static_cast<double>(ATCtree.nrow()));
+        }
+      }
+      
       pAcceptation = exp(((RRy_k - RRx_k)/individualsCpp[chosenIndividual_k].getTemperature())) 
-        * (((1/seqLen) * (1/(ATCtree.nrow()-seqLen))) / ((1/seqLen) * (1/(seqLen+1))));
+        * ( q_y_given_x / q_x_given_y);
 
       pDraw = Rcpp::runif(1,0,1)[0];
       
@@ -184,6 +214,7 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, dou
       //get every vertex 0/1 for this patient
       vertexX = individualsCpp[chosenIndividual_k].getVertexList(ATCtree);
       chosenVertexidx = trunc(Rcpp::runif(1,0,vertexX.size())[0]);
+      // TODO : /!\ quand le cocktail est vide, on peut avoir un indice de -1 -> interdire sur cocktail vide.
       chosenVertexidx = chosenVertexidx == vertexX.size() ? vertexX.size()-1 : chosenVertexidx;
       
       std::pair<int,int> chosenVertex = vertexX[chosenVertexidx];
