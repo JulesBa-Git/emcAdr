@@ -67,6 +67,7 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, dou
   //acceptance rate
   int acceptedMove = 0;
   int nonZeroRR = 0;
+  int acceptedSize = 0;
   
   //ADR pairs 
   std::set<std::pair<int,int>> ADRPairs;
@@ -173,7 +174,7 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, dou
           q_y_given_x = 1.0 / static_cast<double>(ATCtree.nrow());
         }
         double U_p_plus = std::min(1.0, (alpha/static_cast<double>(seqLen + 1)));
-        q_x_given_y = ((1 - U_p_plus) * (1.0 / static_cast<double>(seqLen+1)));
+        q_x_given_y = ((1 - U_p_plus) * (1.0 / static_cast<double>(seqLen + 1)));
       }
       else{
         // if the X cocktail size is larger than the Y (so the mutation 1 removed a medication)
@@ -200,7 +201,8 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, dou
       if(pAcceptation > pDraw){
         individualsCpp[chosenIndividual_k] = mutatedIndividual_k;
         ++acceptedMove;
-      }
+        acceptedSize += individualsCpp[chosenIndividual_k].getMedications().size();
+      };
       
     }
     else if(pMutation > P_type1 && pMutation <= type2Bound){//pMutation > 0.25 && pMutation <= 0.50 (default parameter)
@@ -208,42 +210,47 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, dou
 
       chosenIndividual_k = trunc(Rcpp::runif(1,0,nbIndividuals)[0]);
       chosenIndividual_k = chosenIndividual_k >= nbIndividuals ? nbIndividuals-1 : chosenIndividual_k;
-
-      RRx_k = individualsCpp[chosenIndividual_k].computeRR(observationsMedication, observationsADR, ATCtree);
-
-      //get every vertex 0/1 for this patient
-      vertexX = individualsCpp[chosenIndividual_k].getVertexList(ATCtree);
-      chosenVertexidx = trunc(Rcpp::runif(1,0,vertexX.size())[0]);
-      // TODO : /!\ quand le cocktail est vide, on peut avoir un indice de -1 -> interdire sur cocktail vide.
-      chosenVertexidx = chosenVertexidx == vertexX.size() ? vertexX.size()-1 : chosenVertexidx;
       
-      std::pair<int,int> chosenVertex = vertexX[chosenVertexidx];
-      
-      mutatedIndividual_k = type2Mutation(individualsCpp[chosenIndividual_k],ATCtree.nrow(),chosenVertex);
-
-      RRy_k = mutatedIndividual_k.computeRR(observationsMedication, observationsADR, ATCtree);
-      vertexY = mutatedIndividual_k.getVertexList(ATCtree);
-      
-      //for acceptance rate -> debug
-      if(RRy_k > 0)
-        ++nonZeroRR;
-      //to have an overview of the explored space
-      addPairToSet(mutatedIndividual_k, exploredPairs);
-      
-      
-      pAcceptation = (exp(((RRy_k - RRx_k) / individualsCpp[chosenIndividual_k].getTemperature()))) * 
-                      (vertexY.size()/vertexX.size());
-      
-      pDraw = Rcpp::runif(1,0,1)[0];
-      
-      bestResult.second = RRx_k > RRy_k ? RRx_k : RRy_k;
-      bestResult.first = RRx_k > RRy_k ? individualsCpp[chosenIndividual_k] : mutatedIndividual_k;
-      
-      if(pAcceptation > pDraw){
-        individualsCpp[chosenIndividual_k] = mutatedIndividual_k;
-        ++acceptedMove;
+      //if the selected indivudual is empty, the type 2 mutation cannot occur
+      if(individualsCpp[chosenIndividual_k].getMedications().size() != 0){
+        RRx_k = individualsCpp[chosenIndividual_k].computeRR(observationsMedication, observationsADR, ATCtree);
+        
+        //get every vertex 0/1 for this patient
+        vertexX = individualsCpp[chosenIndividual_k].getVertexList(ATCtree);
+        chosenVertexidx = trunc(Rcpp::runif(1,0,vertexX.size())[0]);
+        
+        chosenVertexidx = chosenVertexidx == vertexX.size() ? vertexX.size()-1 : chosenVertexidx;
+        
+        std::pair<int,int> chosenVertex = vertexX[chosenVertexidx];
+        
+        mutatedIndividual_k = type2Mutation(individualsCpp[chosenIndividual_k],ATCtree.nrow(),chosenVertex);
+        
+        RRy_k = mutatedIndividual_k.computeRR(observationsMedication, observationsADR, ATCtree);
+        vertexY = mutatedIndividual_k.getVertexList(ATCtree);
+        
+        //for acceptance rate -> debug
+        if(RRy_k > 0)
+          ++nonZeroRR;
+        //to have an overview of the explored space
+        addPairToSet(mutatedIndividual_k, exploredPairs);
+        
+        
+        pAcceptation = (exp(((RRy_k - RRx_k) / individualsCpp[chosenIndividual_k].getTemperature()))) * 
+          (vertexY.size()/vertexX.size());
+        
+        pDraw = Rcpp::runif(1,0,1)[0];
+        
+        bestResult.second = RRx_k > RRy_k ? RRx_k : RRy_k;
+        bestResult.first = RRx_k > RRy_k ? individualsCpp[chosenIndividual_k] : mutatedIndividual_k;
+        
+        if(pAcceptation > pDraw){
+          individualsCpp[chosenIndividual_k] = mutatedIndividual_k;
+          ++acceptedMove;
+          acceptedSize += individualsCpp[chosenIndividual_k].getMedications().size();
+        }
+        
       }
-      
+  
     }
     else if(pMutation > type2Bound && pMutation <= crossoverBound){//pMutation > 0.50 && pMutation <= 0.75
 
@@ -301,6 +308,7 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, dou
         individualsCpp[chosenIndividual_k] = mutatedIndividual_k;
         individualsCpp[chosenIndividual_l] = mutatedIndividual_l;
         ++acceptedMove;
+        acceptedSize += individualsCpp[chosenIndividual_k].getMedications().size();
       }
       
     }
@@ -344,6 +352,7 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, dou
         individualsCpp[chosenIndividual_k] = mutatedIndividual_k;
         individualsCpp[chosenIndividual_l] = mutatedIndividual_l;
         ++acceptedMove;
+        acceptedSize += individualsCpp[chosenIndividual_k].getMedications().size();
       }
     }
     //add the best results to the RR array -> do we consider the 0 RR in the distribution ? 
@@ -398,8 +407,10 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, dou
   
   double acceptanceRate = static_cast<double>(acceptedMove) / static_cast<double>(n);
   double acceptedNonZeroRR = static_cast<double>(acceptedMove) / static_cast<double>(nonZeroRR);
+  double meanCocktailsSize = static_cast<double>(acceptedSize) / static_cast<double>(acceptedMove);
   std::cout << "acceptance rate : " << acceptanceRate << '\n';
   std::cout << "acceptance rate when a move is on a non zero RR direction : " << acceptedNonZeroRR<< "\n";
+  std::cout << "mean size of accepted cocktails : " << meanCocktailsSize << "\n";
   
   std::vector<std::pair<int,int>> inter;
   //check the intersection between the eplored pairs and the pairs of the observations

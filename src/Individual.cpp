@@ -18,7 +18,6 @@ void Individual::printTemperature() const{
 bool Individual::matches(const std::vector<int>& observation, const std::vector<int>& upperBound) const{
   int idx;
   bool inIt;
-
   
   for(const int& medIdx : medications_){
     inIt = false;
@@ -49,6 +48,10 @@ double Individual::computeRR(const Rcpp::List& medications,const Rcpp::LogicalVe
   int yesNotInDelt = 0, noNotInDelt = 0;
   double sumInDelt, sumNotInDelt;
   std::vector<int> upperBound = ATCtree["upperBound"];
+  
+  //if the cocktail is empty, the related risk is zero.
+  if(this->medications_.size() == 0)
+    return 0.0;
   
   for(int i = 0; i < medications.size() ; ++i){
     //does the i-th observations is included in the individual ?
