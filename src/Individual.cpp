@@ -98,8 +98,8 @@ std::vector<std::pair<int,int>> Individual::getVertexList(const Rcpp::DataFrame&
   int idx,depthMed,nextDepth,upperBMed;
   for(const auto& med : medications_){
     idx = med;
-    depthMed = depth[med-1]; // minus 1 because per example the medication n° 317 in R numerotation will be at the index 316
-    upperBMed = upperBound[med-1];
+    depthMed = depth[med]; // minus 1 because per example the medication n° 317 in R numerotation will be at the index 316
+    upperBMed = upperBound[med]-1;
     //get the next depth
     if(depthMed == 1 || depthMed == 5)
       nextDepth = depthMed+2;
@@ -109,16 +109,16 @@ std::vector<std::pair<int,int>> Individual::getVertexList(const Rcpp::DataFrame&
     //find the lower depth medications if we are not on a leaf
     if(depthMed != 7){
       
-      while(idx < upperBMed){
+      while(idx <= upperBMed){
         //if we are on the lower depth and the medication is not on the current medications vector
-        if(depth[idx] == nextDepth && (std::find(medications_.begin(),medications_.end(),idx+1) == medications_.end())){
-          returnedVec.emplace_back(med,idx+1);
+        if(depth[idx] == nextDepth && (std::find(medications_.begin(),medications_.end(),idx) == medications_.end())){
+          returnedVec.emplace_back(med,idx);
         }
         ++idx;
       }
     
     }
-    //we come back on the medication (so we got minus 1 because of the R <-> cpp index convertion)
+    //we come back above the medication 
     idx = med-1;
     //now find the upper depth medication (it should only have one because it is a tree), we do it if we are not on the first depth
     if(depthMed != 1){
@@ -127,8 +127,8 @@ std::vector<std::pair<int,int>> Individual::getVertexList(const Rcpp::DataFrame&
         idx--;
       }
       //we add it if it is not already on the medications vector
-      if(std::find(medications_.begin(),medications_.end(),idx+1) == medications_.end())
-        returnedVec.emplace_back(med,idx+1);
+      if(std::find(medications_.begin(),medications_.end(),idx) == medications_.end())
+        returnedVec.emplace_back(med,idx);
       
     }
     
