@@ -25,7 +25,7 @@ bool Individual::matches(const std::vector<int>& observation, const std::vector<
     
     while (idx < observation.size() && !inIt){
       //medix-1 because R index starts at 1 and the ATC tree is pretreated with R (will be changed ?)
-      if(observation[idx] >= medIdx && observation[idx] <= upperBound[medIdx-1]){
+      if(observation[idx] >= medIdx && observation[idx] < upperBound[medIdx]){
         inIt = true;
       }else{
         ++idx;
@@ -80,13 +80,62 @@ double Individual::computeRR(const Rcpp::List& medications,const Rcpp::LogicalVe
   //no matter the denominator, we have 
   sumInDelt = (sumInDelt == 0) ? 1 : sumInDelt;
   
-  double P_ADR_SEQ = yesInDelt / sumInDelt;
-  double P_ADR_NotSEQ = yesNotInDelt / sumNotInDelt;
+  double P_ADR_SEQ = static_cast<double>(yesInDelt) / static_cast<double>(sumInDelt);
+  double P_ADR_NotSEQ = static_cast<double>(yesNotInDelt) / static_cast<double>(sumNotInDelt);
   
   //same as the sumInDelt
   P_ADR_NotSEQ = P_ADR_NotSEQ == 0 ? 0.00001 : P_ADR_NotSEQ;
 
   return P_ADR_SEQ / P_ADR_NotSEQ;
+}
+
+std::pair<double, bool> Individual::computeRR(const Rcpp::List& medications,const Rcpp::LogicalVector& ADR,
+                                  const Rcpp::DataFrame& ATCtree, bool deltaEmpty){
+  int yesInDelt = 0, noInDelt = 0;
+  int yesNotInDelt = 0, noNotInDelt = 0;
+  double sumInDelt, sumNotInDelt;
+  std::vector<int> upperBound = ATCtree["upperBound"];
+  
+  //if the cocktail is empty, the related risk is zero.
+  if(this->medications_.size() == 0)
+    return std::make_pair(0.0, false);
+  
+  for(int i = 0; i < medications.size() ; ++i){
+    //does the i-th observations is included in the individual ?
+    bool isInDelta = this->matches(medications[i], upperBound);
+    
+    if(isInDelta){
+      if(ADR[i]){
+        ++yesInDelt;
+      }else{
+        ++noInDelt;
+      }
+    }
+    else{
+      if(ADR[i]){
+        ++yesNotInDelt;
+      }else{
+        ++noNotInDelt;
+      }
+    }
+    
+  }
+  sumInDelt = yesInDelt + noInDelt;
+  sumNotInDelt = yesNotInDelt + noNotInDelt;
+  bool someoneInDelta = (sumInDelt != 0);
+  //during the test the denominator was frequently 0 so I make it really small if it is 0 
+  //because if the denominator is 0 the numerator has to be 0 so the result would be 0 
+  //no matter the denominator, we have 
+  sumInDelt = (sumInDelt == 0) ? 1 : sumInDelt;
+  
+  double P_ADR_SEQ = static_cast<double>(yesInDelt) / static_cast<double>(sumInDelt);
+  double P_ADR_NotSEQ = static_cast<double>(yesNotInDelt) / static_cast<double>(sumNotInDelt);
+  
+  //same as the sumInDelt
+  P_ADR_NotSEQ = P_ADR_NotSEQ == 0 ? 0.00001 : P_ADR_NotSEQ;
+  
+  return std::make_pair((P_ADR_SEQ / P_ADR_NotSEQ), someoneInDelta);
+  
 }
 
 std::vector<std::pair<int,int>> Individual::getVertexList(const Rcpp::DataFrame& ATCtree) const{
@@ -98,8 +147,8 @@ std::vector<std::pair<int,int>> Individual::getVertexList(const Rcpp::DataFrame&
   int idx,depthMed,nextDepth,upperBMed;
   for(const auto& med : medications_){
     idx = med;
-    depthMed = depth[med]; // minus 1 because per example the medication n° 317 in R numerotation will be at the index 316
-    upperBMed = upperBound[med]-1;
+    depthMed = depth[med];
+    upperBMed = upperBound[med]-1; //shift index to cpp zero indexing
     //get the next depth
     if(depthMed == 1 || depthMed == 5)
       nextDepth = depthMed+2;
@@ -137,6 +186,7 @@ std::vector<std::pair<int,int>> Individual::getVertexList(const Rcpp::DataFrame&
   return returnedVec;
 }
 
+
 bool Individual::operator==(const Individual& ind) const{
   if(ind.medications_.size() != medications_.size())
     return false;
@@ -152,4 +202,9 @@ bool Individual::operator==(const Individual& ind) const{
   
   return true;
 }
+
+bool Individual::operator<(const Individual& ind) const{
+  return true;
+}
+
 

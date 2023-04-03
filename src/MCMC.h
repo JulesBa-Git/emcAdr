@@ -39,12 +39,57 @@ void addPairToSet(const Individual& i, std::set<std::pair<int,int>>&);
  //' @return true if the result is already in the results vector, false otherwise
 bool isNotInResultList(const std::vector<std::pair<Individual,double>>& bestResults,
                        const std::pair<Individual,double>& bestResult);
+ 
+template<class T1>
+bool PermutEqual(const std::pair<T1,T1>& P1, const std::pair<T1,T1>& P2){
+ return ((P1.first == P2.first) && (P1.second == P2.second)) || ((P1.first == P2.second) && (P1.second == P2.first));
+}
+
+ //' Check if the Y cocktail could come from a type 2 mutation of the X cocktail
+ //' 
+ //' @param X : original cocktail
+ //' @param Y : mmutated cocktail
+ //' @param vertex : all the (1,0) vertex that are available for the cocktail X.
+ //' 
+ //' @return true if the Y cocktail could come from X using the type 2 mutation
+bool mutatedByType2(std::vector<int> X, std::vector<int> Y, const std::vector<std::pair<int,int>>& vertex);
+ 
+ 
 //'Create the individuals vector with starting individuals only
 //'
 //'@param startingInd : starting individuals given by the user
 //'
 //'@return Individual vector which would be use by the emc algorithm
 std::vector<Individual> DFtoCPP_WOtemp(const Rcpp::List& startingInd);
+
+//'Create the individuals vector with starting temperatures only
+//'
+//'@param treeSize : size of the ATC tree (to get the DFS index interval)
+//'@param nbIndividuals : number of individuals in the population
+//'@param meanMedic : the average number of medications took by the observations patients
+//'@param temperatures : starting temperatures given by the user
+//'
+//'@return Individual vector which would be use by the emc algorithm
+std::vector<Individual> DFtoCPP_WOIndividual(int treeSize, int nbIndividuals,double meanMedic, const Rcpp::NumericVector& temperatures);;
+
+//' Overload of the DFtoCPP_WOtemp function here we don't have to specify the temperatures
+//' every individual has the same temperature which is 1.
+//' 
+//'@param treeSize : size of the ATC tree (to get the DFS index interval)
+//'@param nbIndividuals : number of individuals in the population
+//'@param meanMedic : the average number of medications took by the observations patients
+//'@return Individual vector which would be use by the emc algorithm and the GeneticAlgorithm
+std::vector<Individual> DFtoCPP_WOIndividual(int treeSize, int nbIndividuals,double meanMedic);
+
+//' Made for the distributionApproximation function, return an individual with a specified cocktail size
+//' 
+//'@param treeSize : size of the ATC tree (to get the DFS index interval)
+//'@param cocktailSize : the number of drugs the individual must take
+//'@param nbIndividuals : number of individuals in the population
+//'@param temperature : the temperature of the individual
+//'
+//'@return Individual vector randomly initialized with cocktailSize drugs
+std::vector<Individual> newIndividualWithCocktailSize(int treeSize, int cocktailSize, int nbIndividuals = 1, double temperature = 1);
 
 //'Create the individuals vector with starting individuals and starting temperatures
 //'
@@ -80,6 +125,9 @@ std::set<std::pair<int,int>> getADRPairs(const Rcpp::List& observationsMed, cons
 //' 
 //' @return the mutated individual
 Individual type1Mutation(const Individual& indiv, int treeSize, double alpha, bool emptyCocktail);
+
+//' Test adjusted type 1 mutation
+Individual adjustedType1Mutation(const Individual& indiv, int treeSize, double alpha, bool emptyCocktail);
 
 //' Return a mutated version of the individual in parameter (using the 2nd mutation)
 //'

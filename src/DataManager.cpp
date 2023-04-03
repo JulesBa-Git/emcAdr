@@ -1,5 +1,6 @@
 #include "RcppArmadillo.h"
 #include <vector>
+#include <numeric>
 #include <iostream>
 using Rcpp::DataFrame;
 
@@ -57,30 +58,24 @@ void ATCtoNumeric(DataFrame& patients,const DataFrame& tree) {
   
 }
 
-//' test data transformation for histogram plot (in)
-//' 
-//' @param RRDistribution : the RR distribution Vector (given by the EMC algorithm)
-//' @param f : the function used to plot, hist by default
-//[[Rcpp::export]]
-void frequencyHist(const Rcpp::IntegerVector& RRDistribution, Rcpp::Function f = Rcpp::Function("hist")){
-  int size = 0;
-  double RR = 0.9;
-  for(auto tmp : RRDistribution)
-    size+=tmp;
-  
-  std::vector<double> ret{};
-  ret.reserve(size);
-  
-  for(auto tmp : RRDistribution){
-    for(int i = 0 ; i < tmp ; ++i){
-      ret.push_back(RR);
+//'Convert the histogram returned by the DistributionApproximation function, to a real number ditribution
+//'(that can be used in a test for example) 
+//'
+//'@param tree : ATC tree (we assume that there is a column 'ATCCode' )
+//'@param patients : patients observations, for each patient we got a string containing every medication he takes/took
+//'@export
+// [[Rcpp::export]]
+Rcpp::NumericVector histogramToDitribution(const std::vector<int>& vec){
+  std::vector<double> returnedVec;
+  returnedVec.reserve(std::accumulate(vec.begin(),vec.end(),0));
+  int count;
+  for(int i = 0 ; i < vec.size(); ++i){
+    count = vec[i];
+    for(int j = 0 ; j < count ; ++j){
+      returnedVec.push_back(static_cast<double>(i)/10.0);
     }
-    RR+=0.1;
   }
-  
-  Rcpp::NumericVector rRet;
-  rRet = ret;
-  f(rRet);
+  return Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(returnedVec));
 }
 
 /*** R

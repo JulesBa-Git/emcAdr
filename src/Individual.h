@@ -31,9 +31,16 @@ public:
   bool matches(const std::vector<int>& observation, const std::vector<int>& upperBound) const;
   double computeRR(const Rcpp::List& medications,const Rcpp::LogicalVector& ADR
                      , const Rcpp::DataFrame& ATCtree) const;
+  
+  std::pair<double, bool> computeRR(const Rcpp::List& medications,const Rcpp::LogicalVector& ADR,
+                                    const Rcpp::DataFrame& ATCtree, bool deltaEmpty);
   std::vector<std::pair<int,int>> getVertexList(const Rcpp::DataFrame& ATCtree) const;
   
   bool operator==(const Individual& ind) const;
+  //the result is not important, we redefined this operator because of his utilization in "keepElite",
+  // result does not matter since it is used in an std::pair<> and the comparaison rely on the first
+  // element of the pair
+  bool operator<(const Individual& ind) const;
   
 private:
   std::vector<int> medications_;

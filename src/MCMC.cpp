@@ -51,6 +51,25 @@ bool isNotInResultList(const std::vector<std::pair<Individual,double>>& bestResu
 }
 
 
+bool mutatedByType2(std::vector<int> X, std::vector<int> Y, const std::vector<std::pair<int,int>>& vertex){
+  std::sort(X.begin(),X.end());
+  std::sort(Y.begin(),Y.end());
+  std::vector<int> diff{};
+  diff.reserve(std::max(X.size(),Y.size()));
+  std::set_symmetric_difference(X.begin(),X.end(),Y.begin(),Y.end(),
+                                std::back_inserter(diff));
+  diff.shrink_to_fit();
+  
+  std::pair<int,int> find{diff[0],diff[1]};
+  for(const auto& i : vertex){
+    if(PermutEqual(find,i)){
+      return true;
+    }
+  }
+  return false;
+}
+
+
 std::vector<Individual> DFtoCPP_WOtemp(const Rcpp::List& startingInd){
   std::vector<Individual> returnedVec;
   returnedVec.reserve(startingInd.size());
@@ -62,6 +81,50 @@ std::vector<Individual> DFtoCPP_WOtemp(const Rcpp::List& startingInd){
     returnedVec.push_back(Individual{ind,temp[0]});
     //because the temperatures have to be increasing
     ++itemp;
+  }
+  return returnedVec;
+}
+
+std::vector<Individual> DFtoCPP_WOIndividual(int treeSize, int nbIndividuals,double meanMedic, const Rcpp::NumericVector& temperatures){
+  std::vector<Individual> returnedVec;
+  returnedVec.reserve(nbIndividuals);
+  int nbMedic,num;
+  std::vector<int> medicVec(0);
+  
+  for(int i = 0; i < nbIndividuals; ++i){
+    nbMedic = 1 + Rcpp::rpois(1,meanMedic)[0];
+    medicVec.reserve(nbMedic);
+    
+    for(int j = 0; j < nbMedic ; ++j){
+      //Draw every medications for a patient -> consider using sample ?
+      num = trunc(Rcpp::runif(1,0,treeSize)[0]);
+      num = num == treeSize ? treeSize-1 : num;
+      medicVec.push_back(num);
+    }
+    returnedVec.push_back(Individual{medicVec,temperatures[i]});
+    medicVec.clear();
+  }
+  return returnedVec;
+}
+
+std::vector<Individual> DFtoCPP_WOIndividual(int treeSize, int nbIndividuals,double meanMedic){
+  std::vector<Individual> returnedVec;
+  returnedVec.reserve(nbIndividuals);
+  int nbMedic,num;
+  std::vector<int> medicVec(0);
+  
+  for(int i = 0; i < nbIndividuals; ++i){
+    nbMedic = 1 + Rcpp::rpois(1,meanMedic)[0];
+    medicVec.reserve(nbMedic);
+    
+    for(int j = 0; j < nbMedic ; ++j){
+      //Draw every medications for a patient -> consider using sample ?
+      num = trunc(Rcpp::runif(1,0,treeSize)[0]);
+      num = num == treeSize ? treeSize-1 : num;
+      medicVec.push_back(num);
+    }
+    returnedVec.push_back(Individual{medicVec, 1});
+    medicVec.clear();
   }
   return returnedVec;
 }
@@ -102,6 +165,27 @@ std::vector<Individual> DFtoCPP_WOtempAndIndividual(int treeSize, int nbIndividu
   }
   return returnedVec;
 }
+
+std::vector<Individual> newIndividualWithCocktailSize(int treeSize, int cocktailSize, int nbIndividuals, double temperature){
+  std::vector<Individual> returnedVec;
+  returnedVec.reserve(nbIndividuals);
+  int num;
+  
+  std::vector<int> medicVec;
+  for(int i = 0 ; i < nbIndividuals; ++i){
+    medicVec.reserve(cocktailSize);
+    for(int j = 0; j < cocktailSize ; ++j){
+      //Draw every medications for a patient 
+      num = trunc(Rcpp::runif(1,0,treeSize)[0]);
+      medicVec.push_back(num);
+    }
+    returnedVec.push_back(Individual{medicVec,temperature});
+    medicVec.clear();
+  }
+  
+  return returnedVec;
+}
+
 
 std::set<std::pair<int,int>> getADRPairs(const Rcpp::List& observationsMed, const Rcpp::LogicalVector& ADR){
   std::set<std::pair<int,int>> retSet;
@@ -158,6 +242,50 @@ Individual type1Mutation(const Individual& indiv, int treeSize, double alpha, bo
   }
   
   return {newMed,indiv.getTemperature()};
+}
+
+Individual adjustedType1Mutation(const Individual& indiv, int treeSize, double alpha, bool emptyCocktail){
+  int mutateMed = trunc(Rcpp::runif(1,0,treeSize)[0]);
+  mutateMed = mutateMed == treeSize ? treeSize-1 : mutateMed;
+  std::vector<int> newMed = indiv.getMedications();
+  
+  if(emptyCocktail){
+    newMed.push_back(mutateMed);
+  }
+  else{
+    
+    double draw = Rcpp::runif(1,0,1)[0];
+    //here alpha is a probability 
+    
+    if(draw <= alpha){
+      //here we add since alpha is the probability to add a drug to the cocktail
+      while (std::find(newMed.begin(), newMed.end(), mutateMed) != std::end(newMed)){
+        // we draw a medication that is not inside the cocktail for the moment
+        mutateMed = trunc(Rcpp::runif(1,0,treeSize)[0]);
+        mutateMed = mutateMed == treeSize ? treeSize-1 : mutateMed;
+      }
+      
+      newMed.push_back(mutateMed);
+    }
+    else{
+      //the modified medication
+      int chosenMedic = Rcpp::sample(Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(newMed)),1)[0];
+      auto end = std::remove(newMed.begin(),newMed.end(), chosenMedic);
+      newMed.erase(end, newMed.end());
+      int replacementMed;
+      do{
+        replacementMed = trunc(Rcpp::runif(1,0,treeSize)[0]);
+        replacementMed = replacementMed == treeSize ? treeSize-1 : replacementMed;
+      }while(std::find(newMed.begin(), newMed.end(), replacementMed) != std::end(newMed));
+      // here replacementMed is either a new medication or the chosen medic, we add it only if it is not the chosen medic
+      if( replacementMed != chosenMedic){
+        newMed.push_back(replacementMed);
+      }
+      
+    }
+  }
+  
+  return {newMed, indiv.getTemperature()};
 }
 
 Individual type2Mutation(const Individual& indiv, int treeSize, const std::pair<int,int>& p){

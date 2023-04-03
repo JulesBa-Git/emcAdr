@@ -10,13 +10,21 @@ ATCtoNumeric <- function(patients, tree) {
     invisible(.Call(`_emcAdr_ATCtoNumeric`, patients, tree))
 }
 
-#' test data transformation for histogram plot (in)
-#' 
-#' @param RRDistribution : the RR distribution Vector (given by the EMC algorithm)
-#' @param f : the function used to plot, hist by default
-frequencyHist <- function(RRDistribution, f) {
-    invisible(.Call(`_emcAdr_frequencyHist`, RRDistribution, f))
+#'Convert the histogram returned by the DistributionApproximation function, to a real number ditribution
+#'(that can be used in a test for example) 
+#'
+#'@param tree : ATC tree (we assume that there is a column 'ATCCode' )
+#'@param patients : patients observations, for each patient we got a string containing every medication he takes/took
+#'@export
+histogramToDitribution <- function(vec) {
+    .Call(`_emcAdr_histogramToDitribution`, vec)
 }
+
+#'The Evolutionary MCMC method that runs the random walk
+NULL
+
+#'The Evolutionary MCMC method that runs the random walk
+NULL
 
 #'The Evolutionary MCMC method that runs the random walk
 #'
@@ -39,5 +47,22 @@ frequencyHist <- function(RRDistribution, f) {
 #'@export
 EMC <- function(n, ATCtree, observations, P_type1 = .25, P_type2 = .25, P_crossover = .25, nbIndividuals = 5L, nbResults = 5L, alpha = 1, startingIndividuals = NULL, startingTemperatures = NULL) {
     .Call(`_emcAdr_EMC`, n, ATCtree, observations, P_type1, P_type2, P_crossover, nbIndividuals, nbResults, alpha, startingIndividuals, startingTemperatures)
+}
+
+DistributionApproximation <- function(epochs, ATCtree, observations, temperature_M1 = 1L, temperature_M2 = 1L, Smax = 4L, p_type1 = .01) {
+    .Call(`_emcAdr_DistributionApproximation`, epochs, ATCtree, observations, temperature_M1, temperature_M2, Smax, p_type1)
+}
+
+GeneticAlgorithm <- function(epochs, nbIndividuals, ATCtree, observations, p_crossover = .80, p_mutation = .01, nbElite = 0L, tournamentSize = 2L) {
+    .Call(`_emcAdr_GeneticAlgorithm`, epochs, nbIndividuals, ATCtree, observations, p_crossover, p_mutation, nbElite, tournamentSize)
+}
+
+#'The true RR distribution of cocktail of size 2
+#'
+#'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
+#'@return the RR distribution among size 2 cocktail
+#'@export
+trueDistributionSizeTwoCocktail <- function(ATCtree, observations) {
+    .Call(`_emcAdr_trueDistributionSizeTwoCocktail`, ATCtree, observations)
 }
 
