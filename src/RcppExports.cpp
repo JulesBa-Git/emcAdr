@@ -55,8 +55,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // DistributionApproximation
-Rcpp::IntegerVector DistributionApproximation(int epochs, const DataFrame& ATCtree, const DataFrame& observations, int temperature_M1, int temperature_M2, int Smax, double p_type1);
-RcppExport SEXP _emcAdr_DistributionApproximation(SEXP epochsSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP temperature_M1SEXP, SEXP temperature_M2SEXP, SEXP SmaxSEXP, SEXP p_type1SEXP) {
+Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const DataFrame& observations, int temperature_M1, int temperature_M2, int nbResults, int Smax, double p_type1);
+RcppExport SEXP _emcAdr_DistributionApproximation(SEXP epochsSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP temperature_M1SEXP, SEXP temperature_M2SEXP, SEXP nbResultsSEXP, SEXP SmaxSEXP, SEXP p_type1SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -65,9 +65,10 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
     Rcpp::traits::input_parameter< int >::type temperature_M1(temperature_M1SEXP);
     Rcpp::traits::input_parameter< int >::type temperature_M2(temperature_M2SEXP);
+    Rcpp::traits::input_parameter< int >::type nbResults(nbResultsSEXP);
     Rcpp::traits::input_parameter< int >::type Smax(SmaxSEXP);
     Rcpp::traits::input_parameter< double >::type p_type1(p_type1SEXP);
-    rcpp_result_gen = Rcpp::wrap(DistributionApproximation(epochs, ATCtree, observations, temperature_M1, temperature_M2, Smax, p_type1));
+    rcpp_result_gen = Rcpp::wrap(DistributionApproximation(epochs, ATCtree, observations, temperature_M1, temperature_M2, nbResults, Smax, p_type1));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -106,7 +107,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_ATCtoNumeric", (DL_FUNC) &_emcAdr_ATCtoNumeric, 2},
     {"_emcAdr_histogramToDitribution", (DL_FUNC) &_emcAdr_histogramToDitribution, 1},
     {"_emcAdr_EMC", (DL_FUNC) &_emcAdr_EMC, 11},
-    {"_emcAdr_DistributionApproximation", (DL_FUNC) &_emcAdr_DistributionApproximation, 7},
+    {"_emcAdr_DistributionApproximation", (DL_FUNC) &_emcAdr_DistributionApproximation, 8},
     {"_emcAdr_GeneticAlgorithm", (DL_FUNC) &_emcAdr_GeneticAlgorithm, 8},
     {"_emcAdr_trueDistributionSizeTwoCocktail", (DL_FUNC) &_emcAdr_trueDistributionSizeTwoCocktail, 2},
     {NULL, NULL, 0}

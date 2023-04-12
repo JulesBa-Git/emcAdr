@@ -2,7 +2,11 @@
 #include "MCMC.h"
 #include "Population.h"
 #include <iostream>
+#ifdef _OPENMP
+  #include <omp.h>
+#endif
 using Rcpp::DataFrame;
+// [[Rcpp::plugins(openmp)]]
 // via the depends attribute we tell Rcpp to create hooks for
 // RcppArmadillo so that the build process will know what to do
 // [[Rcpp::depends(RcppArmadillo)]]
@@ -531,12 +535,13 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, dou
  //'@return if no problem return an array of the approximation of the RR distribution : the distribution of RR we've met; Otherwise the list is empty
  //'@export
  //[[Rcpp::export]]
-Rcpp::IntegerVector DistributionApproximation(int epochs, const DataFrame& ATCtree, const DataFrame& observations,
-                                              int temperature_M1 = 1, int temperature_M2 = 1, int Smax = 4, double p_type1 = .01){
+Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const DataFrame& observations,
+                                              int temperature_M1 = 1, int temperature_M2 = 1, 
+                                              int nbResults = 5, int Smax = 4, double p_type1 = .01){
   //arguments verification
   if(p_type1 > 1 || p_type1 < 0 || epochs < 1){
     std::cerr << "problem in the values of the parameter in the call of this function \n";
-    return Rcpp::IntegerVector();
+    return Rcpp::List();
   }
   Rcpp::List observationsMedication = observations["patientATC"];
   Rcpp::LogicalVector observationsADR = observations["patientADR"];
@@ -560,6 +565,7 @@ Rcpp::IntegerVector DistributionApproximation(int epochs, const DataFrame& ATCtr
   int accepted_type1 =0;
   int accepted_type2 =0;
   int type1_move=0, type2_move=0;
+  int type1_move_inF = 0, type2_move_inF = 0;
   
   double RRx_k, RRy_k, q_y_given_x, q_x_given_y, pMutation, pAcceptation, pDraw;
   double q_ratio;
@@ -568,6 +574,11 @@ Rcpp::IntegerVector DistributionApproximation(int epochs, const DataFrame& ATCtr
   std::vector<std::pair<int,int>> vertexX;
   std::vector<std::pair<int,int>> vertexY;
   int chosenVertexidx;
+  
+  std::vector<std::pair<Individual,double>> bestResults;
+  bestResults.reserve(nbResults);
+  double minRR = 0;
+  std::pair<Individual, double> currentResult;
   
   //if p.second is true, it means that the cocktail correspond to at least one person
   auto belongToF = [](const std::vector<int>& med, int acceptedSize, const std::pair<double,bool>& p){
@@ -581,6 +592,8 @@ Rcpp::IntegerVector DistributionApproximation(int epochs, const DataFrame& ATCtr
     computeRROutput = cocktail.computeRR(observationsMedication, observationsADR, ATCtree, true);
   } while (!belongToF(cocktail.getMedications(), Smax, computeRROutput));
   currentRR = computeRROutput.first;
+  minRR = currentRR;
+  bestResults.emplace_back(cocktail, currentRR);
   
   for(int i = 0; i < epochs; ++i){
       pMutation = Rcpp::runif(1,0,1)[0];
@@ -594,9 +607,9 @@ Rcpp::IntegerVector DistributionApproximation(int epochs, const DataFrame& ATCtr
         //here the current type 1 mutation consist in drawing a new cocktail of the same size
         mutatedIndividual = newIndividualWithCocktailSize(ATCtree.nrow(), Smax, 1, temperature_M1)[0];
         computeRROutput = mutatedIndividual.computeRR(observationsMedication, observationsADR, ATCtree, true);
-        std::cout << "size : " << mutatedIndividual.getMedications().size() << '\n';
+        //std::cout << "size : " << mutatedIndividual.getMedications().size() << '\n';
         RRy_k = computeRROutput.first;
-        std::cout << "prev RR : " << RRx_k << " new RR : " << RRy_k << '\n';
+        //std::cout << "prev RR : " << RRx_k << " new RR : " << RRy_k << '\n';
 
         //to have an overview of the explored space (not in this method for the moment)
         //addPairToSet(mutatedIndividual_k, exploredPairs);
@@ -606,9 +619,9 @@ Rcpp::IntegerVector DistributionApproximation(int epochs, const DataFrame& ATCtr
         if(belongToF(mutatedIndividual.getMedications(), Smax, computeRROutput)){
           // with this mutation, our ration q(X|Y) / q(Y|X) = 1
           pAcceptation = exp(((RRy_k - RRx_k)/static_cast<double>(temperature_M1))); //cocktail.getTemperature()
-          std::cout << "proba d'acceptation : " << pAcceptation << '\n';
+          //std::cout << "proba d'acceptation : " << pAcceptation << '\n';
           pDraw = Rcpp::runif(1,0,1)[0];
-          
+          ++type1_move_inF;
           if(pAcceptation > pDraw){
             cocktail = mutatedIndividual;
             currentRR = RRy_k;
@@ -648,7 +661,7 @@ Rcpp::IntegerVector DistributionApproximation(int epochs, const DataFrame& ATCtr
             (static_cast<double>(vertexX.size())/static_cast<double>(vertexY.size()));
           
           pDraw = Rcpp::runif(1,0,1)[0];
-          
+          ++type2_move_inF;
           if(pAcceptation > pDraw){
             cocktail = mutatedIndividual;
             currentRR = RRy_k;
@@ -669,13 +682,50 @@ Rcpp::IntegerVector DistributionApproximation(int epochs, const DataFrame& ATCtr
       // if we are on a good RR we have a huge probability to stay on it -> maybe add the current RR only if it does not belong to the vector already ?
       outstandingRR.push_back(currentRR);
     }
+    
+    currentResult = std::make_pair(cocktail, currentRR);
+    //adding the result to the best result if we need to 
+    if(isNotInResultList(bestResults,currentResult)){
+      if(bestResults.size() < nbResults){
+        bestResults.emplace_back(currentResult);
+        minRR = minRR < currentResult.second ? minRR : currentResult.second;
+      }
+      else if(minRR < currentResult.second){
+        auto it = std::find_if(bestResults.begin(),bestResults.end(),
+                               [minRR](const std::pair<Individual,double>& p){return p.second == minRR;});
+        if(it != bestResults.end()){
+          bestResults.erase(it);
+        }
+        bestResults.emplace_back(currentResult);
+        auto tmpMin = *std::min_element(bestResults.begin(),bestResults.end(),
+                                        [](const std::pair<Individual,double>& lp,const std::pair<Individual,double>& rp){
+                                          return lp.second < rp.second; 
+                                        });
+        minRR = tmpMin.second;
+      }
+    }
   }
+  
+  //create the returned vector
+  std::vector<std::vector<int>> returnedMed{};
+  returnedMed.reserve(bestResults.size());
+  std::vector<double>returnedRR{};
+  returnedRR.reserve(bestResults.size());
+  
+  for(const auto &pair : bestResults){
+    returnedMed.push_back(pair.first.getMedications());
+    returnedRR.push_back(pair.second);
+  }
+  
   std::cout << "acceptance rate : " << static_cast<double>(acceptedMove) / static_cast<double>(epochs)<< "\n";
   std::cout << "acceptance rate type1 mutation : " << static_cast<double>(accepted_type1) / static_cast<double>(type1_move)<< "\n";
   std::cout << "acceptance rate type2 mutation : " << static_cast<double>(accepted_type2) / static_cast<double>(type2_move)<< "\n";
+  std::cout << "acceptance rate type1 mutation when the proposal is in F : " << static_cast<double>(accepted_type1) / static_cast<double>(type1_move_inF)<< "\n";
+  std::cout << "acceptance rate type2 mutation when the proposal is in F : " << static_cast<double>(accepted_type2) / static_cast<double>(type2_move_inF)<< "\n";
   std::cout << "number of proposed cocktail that was taken by nobody in the population : " << nbCocktailNotInPopulation << '\n';
-  Rcpp::IntegerVector result = Rcpp::as<Rcpp::IntegerVector>(Rcpp::wrap(RRDistribution));
-  return result;
+
+  return Rcpp::List::create(Rcpp::Named("Distribution") = RRDistribution, Rcpp::Named("OutstandingRR") = outstandingRR, 
+                            Rcpp::Named("bestCockatils") = returnedMed, Rcpp::Named("bestRR") = returnedRR);
 }
 
 //'The Evolutionary MCMC method that runs the random walk

@@ -49,8 +49,8 @@ EMC <- function(n, ATCtree, observations, P_type1 = .25, P_type2 = .25, P_crosso
     .Call(`_emcAdr_EMC`, n, ATCtree, observations, P_type1, P_type2, P_crossover, nbIndividuals, nbResults, alpha, startingIndividuals, startingTemperatures)
 }
 
-DistributionApproximation <- function(epochs, ATCtree, observations, temperature_M1 = 1L, temperature_M2 = 1L, Smax = 4L, p_type1 = .01) {
-    .Call(`_emcAdr_DistributionApproximation`, epochs, ATCtree, observations, temperature_M1, temperature_M2, Smax, p_type1)
+DistributionApproximation <- function(epochs, ATCtree, observations, temperature_M1 = 1L, temperature_M2 = 1L, nbResults = 5L, Smax = 4L, p_type1 = .01) {
+    .Call(`_emcAdr_DistributionApproximation`, epochs, ATCtree, observations, temperature_M1, temperature_M2, nbResults, Smax, p_type1)
 }
 
 GeneticAlgorithm <- function(epochs, nbIndividuals, ATCtree, observations, p_crossover = .80, p_mutation = .01, nbElite = 0L, tournamentSize = 2L) {
