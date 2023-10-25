@@ -89,7 +89,7 @@ double Individual::computeRR(const Rcpp::List& medications,const Rcpp::LogicalVe
 }
 
 std::pair<double, bool> Individual::computeRR(const Rcpp::List& medications,const Rcpp::LogicalVector& ADR,
-                                  const Rcpp::DataFrame& ATCtree, bool deltaEmpty){
+                                  const Rcpp::DataFrame& ATCtree, bool deltaEmpty) {
   int yesInDelt = 0, noInDelt = 0;
   int yesNotInDelt = 0, noNotInDelt = 0;
   double sumInDelt, sumNotInDelt;
@@ -138,7 +138,7 @@ std::pair<double, bool> Individual::computeRR(const Rcpp::List& medications,cons
 }
 
 std::pair<double, std::pair<int,int>> Individual::computeRR(const std::vector<std::vector<int>>& medications,const Rcpp::LogicalVector& ADR,
-                                 const std::vector<int>& upperBound, int beta, int RRmax){
+                                 const std::vector<int>& upperBound, int beta, int RRmax) const{
   int yesInDelt = 0, noInDelt = 0;
   int yesNotInDelt = 0, noNotInDelt = 0;
   double sumInDelt, sumNotInDelt;

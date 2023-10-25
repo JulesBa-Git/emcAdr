@@ -544,6 +544,8 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
     std::cerr << "problem in the values of the parameter in the call of this function \n";
     return Rcpp::List();
   }
+  
+  
   Rcpp::List observationsMedicationTmp = observations["patientATC"];
   std::vector<std::vector<int>> observationsMedication;
   observationsMedication.reserve(observationsMedicationTmp.size());
