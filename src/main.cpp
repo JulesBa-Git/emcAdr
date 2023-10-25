@@ -584,11 +584,11 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
   std::pair<double, std::pair<int, int>> computeGeomOutput; // pair< phypergeometric, <N° of people taking the cocktail and having the ADR, N° of people taking the cocktail>>
   double minGeom = 0;
   double minGeomBeta = 0;
-  
+  /*
   std::pair<double, std::pair<int, int>> currentBinom = std::make_pair(0.0,std::make_pair(0,0));
   std::pair<double, std::pair<int, int>> computePBinomOutput; // pair< phypergeometric, <N° of people taking the cocktail and having the ADR, N° of people taking the cocktail>>
   double minBinom = 0;
-  double minBinomBeta = 0;
+  double minBinomBeta = 0;*/
   
 
   //acceptance rate
@@ -624,26 +624,26 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
   do{
     cocktail = newIndividualWithCocktailSize(ATCtree.nrow(), Smax, 1, temperature)[0];
     //computeRROutput = cocktail.computeRR(observationsMedication, observationsADR, upperBounds, beta, RRmax);
-    /*computeGeomOutput = cocktail.computePHypergeom(observationsMedication, observationsADR,
+    computeGeomOutput = cocktail.computePHypergeom(observationsMedication, observationsADR,
                                                    upperBounds, ADRCount, notADRCount,
-                                                   RRmax);*/
-    computePBinomOutput = cocktail.computePBinomial(observationsMedication, observationsADR,
+                                                   RRmax);
+    /*computePBinomOutput = cocktail.computePBinomial(observationsMedication, observationsADR,
                                                     upperBounds, ADRProp,
-                                                    RRmax);
-  } while (!belongToF(computePBinomOutput));
+                                                    RRmax);*/
+  } while (!belongToF(computeGeomOutput));
   //currentRR = computeRROutput;
-  currentBinom = computePBinomOutput;
+  currentGeom = computeGeomOutput;
   
 #ifdef _OPENMP
   std::cout<< "openMP available \n";
 #endif
   
   //minRR = currentRR.first;
-  minBinom = currentBinom.first;
-  bestResults.emplace_back(cocktail, currentBinom.first);
-  if(currentBinom.second.second > beta){
-    minBinomBeta = currentBinom.first;
-    bestResultsBeta.emplace_back(cocktail, currentBinom.first);
+  minGeom = currentGeom.first;
+  bestResults.emplace_back(cocktail, currentGeom.first);
+  if(currentGeom.second.second > beta){
+    minGeomBeta = currentGeom.first;
+    bestResultsBeta.emplace_back(cocktail, currentGeom.first);
   }
   
   for(int i = 0; i < epochs; ++i){
@@ -651,18 +651,19 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
       
       if(pMutation < p_type1){
         //type 1 mutation
-        RRx_k = currentBinom.first;
+        RRx_k = currentGeom.first;
         
         //mutatedIndividual = type1Mutation(cocktail, ATCtree.nrow(), alpha, emptySeq);
         //mutatedIndividual = adjustedType1Mutation(cocktail, ATCtree.nrow(), alpha, emptySeq);
         //here the current type 1 mutation consist in drawing a new cocktail of the same size
         mutatedIndividual = newIndividualWithCocktailSize(ATCtree.nrow(), Smax, 1, temperature)[0];
         //computeRROutput = mutatedIndividual.computeRR(observationsMedication, observationsADR, upperBounds, beta, RRmax);
-        computePBinomOutput = mutatedIndividual.computePBinomial(observationsMedication, observationsADR,
-                                                                upperBounds, ADRProp,
+        computeGeomOutput = mutatedIndividual.computePHypergeom(observationsMedication, observationsADR,
+                                                                upperBounds, ADRCount,
+                                                                notADRCount,
                                                                 RRmax);
         //std::cout << "size : " << mutatedIndividual.getMedications().size() << '\n';
-        RRy_k = computePBinomOutput.first;
+        RRy_k = computeGeomOutput.first;
         //std::cout << "prev RR : " << RRx_k << " new RR : " << RRy_k << '\n';
 
         //to have an overview of the explored space (not in this method for the moment)
@@ -670,7 +671,7 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
         
 
         
-        if(belongToF(computePBinomOutput)){
+        if(belongToF(computeGeomOutput)){
           // with this mutation, our ration q(X|Y) / q(Y|X) = 1
           pAcceptation = exp(((RRy_k - RRx_k)/static_cast<double>(cocktail.getTemperature()))); 
           //std::cout << "proba d'acceptation : " << pAcceptation << '\n';
@@ -678,7 +679,7 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
           ++type1_move_inF;
           if(pAcceptation > pDraw){
             cocktail = mutatedIndividual;
-            currentBinom = computePBinomOutput;
+            currentGeom = computeGeomOutput;
             ++acceptedMove;
             ++accepted_type1;
           }
@@ -692,7 +693,7 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
         //type 2 mutation
         //if the selected indivudual is empty, the type 2 mutation cannot occur
 
-        RRx_k = currentBinom.first;
+        RRx_k = currentGeom.first;
         //get every vertex 0/1 for this patient
         vertexX = cocktail.getVertexList(ATCtree);
         
@@ -704,16 +705,17 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
         mutatedIndividual = type2Mutation(cocktail, ATCtree.nrow(), chosenVertex);
         
         //computeRROutput = mutatedIndividual.computeRR(observationsMedication, observationsADR, upperBounds, beta, RRmax);
-        computePBinomOutput = mutatedIndividual.computePBinomial(observationsMedication, observationsADR,
-                                                                upperBounds, ADRProp,
+        computeGeomOutput = mutatedIndividual.computePHypergeom(observationsMedication, observationsADR,
+                                                                upperBounds, ADRCount,
+                                                                notADRCount,
                                                                 RRmax);
-        RRy_k = computePBinomOutput.first;
+        RRy_k = computeGeomOutput.first;
         vertexY = mutatedIndividual.getVertexList(ATCtree);
         
         //to have an overview of the explored space
         //addPairToSet(mutatedIndividual_k, exploredPairs);
         
-        if(belongToF(computePBinomOutput)){
+        if(belongToF(computeGeomOutput)){
           pAcceptation = (exp(((RRy_k - RRx_k) / cocktail.getTemperature()))) * 
             (static_cast<double>(vertexX.size())/static_cast<double>(vertexY.size()));
           
@@ -721,7 +723,7 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
           ++type2_move_inF;
           if(pAcceptation > pDraw){
             cocktail = mutatedIndividual;
-            currentBinom = computePBinomOutput;
+            currentGeom = computeGeomOutput;
             ++acceptedMove;
             ++accepted_type2;
           }
@@ -731,30 +733,30 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
         ++type2_move;
       
     }
-    if(currentBinom.first < RRmax){
-      int index = 10 * currentBinom.first;
+    if(currentGeom.first < RRmax){
+      int index = 10 * currentGeom.first;
       ++RRDistribution[index];
       // in every cases we add the RR to the "normal returned" distribution, and if
       // more than beta persons take it, we add the RR to the other ditribution named
       // RRDistributionGreaterBeta
-      if(currentBinom.second.second > beta){ // second.first = N° of people taking the cocktail and having the ADR
+      if(currentGeom.second.second > beta){ // second.first = N° of people taking the cocktail and having the ADR
         ++RRDistributionGreaterBeta[index];
       }
     }
     else{ // since we have an RR max, we just increment the last elements of the distribution
       // if we are on a good RR we have a huge probability to stay on it -> maybe add the current RR only if it does not belong to the vector already ?
-      outstandingRR.push_back(currentBinom.first); // could remove this line ?
+      outstandingRR.push_back(currentGeom.first); // could remove this line ?
       ++RRDistribution[RRDistribution.size()-1];
     }
     
-    currentResult = std::make_pair(cocktail, currentBinom.first);
+    currentResult = std::make_pair(cocktail, currentGeom.first);
     //adding the result to the best result if we need to 
-    minBinom = addToBestCocktails(bestResults, currentResult, nbResults, minBinom,
+    minGeom = addToBestCocktails(bestResults, currentResult, nbResults, minGeom,
                                upperBounds);
     
-    if(currentBinom.second.second > beta){
-      minBinomBeta = addToBestCocktails(bestResultsBeta, currentResult, nbResults,
-                                       minBinomBeta, upperBounds);
+    if(currentGeom.second.second > beta){
+      minGeomBeta = addToBestCocktails(bestResultsBeta, currentResult, nbResults,
+                                       minGeomBeta, upperBounds);
     }
   }
   
