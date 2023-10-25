@@ -13,17 +13,17 @@ ATCtoNumeric <- function(patients, tree) {
 #'Convert the histogram returned by the DistributionApproximation function, to a real number ditribution
 #'(that can be used in a test for example) 
 #'
-#'@param tree : ATC tree (we assume that there is a column 'ATCCode' )
-#'@param patients : patients observations, for each patient we got a string containing every medication he takes/took
+#'@param vec : distribution returned by the DistributionAproximationFunction
 #'@export
 histogramToDitribution <- function(vec) {
     .Call(`_emcAdr_histogramToDitribution`, vec)
 }
 
-#'The Evolutionary MCMC method that runs the random walk
-NULL
+incorporateOustandingRRToDistribution <- function(outstandingRR, RRmax) {
+    .Call(`_emcAdr_incorporateOustandingRRToDistribution`, outstandingRR, RRmax)
+}
 
-#'The Evolutionary MCMC method that runs the random walk
+#'Function used to compare diverse metrics used in Disproportionality analysis
 NULL
 
 #'The Evolutionary MCMC method that runs the random walk
@@ -49,10 +49,40 @@ EMC <- function(n, ATCtree, observations, P_type1 = .25, P_type2 = .25, P_crosso
     .Call(`_emcAdr_EMC`, n, ATCtree, observations, P_type1, P_type2, P_crossover, nbIndividuals, nbResults, alpha, startingIndividuals, startingTemperatures)
 }
 
-DistributionApproximation <- function(epochs, ATCtree, observations, temperature_M1 = 1L, temperature_M2 = 1L, nbResults = 5L, Smax = 4L, p_type1 = .01) {
-    .Call(`_emcAdr_DistributionApproximation`, epochs, ATCtree, observations, temperature_M1, temperature_M2, nbResults, Smax, p_type1)
+#'The Evolutionary MCMC method that runs the random walk on a single cocktail
+#'
+#'@param epochs : number of step 
+#'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
+#'@param observation : real observation of the ADR based on the medications of each real patients
+#'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+#'
+#'@param temperature : starting temperature, default = 1
+#'@param p_type1: probability to operate type1 mutation. Note :
+#'the probability to operate the type 2 mutation is then 1 - P_type1. P_type1 must be in [0;1]. 
+#'@param alpha : a hyperparameter allowing us to manage to probability of adding a drug to the cocktail. The probability
+#' to add a drug to the cocktail is the following : \eqn{\frac12}{\alpha/n} Where n is the original size of the cocktail. 1 is the default value.
+#'
+#'@return if no problem return an array of the approximation of the RR distribution : the distribution of RR we've met; Otherwise the list is empty
+#'@export
+DistributionApproximation <- function(epochs, ATCtree, observations, temperature = 1L, nbResults = 5L, Smax = 4L, p_type1 = .01, beta = 4L, RRmax = 100L) {
+    .Call(`_emcAdr_DistributionApproximation`, epochs, ATCtree, observations, temperature, nbResults, Smax, p_type1, beta, RRmax)
 }
 
+#'Genetic algorithm, trying to reach the best cocktail (the one which maximize
+#'the fitness function, Related Risk in our case)
+#'
+#'@param epochs : number of step 
+#'@param nbIndividuals : size of the popultation
+#'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
+#'@param observation : real observation of the ADR based on the medications of each real patients
+#'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+#'@param p_crossover: probability to operate a crossover on the crossover phase.
+#'@param p_mutation: probability to operate a mutation after the crossover phase.
+#'@param nbElite : number of best individual we keep from generation to generation
+#'@param tournamentSize : size of the tournament (select the best individual be tween tournamentSize individuals) 
+#'
+#'@return if no problem return the best cocktail we found (according to the fitness function which is the Relative Risk)
+#'@export
 GeneticAlgorithm <- function(epochs, nbIndividuals, ATCtree, observations, p_crossover = .80, p_mutation = .01, nbElite = 0L, tournamentSize = 2L) {
     .Call(`_emcAdr_GeneticAlgorithm`, epochs, nbIndividuals, ATCtree, observations, p_crossover, p_mutation, nbElite, tournamentSize)
 }
@@ -62,7 +92,15 @@ GeneticAlgorithm <- function(epochs, nbIndividuals, ATCtree, observations, p_cro
 #'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
 #'@return the RR distribution among size 2 cocktail
 #'@export
-trueDistributionSizeTwoCocktail <- function(ATCtree, observations) {
-    .Call(`_emcAdr_trueDistributionSizeTwoCocktail`, ATCtree, observations)
+trueDistributionSizeTwoCocktail <- function(ATCtree, observations, beta) {
+    .Call(`_emcAdr_trueDistributionSizeTwoCocktail`, ATCtree, observations, beta)
+}
+
+MetricCalc <- function(cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount) {
+    .Call(`_emcAdr_MetricCalc`, cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount)
+}
+
+computeMetrics <- function(df, ATCtree, observations) {
+    .Call(`_emcAdr_computeMetrics`, df, ATCtree, observations)
 }
 

@@ -8,9 +8,7 @@
 histogramToDitribution(vec)
 }
 \arguments{
-\item{tree}{: ATC tree (we assume that there is a column 'ATCCode' )}
-
-\item{patients}{: patients observations, for each patient we got a string containing every medication he takes/took}
+\item{vec}{: distribution returned by the DistributionAproximationFunction}
 }
 \description{
 Convert the histogram returned by the DistributionApproximation function, to a real number ditribution

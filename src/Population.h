@@ -38,6 +38,10 @@ public:
   
   int bestIndividual() const;
   
+  std::vector<std::vector<int>> getMedications() const;
+  
+  std::vector<double> getRR() const;
+  
   void printPopulation(std::ostream& ost) const;
   
   void printSummary(int epoch, double populationMean, int populationBestIndex) const;

@@ -4,6 +4,9 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
+#ifdef _OPENMP
+  #include<omp.h>
+#endif
 #include "RcppArmadillo.h"
 
 class Individual{
@@ -34,7 +37,32 @@ public:
   
   std::pair<double, bool> computeRR(const Rcpp::List& medications,const Rcpp::LogicalVector& ADR,
                                     const Rcpp::DataFrame& ATCtree, bool deltaEmpty);
+  
+  std::pair<double, std::pair<int,int>> computeRR(const std::vector<std::vector<int>>& medications, 
+                                                  const Rcpp::LogicalVector& ADR,
+                                                  const std::vector<int>& upperBound, int beta,
+                                                  int RRmax);
+  // compute the -log(phyper) given the number of people having ADR and taking 
+  // this cocktail
+  std::pair<double, std::pair<int,int>> computePHypergeom(const std::vector<std::vector<int>>& medications,
+                                                          const Rcpp::LogicalVector& ADR,
+                                                          const std::vector<int>& upperBound,
+                                                          int ADRProportion, int notADRProportion,
+                                                          int geomMax) const;
+  
+  // compute the -log(pbinom) given the number of people having ADR and taking 
+  // this cocktail
+  std::pair<double, std::pair<int,int>> computePBinomial(const std::vector<std::vector<int>>& medications,
+                                                                     const Rcpp::LogicalVector& ADR,
+                                                                     const std::vector<int>& upperBound,
+                                                                     double ADRproportion,
+                                                                     int binomMax) const;
+  
   std::vector<std::pair<int,int>> getVertexList(const Rcpp::DataFrame& ATCtree) const;
+  // we use this function to determine whether a cocktail is true or not
+  // a true cocktail is a cocktail that does not contain a vertice and its son
+  // or a vertice and its father
+  bool isTrueCocktail(const std::vector<int>& upperBound) const;
   
   bool operator==(const Individual& ind) const;
   //the result is not important, we redefined this operator because of his utilization in "keepElite",

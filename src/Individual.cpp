@@ -24,7 +24,6 @@ bool Individual::matches(const std::vector<int>& observation, const std::vector<
     idx = 0;
     
     while (idx < observation.size() && !inIt){
-      //medix-1 because R index starts at 1 and the ATC tree is pretreated with R (will be changed ?)
       if(observation[idx] >= medIdx && observation[idx] < upperBound[medIdx]){
         inIt = true;
       }else{
@@ -138,6 +137,129 @@ std::pair<double, bool> Individual::computeRR(const Rcpp::List& medications,cons
   
 }
 
+std::pair<double, std::pair<int,int>> Individual::computeRR(const std::vector<std::vector<int>>& medications,const Rcpp::LogicalVector& ADR,
+                                 const std::vector<int>& upperBound, int beta, int RRmax){
+  int yesInDelt = 0, noInDelt = 0;
+  int yesNotInDelt = 0, noNotInDelt = 0;
+  double sumInDelt, sumNotInDelt;
+  
+  //if the cocktail is empty, the related risk is zero.
+  if(this->medications_.size() == 0)
+    return std::make_pair(0.0, std::make_pair(0,0));
+#ifdef _OPENMP
+  omp_set_num_threads(omp_get_num_procs());
+#pragma omp parallel for reduction(+:yesInDelt) reduction(+:noInDelt) reduction(+:yesNotInDelt) reduction(+:noNotInDelt)
+#endif
+    for(int i = 0; i < medications.size() ; ++i){
+    //does the i-th observations is included in the individual ?
+    bool isInDelta = this->matches(medications[i], upperBound);
+    
+    if(isInDelta){
+      if(ADR[i]){
+        ++yesInDelt;
+      }else{
+        ++noInDelt;
+      }
+    }
+    else{
+      if(ADR[i]){
+        ++yesNotInDelt;
+      }else{
+        ++noNotInDelt;
+      }
+    }
+    
+  }
+  sumInDelt = yesInDelt + noInDelt;
+  sumNotInDelt = yesNotInDelt + noNotInDelt;
+  int returnedYesInDelt = yesInDelt;
+  int returnedSumInDelt = sumInDelt;
+  //during the test the denominator was frequently 0 so I make it really small if it is 0 
+  //because if the denominator is 0 the numerator has to be 0 so the result would be 0 
+  //no matter the denominator, we have 
+  sumInDelt = (sumInDelt == 0) ? 1 : sumInDelt;
+  
+  double P_ADR_SEQ = static_cast<double>(yesInDelt) / static_cast<double>(sumInDelt);
+  double P_ADR_NotSEQ = static_cast<double>(yesNotInDelt) / static_cast<double>(sumNotInDelt);
+  
+  //same as the sumInDelt
+  P_ADR_NotSEQ = P_ADR_NotSEQ == 0 ? 0.00001 : P_ADR_NotSEQ;
+  double RR = std::min((P_ADR_SEQ / P_ADR_NotSEQ), static_cast<double>(RRmax));
+  return std::make_pair(RR, std::make_pair(returnedYesInDelt, returnedSumInDelt));
+  
+}
+
+std::pair<double, std::pair<int,int>> Individual::computePHypergeom(const std::vector<std::vector<int>>& medications,
+                                                        const Rcpp::LogicalVector& ADR,
+                                                        const std::vector<int>& upperBound,
+                                                        int ADRProportion, int notADRProportion,
+                                                        int geomMax) const{
+  int takingCocktail = 0;
+  int takingCocktailHavingADR = 0;
+  
+  //if the cocktail is empty, the phyper is zero.
+  if(this->medications_.size() == 0)
+    return std::make_pair(0.0, std::make_pair(0,0));
+#ifdef _OPENMP
+  omp_set_num_threads(omp_get_num_procs());
+#pragma omp parallel for reduction(+:takingCocktail) reduction(+:takingCocktailHavingADR)
+#endif
+  for(int i = 0; i < medications.size() ; ++i){
+    //does the i-th observations is included in the individual ?
+    bool isInDelta = this->matches(medications[i], upperBound);
+    if(isInDelta){
+      if(ADR[i]){
+        ++takingCocktailHavingADR;
+      }
+      ++takingCocktail;
+    }
+  }
+  
+  Rcpp::IntegerVector tmp{takingCocktailHavingADR-1};
+  
+  double phyper = -(Rcpp::phyper(tmp, ADRProportion, notADRProportion, takingCocktail, false, true)[0]);
+  phyper = std::min(phyper, static_cast<double>(geomMax));
+  
+  return std::make_pair(phyper, std::make_pair(takingCocktailHavingADR, takingCocktail));
+}
+
+std::pair<double, std::pair<int,int>> Individual::computePBinomial(const std::vector<std::vector<int>>& medications,
+                                                                    const Rcpp::LogicalVector& ADR,
+                                                                    const std::vector<int>& upperBound,
+                                                                    double ADRProportion,
+                                                                    int binomMax) const{
+  int takingCocktail = 0;
+  int takingCocktailHavingADR = 0;
+  
+  //if the cocktail is empty, the pbinom is zero.
+  if(this->medications_.size() == 0)
+    return std::make_pair(0.0, std::make_pair(0,0));
+#ifdef _OPENMP
+  omp_set_num_threads(omp_get_num_procs());
+#pragma omp parallel for reduction(+:takingCocktail) reduction(+:takingCocktailHavingADR)
+#endif
+  for(int i = 0; i < medications.size() ; ++i){
+    //does the i-th observations is included in the individual ?
+    bool isInDelta = this->matches(medications[i], upperBound);
+    if(isInDelta){
+      if(ADR[i]){
+        ++takingCocktailHavingADR;
+      } 
+      ++takingCocktail;
+    } 
+  }
+  
+  Rcpp::IntegerVector tmp{takingCocktailHavingADR-1};
+  
+  double pbinom = -(Rcpp::pbinom(tmp, takingCocktail, ADRProportion,false, true)[0]);
+  pbinom = std::min(pbinom, static_cast<double>(binomMax));
+  
+  return std::make_pair(pbinom, std::make_pair(takingCocktailHavingADR, takingCocktail));
+}
+
+  
+
+
 std::vector<std::pair<int,int>> Individual::getVertexList(const Rcpp::DataFrame& ATCtree) const{
   std::vector<std::pair<int,int>> returnedVec{0};
   
@@ -184,6 +306,23 @@ std::vector<std::pair<int,int>> Individual::getVertexList(const Rcpp::DataFrame&
   }
 
   return returnedVec;
+}
+
+
+bool Individual::isTrueCocktail(const std::vector<int>& upperBound) const{
+  if(medications_.size() <= 1)
+    return true;
+  
+  auto med = medications_;
+  std::sort(med.begin(), med.end());
+  for(int i = 0; i < med.size() - 1 ; ++i){
+    //if the cocktail contain a vertice and its son, we return false 
+    if(upperBound[med[i]] > med[i+1]){
+      return false;
+    }
+  }
+  // if we are here no father-son medications has been found
+  return true;
 }
 
 

@@ -10,5 +10,5 @@
 ## support within Armadillo prefers / requires it
 CXX_STD = CXX11
 
-PKG_CXXFLAGS = -I'/opt/homebrew/opt/libomp/include'
-PKG_LIBS = -L/opt/homebrew/opt/libomp/lib
+PKG_CXXFLAGS = -Xpreprocessor -fopenmp -I/opt/homebrew/opt/libomp/include
+PKG_LIBS = -L/opt/homebrew/opt/libomp/lib -lomp

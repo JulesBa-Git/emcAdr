@@ -12,6 +12,8 @@
 #' @export
 #'
 plot_evolution <- function(list, mean_color = "#F2A900", best_color = "#008080", xlab = "Epochs", ylab = "RR") {
+  library(dplyr)
+  library(ggplot2)
   
   epochs <- seq_along(list$meanFitnesses)
   
@@ -43,7 +45,10 @@ plot_evolution <- function(list, mean_color = "#F2A900", best_color = "#008080",
 #' @import ggplot2
 #' @importFrom dplyr data_frame
 #' @export
-plot_frequency <- function(freq_array, sqrt = T,binwidth = .3, hist_color = "#69b3a2", density_color = "#FF5733") {
+plot_frequency <- function(freq_array, sqrt = F, binwidth = .1, hist_color = "#69b3a2", density_color = "#FF5733",
+                           xlab = "RR") {
+  library(dplyr)
+  library(ggplot2)
   
   # Create a data frame from the returned value array
   if(sqrt){
@@ -55,10 +60,11 @@ plot_frequency <- function(freq_array, sqrt = T,binwidth = .3, hist_color = "#69
   }
   
   # Create histogram plot
-  ggplot(df, aes(x = x, y = ..density..)) +
+  ggplot(df, aes(x = x, y = after_stat(density))) +
     geom_histogram(binwidth = binwidth, fill = hist_color, color = "#e9ecef") +
-    labs(title = "The approximation of the distribution histogram", x = "RR", y = y_lab) +
-    theme_minimal() +
-    geom_density(color = density_color, size = 1, alpha = .2, fill = density_color)
+    labs(title = "The approximation of the distribution histogram", x = xlab, y = y_lab) +
+    theme_minimal()# +
+    #geom_density(color = density_color, size = 1, alpha = .2, fill = density_color)
 }
+
 

@@ -176,6 +176,27 @@ int Population::bestIndividual() const{
   return i_max;
 }
 
+std::vector<std::vector<int>> Population::getMedications() const{
+  std::vector<std::vector<int>> ret;
+  ret.reserve(individuals_.size());
+  
+  for(const auto& ind : individuals_){
+    ret.push_back(ind.second.getMedications());
+  }
+  
+  return ret;
+}
+
+std::vector<double> Population::getRR() const{
+  std::vector<double> ret;
+  ret.reserve(individuals_.size());
+  
+  for(const auto& ind : individuals_)
+    ret.push_back(ind.first);
+  
+  return ret;
+}
+
 void Population::printPopulation(std::ostream& ost) const{
   for(const auto& indiv : individuals_){
     ost << "RR : " << indiv.first << "\n medication : ";

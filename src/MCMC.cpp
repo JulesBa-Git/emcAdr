@@ -29,6 +29,32 @@ void addRRtoDistribution(const double RR,std::vector<unsigned int>& vec){
   vec[index]++;
 }
 
+double addToBestCocktails(std::vector<std::pair<Individual,double>>& bestResults,
+                        const std::pair<Individual,double>& currentResult,
+                        int nbResults, double minRR,const std::vector<int>& upperBound){
+  double newMinRR = minRR;
+  if(isNotInResultList(bestResults,currentResult) && currentResult.first.isTrueCocktail(upperBound)){
+    if(bestResults.size() < nbResults){
+      bestResults.emplace_back(currentResult);
+      newMinRR = minRR < currentResult.second ? minRR : currentResult.second;
+    }
+    else if(minRR < currentResult.second){
+      auto it = std::find_if(bestResults.begin(),bestResults.end(),
+                             [minRR](const std::pair<Individual,double>& p){return p.second == minRR;});
+      if(it != bestResults.end()){
+        bestResults.erase(it);
+      }
+      bestResults.emplace_back(currentResult);
+      auto tmpMin = *std::min_element(bestResults.begin(),bestResults.end(),
+                                      [](const std::pair<Individual,double>& lp,const std::pair<Individual,double>& rp){
+                                        return lp.second < rp.second; 
+                                      });
+      newMinRR = tmpMin.second;
+    }
+  }
+  return newMinRR;
+}
+
 void addPairToSet(const Individual& i, std::set<std::pair<int,int>>& p){
   int minPair,maxPair;
   
@@ -176,8 +202,12 @@ std::vector<Individual> newIndividualWithCocktailSize(int treeSize, int cocktail
     medicVec.reserve(cocktailSize);
     for(int j = 0; j < cocktailSize ; ++j){
       //Draw every medications for a patient 
-      num = trunc(Rcpp::runif(1,0,treeSize)[0]);
+      do
+      {
+        num = trunc(Rcpp::runif(1,0,treeSize)[0]);
+      } while(std::find(medicVec.begin(), medicVec.end(), num) != std::end(medicVec));
       medicVec.push_back(num);
+
     }
     returnedVec.push_back(Individual{medicVec,temperature});
     medicVec.clear();

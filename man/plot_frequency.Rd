@@ -6,10 +6,11 @@
 \usage{
 plot_frequency(
   freq_array,
-  sqrt = T,
-  binwidth = 0.3,
+  sqrt = F,
+  binwidth = 0.1,
   hist_color = "#69b3a2",
-  density_color = "#FF5733"
+  density_color = "#FF5733",
+  xlab = "RR"
 )
 }
 \arguments{

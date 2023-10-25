@@ -4,7 +4,7 @@
 \alias{trueDistributionSizeTwoCocktail}
 \title{The true RR distribution of cocktail of size 2}
 \usage{
-trueDistributionSizeTwoCocktail(ATCtree, observations)
+trueDistributionSizeTwoCocktail(ATCtree, observations, beta)
 }
 \arguments{
 \item{ATCtree}{: ATC tree with upper bound of the DFS (without the root)}

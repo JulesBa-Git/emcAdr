@@ -61,8 +61,7 @@ void ATCtoNumeric(DataFrame& patients,const DataFrame& tree) {
 //'Convert the histogram returned by the DistributionApproximation function, to a real number ditribution
 //'(that can be used in a test for example) 
 //'
-//'@param tree : ATC tree (we assume that there is a column 'ATCCode' )
-//'@param patients : patients observations, for each patient we got a string containing every medication he takes/took
+//'@param vec : distribution returned by the DistributionAproximationFunction
 //'@export
 // [[Rcpp::export]]
 Rcpp::NumericVector histogramToDitribution(const std::vector<int>& vec){
@@ -78,6 +77,24 @@ Rcpp::NumericVector histogramToDitribution(const std::vector<int>& vec){
   return Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(returnedVec));
 }
 
+// [[Rcpp::export]]
+Rcpp::NumericVector incorporateOustandingRRToDistribution(const std::vector<double>& outstandingRR, int RRmax){
+  std::vector<double> returnedVec;
+  returnedVec.resize((RRmax*10)+1);
+  
+  for(const auto& rr: outstandingRR){
+    int index;
+    if(rr < RRmax){
+      index= rr*10;
+    }
+    else{
+      index = returnedVec.size()-1;
+    }
+    ++returnedVec[index];
+  }
+  
+  return Rcpp::wrap(returnedVec);
+}
 /*** R
 #to test (there is hard coded path)
 treeATC <- read.csv("your/path/to/ATCtree")

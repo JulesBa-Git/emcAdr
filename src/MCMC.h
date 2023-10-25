@@ -25,6 +25,16 @@ std::pair<Individual,double> largerRR(const std::pair<Individual,double>& firstR
  //' @param the list of RR distribution
 void addRRtoDistribution(const double,std::vector<unsigned int>&);
 
+//' add a pair cocktail/RR in the bestResult set if it is needed
+//' 
+//' @param bestResults : The best current results of the random walk
+//' @param currentResult : The current state (cocktail) and the associated RR
+//' @param nbResults : the number of results the user want to have at the end of the random walk
+//' @param minRR : the minimum RR contained in the bestResults vector
+double addToBestCocktails(std::vector<std::pair<Individual,double>>& bestResults,
+                        const std::pair<Individual,double>& currentResult,
+                        int nbResults, double minRR, const std::vector<int>& upperBound);
+
 //' Add the pair to the set of explored pair if needed
 //' 
 //' @param i : the individual that may be added
