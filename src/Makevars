@@ -10,7 +10,7 @@
 ## support within Armadillo prefers / requires it
 CXX_STD = CXX11
 
-PKG_CXXFLAGS = -Xpreprocessor $(OMP_FLAGS) -I$(OMP_INCLUDE)
+PKG_CXXFLAGS = -Xpreprocessor $(OMP_FLAGS) -I$(OMP_INCLUDE) $(FPICFLAGS) 
 PKG_LIBS = -L$(OMP_LIBS) -lomp
 
 ifndef OMP_FLAGS
