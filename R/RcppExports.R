@@ -23,6 +23,9 @@ incorporateOustandingRRToDistribution <- function(outstandingRR, RRmax) {
     .Call(`_emcAdr_incorporateOustandingRRToDistribution`, outstandingRR, RRmax)
 }
 
+#'The true RR distribution of cocktail of size 3
+NULL
+
 #'Function used to compare diverse metrics used in Disproportionality analysis
 NULL
 
@@ -98,6 +101,10 @@ GeneticAlgorithm <- function(epochs, nbIndividuals, ATCtree, observations, p_cro
 #'@export
 trueDistributionSizeTwoCocktail <- function(ATCtree, observations, beta, num_thread = 1L) {
     .Call(`_emcAdr_trueDistributionSizeTwoCocktail`, ATCtree, observations, beta, num_thread)
+}
+
+trueDistributionSizeThreeCocktail <- function(ATCtree, observations, beta, num_thread = 1L) {
+    .Call(`_emcAdr_trueDistributionSizeThreeCocktail`, ATCtree, observations, beta, num_thread)
 }
 
 MetricCalc <- function(cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount, num_thread = 1L) {

@@ -118,6 +118,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// trueDistributionSizeThreeCocktail
+Rcpp::List trueDistributionSizeThreeCocktail(const DataFrame& ATCtree, const DataFrame& observations, int beta, int num_thread);
+RcppExport SEXP _emcAdr_trueDistributionSizeThreeCocktail(SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP betaSEXP, SEXP num_threadSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
+    Rcpp::traits::input_parameter< int >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
+    rcpp_result_gen = Rcpp::wrap(trueDistributionSizeThreeCocktail(ATCtree, observations, beta, num_thread));
+    return rcpp_result_gen;
+END_RCPP
+}
 // MetricCalc
 std::vector<double> MetricCalc(const std::vector<int>& cocktail, const std::vector<int>& ATClength, const std::vector<int>& upperBounds, const std::vector<std::vector<int>>& observationsMedication, const Rcpp::LogicalVector& observationsADR, int ADRCount, int num_thread);
 RcppExport SEXP _emcAdr_MetricCalc(SEXP cocktailSEXP, SEXP ATClengthSEXP, SEXP upperBoundsSEXP, SEXP observationsMedicationSEXP, SEXP observationsADRSEXP, SEXP ADRCountSEXP, SEXP num_threadSEXP) {
@@ -158,6 +172,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_DistributionApproximation", (DL_FUNC) &_emcAdr_DistributionApproximation, 10},
     {"_emcAdr_GeneticAlgorithm", (DL_FUNC) &_emcAdr_GeneticAlgorithm, 8},
     {"_emcAdr_trueDistributionSizeTwoCocktail", (DL_FUNC) &_emcAdr_trueDistributionSizeTwoCocktail, 4},
+    {"_emcAdr_trueDistributionSizeThreeCocktail", (DL_FUNC) &_emcAdr_trueDistributionSizeThreeCocktail, 4},
     {"_emcAdr_MetricCalc", (DL_FUNC) &_emcAdr_MetricCalc, 7},
     {"_emcAdr_computeMetrics", (DL_FUNC) &_emcAdr_computeMetrics, 4},
     {NULL, NULL, 0}
