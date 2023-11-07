@@ -528,23 +528,36 @@ Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, dou
 //'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
 //'
 //'@param temperature : starting temperature, default = 1
+//'@param nbResults : Number of returned solution (Cocktail of size Smax), 5 by default
+//'@param Smax : Size of the cocktail we approximate the distribution from
 //'@param p_type1: probability to operate type1 mutation. Note :
 //'the probability to operate the type 2 mutation is then 1 - P_type1. P_type1 must be in [0;1]. 
-//'@param alpha : a hyperparameter allowing us to manage to probability of adding a drug to the cocktail. The probability
-//' to add a drug to the cocktail is the following : \eqn{\frac12}{\alpha/n} Where n is the original size of the cocktail. 1 is the default value.
+//'@param beta : filter the minimum number of patients that must have taken the 
+//'cocktail for it to be considered 'significant', default is 4
+//'@param Upper bound of the considered Metric. 
+//'@param num_thread : Number of thread to run in parallel
 //'
 //'@return if no problem return an array of the approximation of the RR distribution : the distribution of RR we've met; Otherwise the list is empty
 //'@export
 //[[Rcpp::export]]
 Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const DataFrame& observations,
-                                              int temperature = 1, int nbResults = 5, int Smax = 4,
-                                              double p_type1 = .01, int beta = 4, int RRmax = 100){
+                                              int temperature = 1, int nbResults = 5, int Smax = 2,
+                                              double p_type1 = .01, int beta = 4, int max_Metric = 100,
+                                              int num_thread = 1){
   //arguments verification
   if(p_type1 > 1 || p_type1 < 0 || epochs < 1){
     std::cerr << "problem in the values of the parameter in the call of this function \n";
     return Rcpp::List();
   }
   
+  // OMP SET NUM THREAD = k, s.t. 1 <= k <= omp_get_num_procs()
+#ifdef _OPENMP
+  if(num_thread < 1 || num_thread > omp_get_num_procs()){
+    std::cerr << "Wrong thread number, it should be between 1 and " 
+              << omp_get_num_procs() << " \n";
+    return Rcpp::List();
+  }
+#endif
   
   Rcpp::List observationsMedicationTmp = observations["patientATC"];
   std::vector<std::vector<int>> observationsMedication;
@@ -562,14 +575,14 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
   
   //for the moment the distribution is bounded by 0 and RRmax
   //const int distribSize = 300;
-  std::vector<unsigned int> RRDistribution((RRmax*10) +1); // +1 stand for every RR over the RRmax value
+  std::vector<unsigned int> RRDistribution((max_Metric*10) +1); // +1 stand for every RR over the RRmax value
   unsigned int nbCocktailNotInPopulation = 0;
   std::vector<double> outstandingRR{};
   outstandingRR.reserve(10);
   std::pair<double, std::pair<int, int>> currentRR = std::make_pair(0.0,std::make_pair(0,0));
   std::pair<double, std::pair<int, int>> computeRROutput; // pair< RR, <N° of people taking the cocktail and having the ADR, N° of people taking the cocktail>>
   
-  std::vector<unsigned int> RRDistributionGreaterBeta((RRmax*10) +1);
+  std::vector<unsigned int> RRDistributionGreaterBeta((max_Metric*10) +1);
   
   //used in the phyper function
   int ADRCount = 0;
@@ -623,13 +636,13 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
   //initialization (every cocktail has to contain Smax medication)
   do{
     cocktail = newIndividualWithCocktailSize(ATCtree.nrow(), Smax, 1, temperature)[0];
-    //computeRROutput = cocktail.computeRR(observationsMedication, observationsADR, upperBounds, beta, RRmax);
+    //computeRROutput = cocktail.computeRR(observationsMedication, observationsADR, upperBounds, RRmax, num_thread);
     computeGeomOutput = cocktail.computePHypergeom(observationsMedication, observationsADR,
                                                    upperBounds, ADRCount, notADRCount,
-                                                   RRmax);
+                                                   max_Metric, num_thread);
     /*computePBinomOutput = cocktail.computePBinomial(observationsMedication, observationsADR,
                                                     upperBounds, ADRProp,
-                                                    RRmax);*/
+                                                    max_Metric, num_thread);*/
   } while (!belongToF(computeGeomOutput));
   //currentRR = computeRROutput;
   currentGeom = computeGeomOutput;
@@ -657,11 +670,12 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
         //mutatedIndividual = adjustedType1Mutation(cocktail, ATCtree.nrow(), alpha, emptySeq);
         //here the current type 1 mutation consist in drawing a new cocktail of the same size
         mutatedIndividual = newIndividualWithCocktailSize(ATCtree.nrow(), Smax, 1, temperature)[0];
-        //computeRROutput = mutatedIndividual.computeRR(observationsMedication, observationsADR, upperBounds, beta, RRmax);
+        //computeRROutput = mutatedIndividual.computeRR(observationsMedication, observationsADR, upperBounds, max_Metric, num_thread);
         computeGeomOutput = mutatedIndividual.computePHypergeom(observationsMedication, observationsADR,
                                                                 upperBounds, ADRCount,
                                                                 notADRCount,
-                                                                RRmax);
+                                                                max_Metric,
+                                                                num_thread);
         //std::cout << "size : " << mutatedIndividual.getMedications().size() << '\n';
         RRy_k = computeGeomOutput.first;
         //std::cout << "prev RR : " << RRx_k << " new RR : " << RRy_k << '\n';
@@ -704,11 +718,12 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
         
         mutatedIndividual = type2Mutation(cocktail, ATCtree.nrow(), chosenVertex);
         
-        //computeRROutput = mutatedIndividual.computeRR(observationsMedication, observationsADR, upperBounds, beta, RRmax);
+        //computeRROutput = mutatedIndividual.computeRR(observationsMedication, observationsADR, upperBounds, max_Metric, num_thread);
         computeGeomOutput = mutatedIndividual.computePHypergeom(observationsMedication, observationsADR,
                                                                 upperBounds, ADRCount,
                                                                 notADRCount,
-                                                                RRmax);
+                                                                max_Metric, 
+                                                                num_thread);
         RRy_k = computeGeomOutput.first;
         vertexY = mutatedIndividual.getVertexList(ATCtree);
         
@@ -733,7 +748,7 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
         ++type2_move;
       
     }
-    if(currentGeom.first < RRmax){
+    if(currentGeom.first < max_Metric){
       int index = 10 * currentGeom.first;
       ++RRDistribution[index];
       // in every cases we add the RR to the "normal returned" distribution, and if
@@ -898,7 +913,16 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
 //'@export
  //[[Rcpp::export]]
 Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataFrame& observations,
-                                           int beta){
+                                           int beta, int num_thread = 1){
+  
+#ifdef _OPENMP
+  if(num_thread < 1 || num_thread > omp_get_num_procs()){
+    std::cerr << "Wrong thread number, it should be between 1 and " 
+              << omp_get_num_procs() << " \n";
+    return Rcpp::List();
+  }
+#endif
+  
   Rcpp::List observationsMedicationTmp = observations["patientATC"];
   std::vector<std::vector<int>> observationsMedication;
   observationsMedication.reserve(observationsMedicationTmp.size());
@@ -948,10 +972,10 @@ Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataF
       med[1] = j;
       indiv.setMedications(med);
       std::cout << ++compteur << '\n';
-      //computeRROutput = indiv.computeRR(observationsMedication, observationsADR, upperBounds, beta, 8000);
+      //computeRROutput = indiv.computeRR(observationsMedication, observationsADR, upperBounds, 8000, num_thread);
       computePhyperOutput = indiv.computePHypergeom(observationsMedication, observationsADR,
                                                     upperBounds, ADRCount, notADRCount,
-                                                    8000);
+                                                    8000, num_thread);
       if(computePhyperOutput.second.second > 0){ // if the cocktail belongs to F
         if(computePhyperOutput.first < 30){
           int index = 10 * computePhyperOutput.first;
@@ -1085,7 +1109,7 @@ std::vector<double> MetricCalc(const std::vector<int> &cocktail,
                                const std::vector<int>& upperBounds,
                                const std::vector<std::vector<int>>& observationsMedication,
                                const Rcpp::LogicalVector& observationsADR,
-                               int ADRCount){
+                               int ADRCount, int num_thread = 1){
   
   std::vector<double> solution;
   solution.reserve(5);
@@ -1099,13 +1123,13 @@ std::vector<double> MetricCalc(const std::vector<int> &cocktail,
   //10 000 stads for the upper limit of the metrics we don't want any upper limit
   // 10 000 should never be encoutered
   auto RR_1_et_2 = ind.computeRR(observationsMedication, observationsADR, upperBounds,
-                0, 10000);
+                10000, num_thread);
   solution.push_back(RR_1_et_2.first);
 
   double phyper = ind.computePHypergeom(observationsMedication, observationsADR,
                                         upperBounds, ADRCount, 
                                         observationsMedication.size() - ADRCount,
-                                        10000).first;
+                                        10000, num_thread).first;
   solution.push_back(phyper);
   
   // -1 because we want P(X >= D1_D2_AE_count)
@@ -1116,10 +1140,10 @@ std::vector<double> MetricCalc(const std::vector<int> &cocktail,
   solution.push_back(pbinom);
   
   auto RR_1 = ind_D1.computeRR(observationsMedication, observationsADR, upperBounds,
-                                 0, 10000);
+                               10000, num_thread);
   
   auto RR_2 = ind_D2.computeRR(observationsMedication, observationsADR, upperBounds,
-                                 0, 10000);
+                               10000, num_thread);
   
   double CRR = std::max(RR_1.first, RR_2.first) == 0 ?
                 0 : RR_1_et_2.first / std::max(RR_1.first, RR_2.first);
@@ -1134,7 +1158,7 @@ std::vector<double> MetricCalc(const std::vector<int> &cocktail,
 
 //[[Rcpp::export]]
 Rcpp::DataFrame computeMetrics(const Rcpp::DataFrame& df, const DataFrame& ATCtree,
-                    const DataFrame& observations ){
+                    const DataFrame& observations, int num_thread ){
   
   std::vector<int> ATClength = ATCtree["ATC_length"];
   std::vector<int> upperBounds = ATCtree["upperBound"];
@@ -1163,7 +1187,8 @@ Rcpp::DataFrame computeMetrics(const Rcpp::DataFrame& df, const DataFrame& ATCtr
   Rcpp::List CocktailList =  df["Cocktail"];
   for(const std::vector<int>& cocktail : CocktailList){
     metricsResults = MetricCalc(cocktail, ATClength, upperBounds, 
-                                observationsMedication, observationsADR, ADRCount);
+                                observationsMedication, observationsADR, ADRCount,
+                                num_thread);
     int i = 0;
     for(auto& pair : metrics){
       pair.second.push_back(metricsResults[i++]);

@@ -40,15 +40,16 @@ public:
   
   std::pair<double, std::pair<int,int>> computeRR(const std::vector<std::vector<int>>& medications, 
                                                   const Rcpp::LogicalVector& ADR,
-                                                  const std::vector<int>& upperBound, int beta,
-                                                  int RRmax) const;
+                                                  const std::vector<int>& upperBound,
+                                                  int RRmax, int num_thread) const;
   // compute the -log(phyper) given the number of people having ADR and taking 
   // this cocktail
   std::pair<double, std::pair<int,int>> computePHypergeom(const std::vector<std::vector<int>>& medications,
                                                           const Rcpp::LogicalVector& ADR,
                                                           const std::vector<int>& upperBound,
                                                           int ADRProportion, int notADRProportion,
-                                                          int geomMax) const;
+                                                          int geomMax,
+                                                          int num_thread) const;
   
   // compute the -log(pbinom) given the number of people having ADR and taking 
   // this cocktail
@@ -56,7 +57,8 @@ public:
                                                                      const Rcpp::LogicalVector& ADR,
                                                                      const std::vector<int>& upperBound,
                                                                      double ADRproportion,
-                                                                     int binomMax) const;
+                                                                     int binomMax,
+                                                                     int num_thread) const;
   
   std::vector<std::pair<int,int>> getVertexList(const Rcpp::DataFrame& ATCtree) const;
   // we use this function to determine whether a cocktail is true or not

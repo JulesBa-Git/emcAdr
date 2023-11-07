@@ -67,8 +67,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // DistributionApproximation
-Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const DataFrame& observations, int temperature, int nbResults, int Smax, double p_type1, int beta, int RRmax);
-RcppExport SEXP _emcAdr_DistributionApproximation(SEXP epochsSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP temperatureSEXP, SEXP nbResultsSEXP, SEXP SmaxSEXP, SEXP p_type1SEXP, SEXP betaSEXP, SEXP RRmaxSEXP) {
+Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const DataFrame& observations, int temperature, int nbResults, int Smax, double p_type1, int beta, int max_Metric, int num_thread);
+RcppExport SEXP _emcAdr_DistributionApproximation(SEXP epochsSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP temperatureSEXP, SEXP nbResultsSEXP, SEXP SmaxSEXP, SEXP p_type1SEXP, SEXP betaSEXP, SEXP max_MetricSEXP, SEXP num_threadSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -80,8 +80,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type Smax(SmaxSEXP);
     Rcpp::traits::input_parameter< double >::type p_type1(p_type1SEXP);
     Rcpp::traits::input_parameter< int >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< int >::type RRmax(RRmaxSEXP);
-    rcpp_result_gen = Rcpp::wrap(DistributionApproximation(epochs, ATCtree, observations, temperature, nbResults, Smax, p_type1, beta, RRmax));
+    Rcpp::traits::input_parameter< int >::type max_Metric(max_MetricSEXP);
+    Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
+    rcpp_result_gen = Rcpp::wrap(DistributionApproximation(epochs, ATCtree, observations, temperature, nbResults, Smax, p_type1, beta, max_Metric, num_thread));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -104,21 +105,22 @@ BEGIN_RCPP
 END_RCPP
 }
 // trueDistributionSizeTwoCocktail
-Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataFrame& observations, int beta);
-RcppExport SEXP _emcAdr_trueDistributionSizeTwoCocktail(SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP betaSEXP) {
+Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataFrame& observations, int beta, int num_thread);
+RcppExport SEXP _emcAdr_trueDistributionSizeTwoCocktail(SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP betaSEXP, SEXP num_threadSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
     Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
     Rcpp::traits::input_parameter< int >::type beta(betaSEXP);
-    rcpp_result_gen = Rcpp::wrap(trueDistributionSizeTwoCocktail(ATCtree, observations, beta));
+    Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
+    rcpp_result_gen = Rcpp::wrap(trueDistributionSizeTwoCocktail(ATCtree, observations, beta, num_thread));
     return rcpp_result_gen;
 END_RCPP
 }
 // MetricCalc
-std::vector<double> MetricCalc(const std::vector<int>& cocktail, const std::vector<int>& ATClength, const std::vector<int>& upperBounds, const std::vector<std::vector<int>>& observationsMedication, const Rcpp::LogicalVector& observationsADR, int ADRCount);
-RcppExport SEXP _emcAdr_MetricCalc(SEXP cocktailSEXP, SEXP ATClengthSEXP, SEXP upperBoundsSEXP, SEXP observationsMedicationSEXP, SEXP observationsADRSEXP, SEXP ADRCountSEXP) {
+std::vector<double> MetricCalc(const std::vector<int>& cocktail, const std::vector<int>& ATClength, const std::vector<int>& upperBounds, const std::vector<std::vector<int>>& observationsMedication, const Rcpp::LogicalVector& observationsADR, int ADRCount, int num_thread);
+RcppExport SEXP _emcAdr_MetricCalc(SEXP cocktailSEXP, SEXP ATClengthSEXP, SEXP upperBoundsSEXP, SEXP observationsMedicationSEXP, SEXP observationsADRSEXP, SEXP ADRCountSEXP, SEXP num_threadSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -128,20 +130,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type observationsMedication(observationsMedicationSEXP);
     Rcpp::traits::input_parameter< const Rcpp::LogicalVector& >::type observationsADR(observationsADRSEXP);
     Rcpp::traits::input_parameter< int >::type ADRCount(ADRCountSEXP);
-    rcpp_result_gen = Rcpp::wrap(MetricCalc(cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount));
+    Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
+    rcpp_result_gen = Rcpp::wrap(MetricCalc(cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount, num_thread));
     return rcpp_result_gen;
 END_RCPP
 }
 // computeMetrics
-Rcpp::DataFrame computeMetrics(const Rcpp::DataFrame& df, const DataFrame& ATCtree, const DataFrame& observations);
-RcppExport SEXP _emcAdr_computeMetrics(SEXP dfSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP) {
+Rcpp::DataFrame computeMetrics(const Rcpp::DataFrame& df, const DataFrame& ATCtree, const DataFrame& observations, int num_thread);
+RcppExport SEXP _emcAdr_computeMetrics(SEXP dfSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP num_threadSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const Rcpp::DataFrame& >::type df(dfSEXP);
     Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
     Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
-    rcpp_result_gen = Rcpp::wrap(computeMetrics(df, ATCtree, observations));
+    Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
+    rcpp_result_gen = Rcpp::wrap(computeMetrics(df, ATCtree, observations, num_thread));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -151,11 +155,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_histogramToDitribution", (DL_FUNC) &_emcAdr_histogramToDitribution, 1},
     {"_emcAdr_incorporateOustandingRRToDistribution", (DL_FUNC) &_emcAdr_incorporateOustandingRRToDistribution, 2},
     {"_emcAdr_EMC", (DL_FUNC) &_emcAdr_EMC, 11},
-    {"_emcAdr_DistributionApproximation", (DL_FUNC) &_emcAdr_DistributionApproximation, 9},
+    {"_emcAdr_DistributionApproximation", (DL_FUNC) &_emcAdr_DistributionApproximation, 10},
     {"_emcAdr_GeneticAlgorithm", (DL_FUNC) &_emcAdr_GeneticAlgorithm, 8},
-    {"_emcAdr_trueDistributionSizeTwoCocktail", (DL_FUNC) &_emcAdr_trueDistributionSizeTwoCocktail, 3},
-    {"_emcAdr_MetricCalc", (DL_FUNC) &_emcAdr_MetricCalc, 6},
-    {"_emcAdr_computeMetrics", (DL_FUNC) &_emcAdr_computeMetrics, 3},
+    {"_emcAdr_trueDistributionSizeTwoCocktail", (DL_FUNC) &_emcAdr_trueDistributionSizeTwoCocktail, 4},
+    {"_emcAdr_MetricCalc", (DL_FUNC) &_emcAdr_MetricCalc, 7},
+    {"_emcAdr_computeMetrics", (DL_FUNC) &_emcAdr_computeMetrics, 4},
     {NULL, NULL, 0}
 };
 

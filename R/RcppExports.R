@@ -57,15 +57,19 @@ EMC <- function(n, ATCtree, observations, P_type1 = .25, P_type2 = .25, P_crosso
 #'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
 #'
 #'@param temperature : starting temperature, default = 1
+#'@param nbResults : Number of returned solution (Cocktail of size Smax), 5 by default
+#'@param Smax : Size of the cocktail we approximate the distribution from
 #'@param p_type1: probability to operate type1 mutation. Note :
 #'the probability to operate the type 2 mutation is then 1 - P_type1. P_type1 must be in [0;1]. 
-#'@param alpha : a hyperparameter allowing us to manage to probability of adding a drug to the cocktail. The probability
-#' to add a drug to the cocktail is the following : \eqn{\frac12}{\alpha/n} Where n is the original size of the cocktail. 1 is the default value.
+#'@param beta : filter the minimum number of patients that must have taken the 
+#'cocktail for it to be considered 'significant', default is 4
+#'@param Upper bound of the considered Metric. 
+#'@param num_thread : Number of thread to run in parallel
 #'
 #'@return if no problem return an array of the approximation of the RR distribution : the distribution of RR we've met; Otherwise the list is empty
 #'@export
-DistributionApproximation <- function(epochs, ATCtree, observations, temperature = 1L, nbResults = 5L, Smax = 4L, p_type1 = .01, beta = 4L, RRmax = 100L) {
-    .Call(`_emcAdr_DistributionApproximation`, epochs, ATCtree, observations, temperature, nbResults, Smax, p_type1, beta, RRmax)
+DistributionApproximation <- function(epochs, ATCtree, observations, temperature = 1L, nbResults = 5L, Smax = 2L, p_type1 = .01, beta = 4L, max_Metric = 100L, num_thread = 1L) {
+    .Call(`_emcAdr_DistributionApproximation`, epochs, ATCtree, observations, temperature, nbResults, Smax, p_type1, beta, max_Metric, num_thread)
 }
 
 #'Genetic algorithm, trying to reach the best cocktail (the one which maximize
@@ -92,15 +96,15 @@ GeneticAlgorithm <- function(epochs, nbIndividuals, ATCtree, observations, p_cro
 #'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
 #'@return the RR distribution among size 2 cocktail
 #'@export
-trueDistributionSizeTwoCocktail <- function(ATCtree, observations, beta) {
-    .Call(`_emcAdr_trueDistributionSizeTwoCocktail`, ATCtree, observations, beta)
+trueDistributionSizeTwoCocktail <- function(ATCtree, observations, beta, num_thread = 1L) {
+    .Call(`_emcAdr_trueDistributionSizeTwoCocktail`, ATCtree, observations, beta, num_thread)
 }
 
-MetricCalc <- function(cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount) {
-    .Call(`_emcAdr_MetricCalc`, cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount)
+MetricCalc <- function(cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount, num_thread = 1L) {
+    .Call(`_emcAdr_MetricCalc`, cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount, num_thread)
 }
 
-computeMetrics <- function(df, ATCtree, observations) {
-    .Call(`_emcAdr_computeMetrics`, df, ATCtree, observations)
+computeMetrics <- function(df, ATCtree, observations, num_thread) {
+    .Call(`_emcAdr_computeMetrics`, df, ATCtree, observations, num_thread)
 }
 

@@ -138,7 +138,7 @@ std::pair<double, bool> Individual::computeRR(const Rcpp::List& medications,cons
 }
 
 std::pair<double, std::pair<int,int>> Individual::computeRR(const std::vector<std::vector<int>>& medications,const Rcpp::LogicalVector& ADR,
-                                 const std::vector<int>& upperBound, int beta, int RRmax) const{
+                                 const std::vector<int>& upperBound, int RRmax, int num_thread) const{
   int yesInDelt = 0, noInDelt = 0;
   int yesNotInDelt = 0, noNotInDelt = 0;
   double sumInDelt, sumNotInDelt;
@@ -147,7 +147,7 @@ std::pair<double, std::pair<int,int>> Individual::computeRR(const std::vector<st
   if(this->medications_.size() == 0)
     return std::make_pair(0.0, std::make_pair(0,0));
 #ifdef _OPENMP
-  omp_set_num_threads(omp_get_num_procs());
+  omp_set_num_threads(num_thread);
 #pragma omp parallel for reduction(+:yesInDelt) reduction(+:noInDelt) reduction(+:yesNotInDelt) reduction(+:noNotInDelt)
 #endif
     for(int i = 0; i < medications.size() ; ++i){
@@ -193,7 +193,7 @@ std::pair<double, std::pair<int,int>> Individual::computePHypergeom(const std::v
                                                         const Rcpp::LogicalVector& ADR,
                                                         const std::vector<int>& upperBound,
                                                         int ADRProportion, int notADRProportion,
-                                                        int geomMax) const{
+                                                        int geomMax, int num_thread) const{
   int takingCocktail = 0;
   int takingCocktailHavingADR = 0;
   
@@ -201,7 +201,7 @@ std::pair<double, std::pair<int,int>> Individual::computePHypergeom(const std::v
   if(this->medications_.size() == 0)
     return std::make_pair(0.0, std::make_pair(0,0));
 #ifdef _OPENMP
-  omp_set_num_threads(omp_get_num_procs());
+  omp_set_num_threads(num_thread);
 #pragma omp parallel for reduction(+:takingCocktail) reduction(+:takingCocktailHavingADR)
 #endif
   for(int i = 0; i < medications.size() ; ++i){
@@ -227,7 +227,8 @@ std::pair<double, std::pair<int,int>> Individual::computePBinomial(const std::ve
                                                                     const Rcpp::LogicalVector& ADR,
                                                                     const std::vector<int>& upperBound,
                                                                     double ADRProportion,
-                                                                    int binomMax) const{
+                                                                    int binomMax,
+                                                                    int num_thread) const{
   int takingCocktail = 0;
   int takingCocktailHavingADR = 0;
   
@@ -235,7 +236,7 @@ std::pair<double, std::pair<int,int>> Individual::computePBinomial(const std::ve
   if(this->medications_.size() == 0)
     return std::make_pair(0.0, std::make_pair(0,0));
 #ifdef _OPENMP
-  omp_set_num_threads(omp_get_num_procs());
+  omp_set_num_threads(num_thread);
 #pragma omp parallel for reduction(+:takingCocktail) reduction(+:takingCocktailHavingADR)
 #endif
   for(int i = 0; i < medications.size() ; ++i){
