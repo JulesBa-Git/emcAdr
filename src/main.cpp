@@ -610,6 +610,7 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
   int accepted_type2 =0;
   int type1_move=0, type2_move=0;
   int type1_move_inF = 0, type2_move_inF = 0;
+  int falseAcceptedCocktailCount = 0, falseSampledCocktailCount= 0;
   
   double RRx_k, RRy_k, q_y_given_x, q_x_given_y, pMutation, pAcceptation, pDraw;
   double q_ratio;
@@ -764,6 +765,11 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
       ++RRDistribution[RRDistribution.size()-1];
     }
     
+    if(!cocktail.isTrueCocktail(upperBounds))
+      falseAcceptedCocktailCount++;
+    if(!mutatedIndividual.isTrueCocktail(upperBounds))
+      falseSampledCocktailCount++;
+        
     currentResult = std::make_pair(cocktail, currentGeom.first);
     //adding the result to the best result if we need to 
     minGeom = addToBestCocktails(bestResults, currentResult, nbResults, minGeom,
@@ -804,7 +810,9 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
   std::cout << "acceptance rate type1 mutation when the proposal is in F : " << static_cast<double>(accepted_type1) / static_cast<double>(type1_move_inF)<< "\n";
   std::cout << "acceptance rate type2 mutation when the proposal is in F : " << static_cast<double>(accepted_type2) / static_cast<double>(type2_move_inF)<< "\n";
   std::cout << "number of proposed cocktail that was taken by nobody in the population : " << nbCocktailNotInPopulation << '\n';
-
+  std::cout << "number of false cocktail sampled : " << falseSampledCocktailCount << '\n';
+  std::cout << "number of false cocktail concidered in the distribution during the run : " << falseAcceptedCocktailCount << '\n';
+  
   return Rcpp::List::create(Rcpp::Named("Distribution") = RRDistribution, Rcpp::Named("OutstandingRR") = outstandingRR, 
                             Rcpp::Named("bestCockatils") = returnedMed, Rcpp::Named("bestRR") = returnedRR,
                             Rcpp::Named("FilteredDistribution") = RRDistributionGreaterBeta,
