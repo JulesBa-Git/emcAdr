@@ -4,6 +4,9 @@
 #include "MCMC.h"
 #include <queue>
 
+using RealMatrix = std::vector<std::vector<double>>;
+using IntMatrix = std::vector<std::vector<int>>;
+
 class Population{
 public:
   Population() = default;
@@ -21,8 +24,11 @@ public:
   
   void addAnIndividualToPopulation(const std::pair<double,Individual>& ind);
   
-  void evaluate(const Rcpp::List& medications, const Rcpp::LogicalVector& ADR
-                  , const Rcpp::DataFrame& ATCtree);
+  void evaluate(const std::vector<std::vector<int>>& medications,
+                const Rcpp::LogicalVector& ADR,
+                const std::vector<int>& upperBound, int ADR_proportion,
+                int not_ADR_proportion, int geom_max, int num_thread);
+  
   void keepElite(int nbElite, Population& matingPool) const;
   
   void tournamentSelection(int tournamentSize, Population& matingPool, int nbDrawing) const;
@@ -31,6 +37,17 @@ public:
                  const Rcpp::DataFrame& ATCtree, double p_crossover);
   
   void mutate(int nbElite, double p_mutation, const Rcpp::DataFrame& ATCtree);
+  
+  RealMatrix initSimilarityMatrix() const;
+  
+  std::pair<IntMatrix, std::vector<int>> pretraitement(const std::vector<int>& depth,
+                                                       const std::vector<int>& father) const;
+  
+  double dist_norm(int i, int j, const IntMatrix& M, const std::vector<int>& idx) const;
+  
+  RealMatrix similarity(const IntMatrix& M, const std::vector<int>& idx) const;
+  
+  void penalize(const std::vector<int>& depth, const std::vector<int>& father);
   
   void clear();
   

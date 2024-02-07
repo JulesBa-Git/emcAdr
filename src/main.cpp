@@ -828,6 +828,8 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
 //'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
 //'@param observation : real observation of the ADR based on the medications of each real patients
 //'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+//'@param diversity : enable the diversity mechanism of the algorithm
+//' (favor the diversity of cocktail in the population)
 //'@param p_crossover: probability to operate a crossover on the crossover phase.
 //'@param p_mutation: probability to operate a mutation after the crossover phase.
 //'@param nbElite : number of best individual we keep from generation to generation
@@ -836,8 +838,11 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
 //'@return if no problem return the best cocktail we found (according to the fitness function which is the Relative Risk)
 //'@export
 //[[Rcpp::export]]
-Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCtree, const DataFrame& observations,
-                            double p_crossover = .80, double p_mutation = .01, int nbElite = 0, int tournamentSize = 2){
+Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCtree, 
+                            const DataFrame& observations, int num_thread = 1, 
+                            bool diversity = false, double p_crossover = .80,
+                            double p_mutation = .01, int nbElite = 0, 
+                            int tournamentSize = 2){
   //arguments verification
   if(p_crossover > 1 || p_crossover < 0 || nbIndividuals < 1 || p_mutation > 1 || p_mutation < 0 || epochs < 1){
     std::cerr << "problem in the values of the parameter in the call of this function \n";
@@ -847,31 +852,74 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
     std::cerr << "the tournament size and the nbElite parameters must be less equal than the number of individuals \n";
     return Rcpp::List();
   }
-  Rcpp::List observationsMedication = observations["patientATC"];
+  // OMP SET NUM THREAD = k, s.t. 1 <= k <= omp_get_num_procs()
+#ifdef _OPENMP
+  if(num_thread < 1 || num_thread > omp_get_num_procs()){
+    std::cerr << "Wrong thread number, it should be between 1 and " 
+              << omp_get_num_procs() << " \n";
+    return Rcpp::List();
+  }
+#endif
+  
+  //since there is a diversity mechanism, we may not want to set an upper bound
+  // to the metric (here Phypergeometric), so we put it equal to INT_MAX
+  // we may want to put this as a parameter
+  int max_metric = INT_MAX;
+  
+  Rcpp::List observationsMedicationTmp = observations["patientATC"];
+  std::vector<std::vector<int>> observationsMedication;
+  observationsMedication.reserve(observationsMedicationTmp.size());
+  for(int i =0; i < observationsMedicationTmp.size(); ++i){
+    observationsMedication.push_back(observationsMedicationTmp[i]);
+  }
+  
   Rcpp::LogicalVector observationsADR = observations["patientADR"];
   std::vector<int> ATClength = ATCtree["ATC_length"];
   std::vector<int> upperBounds = ATCtree["upperBound"];
+  std::vector<int> depth, father;
+  std::tie(depth, father) = treeDepthFather(ATClength);
 
+  int ADRCount = 0;
+  for(const auto& adr : observationsADR){
+    if(adr)
+      ++ADRCount;
+  }
+  int notADRCount = observationsMedication.size() - ADRCount;
+  
   //generate the initial population randomly (do we consider an Smax ?)
   double meanMedicationPerObs = meanMedications(observationsMedication) - 1;
   Population population(ATCtree.nrow(), nbIndividuals, meanMedicationPerObs);
   Population matingPool(nbIndividuals);
   
-  std::vector<double> meanRR;
-  meanRR.reserve(epochs);
-  std::vector<double> bestRR;
-  bestRR.reserve(epochs);
+  std::vector<double> meanScore;
+  meanScore.reserve(epochs);
+  std::vector<double> bestScore;
+  bestScore.reserve(epochs);
   int bestIndividualIndex;
   
   int remainingDraw = 0;
   
+  std::vector<double> score_before_penalization;
+  score_before_penalization.reserve(population.getIndividuals().size());
+  
   //here we may want to have a more sophisticated stopping condition (like, if the RR is 
-  //significantly high given the previous calculated ditribution)
+  //significantly high given the previous calculated distribution)
   for(int i =0; i < epochs; ++i){
+    
     //1st : fit every individual
-    population.evaluate(observationsMedication, observationsADR, ATCtree);
- 
-    //2nd : make a selection given every individual fitness and apply the crossover on the selected individual
+    population.evaluate(observationsMedication, observationsADR, upperBounds,
+                        ADRCount, notADRCount, max_metric, num_thread);
+    
+    for(const auto& ind : population.getIndividuals()){
+      score_before_penalization.push_back(ind.first);
+    }
+    
+    //do we apply the diversity mechanism ?
+    if(diversity){
+      population.penalize(depth,father);
+    }
+    
+    //2nd : make a ss and apply the crossover on the selected individual
     //keep the elite first
     population.keepElite(nbElite, matingPool);
 
@@ -888,29 +936,31 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
     population = matingPool;
     matingPool.clear();
     
-    meanRR.push_back(population.getMean());
+    meanScore.push_back(population.getMean());
     bestIndividualIndex = population.bestIndividual();
-    bestRR.push_back(population.getIndividuals()[bestIndividualIndex].first);
-    population.printSummary(i, meanRR[i], bestIndividualIndex);
+    bestScore.push_back(population.getIndividuals()[bestIndividualIndex].first);
+    population.printSummary(i, meanScore[i], bestIndividualIndex);
+    score_before_penalization.clear();
     
   }
-  population.evaluate(observationsMedication, observationsADR, ATCtree);
+  population.evaluate(observationsMedication, observationsADR, upperBounds,
+                      ADRCount, notADRCount, max_metric, num_thread);
 
   //output the population 
   std::vector<std::vector<int>> medications;
   medications.reserve(nbIndividuals);
-  std::vector<double> populationRR;
-  populationRR.reserve(nbIndividuals);
+  std::vector<double> populationScore;
+  populationScore.reserve(nbIndividuals);
   
   medications = population.getMedications();
-  populationRR = population.getRR();
+  populationScore = population.getRR();
 
   
   Rcpp::List returnedPop = Rcpp::List::create(Rcpp::Named("cocktails") = medications,
-                                              Rcpp::Named("RR") = populationRR);
+                                              Rcpp::Named("score") = populationScore);
   
-  return Rcpp::List::create(Rcpp::Named("meanFitnesses") = meanRR,
-                            Rcpp::Named("BestFitnesses") = bestRR,
+  return Rcpp::List::create(Rcpp::Named("meanFitnesses") = meanScore,
+                            Rcpp::Named("BestFitnesses") = bestScore,
                             Rcpp::Named("FinalPopulation") = returnedPop);
 }
 

@@ -8,7 +8,19 @@ double meanMedications(const Rcpp::List& observations){
     sum += ind.size();
   }
   
-  return (sum / observations.size());
+  return observations.size() >0 ? (sum / static_cast<double>(observations.size())) : 0 ;
+}
+
+double meanMedications(const std::vector<std::vector<int>>& observations){
+  double final_sum = std::accumulate(
+    observations.begin(), observations.end(), 0.0,
+    [](double sum, const std::vector<int>& innerVector) {
+      return sum + innerVector.size();
+    }
+  );
+  
+  return observations.size() > 0 ? final_sum / static_cast<double>(observations.size()):
+    0;
 }
 
 std::pair<Individual,double> largerRR(const std::pair<Individual,double>& firstRR, const std::pair<Individual,double>& secRR,
@@ -350,4 +362,31 @@ Individual crossoverMutation(const Individual& indiv1, const Individual& indiv2,
   
   return {newMedi, indiv1.getTemperature()};
 }
+
+std::pair<std::vector<int>,std::vector<int>> treeDepthFather(const std::vector<int>& ATC_length){
+ std::vector<int> depth, pere, pere_crt;
+ depth.reserve(ATC_length.size());
+ pere.reserve(ATC_length.size());
+ pere_crt.resize(5); // we need the father for each depth
+ pere_crt[0] = -1; // father of depth 1 node is -1
+ 
+ for(int i = 0; i < ATC_length.size(); ++i){
+   if(ATC_length[i] > 1 && ATC_length[i] < 7){
+     depth.push_back(ATC_length[i] -1);
+   }
+   else if(ATC_length[i] == 7){
+     depth.push_back(5);
+   }
+   else{
+     depth.push_back(1);
+   }
+   
+   pere.push_back(pere_crt[depth[i]-1]);
+   if(depth[i] != 5){
+     pere_crt[depth[i]] = i;
+   }
+ }
+ return {depth, pere};
+}
+
 

@@ -96,6 +96,7 @@ Rcpp::NumericVector incorporateOustandingRRToDistribution(const std::vector<doub
   return Rcpp::wrap(returnedVec);
 }
 /*** R
+library(emcAdr)
 #to test (there is hard coded path)
 treeATC <- read.csv("your/path/to/ATCtree")
 patientsATC <- read.csv("your/path/to/testPatientATCList")

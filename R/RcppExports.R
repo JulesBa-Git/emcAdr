@@ -83,6 +83,8 @@ DistributionApproximation <- function(epochs, ATCtree, observations, temperature
 #'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
 #'@param observation : real observation of the ADR based on the medications of each real patients
 #'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+#'@param diversity : enable the diversity mechanism of the algorithm
+#' (favor the diversity of cocktail in the population)
 #'@param p_crossover: probability to operate a crossover on the crossover phase.
 #'@param p_mutation: probability to operate a mutation after the crossover phase.
 #'@param nbElite : number of best individual we keep from generation to generation
@@ -90,8 +92,8 @@ DistributionApproximation <- function(epochs, ATCtree, observations, temperature
 #'
 #'@return if no problem return the best cocktail we found (according to the fitness function which is the Relative Risk)
 #'@export
-GeneticAlgorithm <- function(epochs, nbIndividuals, ATCtree, observations, p_crossover = .80, p_mutation = .01, nbElite = 0L, tournamentSize = 2L) {
-    .Call(`_emcAdr_GeneticAlgorithm`, epochs, nbIndividuals, ATCtree, observations, p_crossover, p_mutation, nbElite, tournamentSize)
+GeneticAlgorithm <- function(epochs, nbIndividuals, ATCtree, observations, num_thread = 1L, diversity = FALSE, p_crossover = .80, p_mutation = .01, nbElite = 0L, tournamentSize = 2L) {
+    .Call(`_emcAdr_GeneticAlgorithm`, epochs, nbIndividuals, ATCtree, observations, num_thread, diversity, p_crossover, p_mutation, nbElite, tournamentSize)
 }
 
 #'The true RR distribution of cocktail of size 2

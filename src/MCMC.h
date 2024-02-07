@@ -7,11 +7,17 @@
 #include <cmath>
 #include <algorithm>
 #include <set>
+#include <numeric>
 
 //' Get the average number of medications taken by a patient (made for the observations set)
 //'
 //'@param observations : a list of medications for each patient 
 double meanMedications(const Rcpp::List& observations);
+
+//' Get the average number of medications taken by a patient (made for the observations set)
+//'
+//'@param observations : a C++ vector of medications for each patient 
+double meanMedications(const std::vector<std::vector<int>>& observations);
 
 //' return the larger RR and the corresponding individual
 //' 
@@ -160,5 +166,12 @@ Individual type2Mutation(const Individual& indiv, int treeSize, const std::pair<
 //' @return the mutated individual
 Individual crossoverMutation(const Individual& indiv,const Individual& indiv2,const Rcpp::DataFrame& ATCtree,
                              int selectedNode, int upperBound);
+
+//'Return the depth and the father of each node of the ATC tree given in parameter
+//'
+//'@param ATC_length : the atc_length vector of the ATC tree
+//'
+//'@return : first = the depth of each node ; second = father of each node
+std::pair<std::vector<int>,std::vector<int>> treeDepthFather(const std::vector<int>& ATC_length);
 
 #endif

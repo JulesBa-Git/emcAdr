@@ -25,10 +25,14 @@ void Population::addAnIndividualToPopulation(const std::pair<double,Individual>&
   individuals_.push_back(ind);
 }
 
-void Population::evaluate(const Rcpp::List& medications, const Rcpp::LogicalVector& ADR
-                , const Rcpp::DataFrame& ATCtree){
+void Population::evaluate(const std::vector<std::vector<int>>& medications,
+                          const Rcpp::LogicalVector& ADR,
+                          const std::vector<int>& upperBound, int ADR_proportion,
+                          int not_ADR_proportion, int geom_max, int num_thread){
   for(auto& indiv : individuals_){
-    indiv.first = indiv.second.computeRR(medications, ADR, ATCtree);
+    indiv.first = indiv.second.computePHypergeom(medications, ADR, upperBound,
+                                                 ADR_proportion, not_ADR_proportion,
+                                                 geom_max, num_thread).first;
   }
 }
 
@@ -53,6 +57,7 @@ void Population::keepElite(int nbElite, Population& matingPool) const{
   }
 }
 
+//we may want to return the mating pool instead of passing it by reference in parameter
 void Population::tournamentSelection(int tournamentSize, Population& matingPool, int nbDrawing) const{
   int popSize = individuals_.size();
   int indexDrawing;
@@ -156,6 +161,133 @@ void Population::mutate(int nbElite, double p_mutation, const Rcpp::DataFrame& A
   }
 }
 
+std::pair<IntMatrix, std::vector<int>> Population::pretraitement(const std::vector<int>& depth,
+                                                                 const std::vector<int>& father) const{
+  IntMatrix M;
+  int number_of_medication = std::accumulate(individuals_.begin(), individuals_.end(), 0,
+                  [](int a, const std::pair<double,Individual>& p){
+                    return a + p.second.getMedications().size();
+                  });
+  M.resize(number_of_medication);
+  for(auto& line : M){
+    line.reserve(6);
+  }
+  
+  std::vector<int> idx;
+  idx.reserve(individuals_.size());
+  int index = 0;
+  int medline = 0;
+  for(int i = 0; i < individuals_.size(); ++i){
+    for(const auto& med : individuals_[i].second.getMedications()){
+      int pred = med;
+      //if we are not on a leaf 
+      for(int j = 0; j < 5-depth[med]; ++j){
+        M[medline].push_back(med);
+      }
+      //then we use the regular treatment
+      while(pred != -1){
+        M[medline].push_back(pred);
+        pred = father[pred];
+      }
+      M[medline].push_back(-1);
+      ++medline;
+    }
+    idx.push_back(index);
+    index+= individuals_[i].second.getMedications().size();
+  }
+  
+  return {M, idx};
+}
+
+RealMatrix Population::initSimilarityMatrix() const{
+  RealMatrix sim;
+  sim.resize(individuals_.size());
+  for(auto& vec : sim){
+    vec.resize(individuals_.size(),-1);
+  }
+  
+  return sim;
+}
+
+double Population::dist_norm(int i, int j, const IntMatrix& M, const std::vector<int>& idx) const{
+  //if j == idx.size -1 the last index of a medication of C_j is M.size()-1 (last row of M)
+  int max_idx_j = j == idx.size()-1 ? M.size() : idx[j+1];
+  int max_idx_i = idx[i+1];
+  int min_idx_i = idx[i], min_idx_j = idx[j];
+  double ATC_height = 5;
+
+  std::vector<int> indexC1(max_idx_i - min_idx_i);
+  std::iota(indexC1.begin(), indexC1.end(), min_idx_i);
+  std::vector<int> indexC2(max_idx_j - min_idx_j);
+  std::iota(indexC2.begin(), indexC2.end(), min_idx_j);
+  
+  std::vector<int> deleteC1;
+  deleteC1.reserve(indexC1.size());
+  int depth = 0;
+  double cost = 0;
+  int initial_length = indexC1.size() + indexC2.size();
+  
+  while(!indexC1.empty() && !indexC2.empty()){
+    for(const auto& idx1 : indexC1){
+      for(const auto& idx2 : indexC2){
+        if(M[idx1][depth] == M[idx2][depth]){
+          deleteC1.push_back(idx1);
+          cost+= depth;
+          indexC2.erase(std::remove(indexC2.begin(), indexC2.end(), idx2),
+                        indexC2.end());
+          break;
+        }
+      }
+    }
+    indexC1.erase(std::remove_if(indexC1.begin(), indexC1.end(), 
+                                 [&deleteC1](int value){
+                                   return std::find(deleteC1.begin(), deleteC1.end(), value) != deleteC1.end();
+                                 }), indexC1.end());
+    deleteC1.clear();
+    ++depth;
+  }
+  
+  // we add to the cost the cost of adding remaining drugs, the cost is :
+  //number of drugs to add times cost of adding which is (ATC_tree height / 2)
+  // and the ATC height is 5
+  double insertion_cost = (ATC_height/2.0);
+  cost += (indexC1.size() + indexC2.size()) * insertion_cost; 
+  
+  return cost / (static_cast<double>(initial_length) * insertion_cost);
+}
+
+RealMatrix Population::similarity(const IntMatrix& M, const std::vector<int>& idx) const{
+  RealMatrix S = initSimilarityMatrix();
+  for(int i = 0 ; i < idx.size()-1; ++i){
+    S[i][i] = 1; // a cocktail have a perfect similarity with himself
+    for(int j = i+1; j < idx.size(); ++j){
+      if(S[i][j] == -1){
+        //distance from cocktail i to cocktail j is the same as the distance of
+        //cocktail j to cocktail i
+        
+        double sim = 1-dist_norm(i,j,M,idx);
+        
+        S[i][j] = sim;
+        S[j][i] = sim;
+      }
+    }
+  }
+  return S;
+}
+
+
+void Population::penalize(const std::vector<int>& depth, const std::vector<int>& father){
+  IntMatrix M;
+  std::vector<int> indexM;
+
+  std::tie(M, indexM) = pretraitement(depth,father);
+
+  RealMatrix S = similarity(M, indexM);
+  for(int i = 0 ; i < individuals_.size(); ++i){
+    individuals_[i].first = (individuals_[i].first / std::accumulate(S[i].begin(), S[i].end(), 0.0));
+  }
+}
+
 void Population::clear(){
   individuals_.clear();
 }
@@ -205,7 +337,7 @@ void Population::printPopulation(std::ostream& ost) const{
 }
 
 void Population::printSummary(int epoch, double populationMean, int populationBestIndex) const{
-  std::cout << "epoch : " << epoch << " | mean : " << populationMean << " | best RR : ";
+  std::cout << "epoch : " << epoch << " | mean : " << populationMean << " | best score : ";
   std::cout << individuals_[populationBestIndex].first << " | best cocktail : ";
   individuals_[populationBestIndex].second.printMedications();
 }
