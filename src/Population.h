@@ -36,7 +36,8 @@ public:
   void crossover(int nbElite, const std::vector<int>& ATClength, const std::vector<int>& upperBounds,
                  const Rcpp::DataFrame& ATCtree, double p_crossover);
   
-  void mutate(int nbElite, double p_mutation, const Rcpp::DataFrame& ATCtree);
+  void mutate(int nbElite, double p_mutation, const Rcpp::DataFrame& ATCtree,
+              const std::vector<int>& upperBounds, double alpha); 
   
   RealMatrix initSimilarityMatrix() const;
   

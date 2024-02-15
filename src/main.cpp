@@ -842,7 +842,7 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
                             const DataFrame& observations, int num_thread = 1, 
                             bool diversity = false, double p_crossover = .80,
                             double p_mutation = .01, int nbElite = 0, 
-                            int tournamentSize = 2){
+                            int tournamentSize = 2, double alpha = 1){
   //arguments verification
   if(p_crossover > 1 || p_crossover < 0 || nbIndividuals < 1 || p_mutation > 1 || p_mutation < 0 || epochs < 1){
     std::cerr << "problem in the values of the parameter in the call of this function \n";
@@ -905,6 +905,12 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
   //here we may want to have a more sophisticated stopping condition (like, if the RR is 
   //significantly high given the previous calculated distribution)
   for(int i =0; i < epochs; ++i){
+    int faux_cocktails =0;
+    for(const auto& ind : population.getIndividuals()){
+      faux_cocktails += ind.second.isTrueCocktail(upperBounds) ? 0 : 1;
+    }
+    
+    std::cout << "nombre de faux cocktail début boucle: " << faux_cocktails << '\n';
     
     //1st : fit every individual
     population.evaluate(observationsMedication, observationsADR, upperBounds,
@@ -930,8 +936,16 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
     //operate a crossover over the mating pool 
     matingPool.crossover(nbElite, ATClength, upperBounds, ATCtree, p_crossover);
 
+    faux_cocktails =0;
+    for(const auto& ind : matingPool.getIndividuals()){
+      faux_cocktails += ind.second.isTrueCocktail(upperBounds) ? 0 : 1;
+    } 
+    
+    std::cout << "nombre de faux cocktail après crossover: " << faux_cocktails << '\n';
+    
     //operate a mutation over the mating pool
-    matingPool.mutate(nbElite, p_mutation, ATCtree);
+    matingPool.mutate(nbElite, p_mutation, ATCtree, upperBounds, alpha);
+    
     //3rd : replace the population
     population = matingPool;
     matingPool.clear();
@@ -1349,7 +1363,7 @@ std::vector<double> MetricCalc(const std::vector<int> &cocktail,
 
 //[[Rcpp::export]]
 Rcpp::DataFrame computeMetrics(const Rcpp::DataFrame& df, const DataFrame& ATCtree,
-                    const DataFrame& observations, int num_thread ){
+                    const DataFrame& observations, int num_thread = 1 ){
   
   std::vector<int> ATClength = ATCtree["ATC_length"];
   std::vector<int> upperBounds = ATCtree["upperBound"];

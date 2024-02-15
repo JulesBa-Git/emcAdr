@@ -88,7 +88,7 @@ void Population::crossover(int nbElite, const std::vector<int>& ATClength, const
   int remainingIndividuals = individuals_.size() - nbElite;
   int selectedNode;
   int upperBound;
-  Individual tmp;
+  Individual tmp, tmp1, tmp2;
   double draw;
   
 
@@ -97,16 +97,25 @@ void Population::crossover(int nbElite, const std::vector<int>& ATClength, const
     // With probability p_crossover we opperate a crossover, otherwise we let the individuals as it is
     if(draw <= p_crossover){
       do{
-        selectedNode = trunc(Rcpp::runif(1,0,ATCtree.nrow())[0]);
-      } while (ATClength[selectedNode] == 7);
-      
-      upperBound = upperBounds[selectedNode];
-      
-      tmp = individuals_[i].second;
-      individuals_[i].second = crossoverMutation(individuals_[i].second, individuals_[i+1].second, ATCtree,
-                                                 selectedNode, upperBound);
-      individuals_[i+1].second = crossoverMutation(individuals_[i+1].second, tmp, ATCtree,
-                                                   selectedNode, upperBound);
+        do{
+          selectedNode = trunc(Rcpp::runif(1,0,ATCtree.nrow())[0]);
+        } while (ATClength[selectedNode] == 7);
+        
+        upperBound = upperBounds[selectedNode];
+        
+        tmp = individuals_[i].second;
+        tmp1 = crossoverMutation(individuals_[i].second, individuals_[i+1].second, ATCtree,
+                                 selectedNode, upperBound);
+        //individuals_[i].second = crossoverMutation(individuals_[i].second, individuals_[i+1].second, ATCtree,
+        //                                           selectedNode, upperBound);
+        tmp2 = crossoverMutation(individuals_[i+1].second, tmp, ATCtree,
+                                 selectedNode, upperBound);
+        //individuals_[i+1].second = crossoverMutation(individuals_[i+1].second, tmp, ATCtree,
+        //                                             selectedNode, upperBound);
+
+      }while (!tmp1.isTrueCocktail(upperBounds) && !tmp2.isTrueCocktail(upperBounds));
+      individuals_[i].second = tmp1;
+      individuals_[i+1].second = tmp2;
     }
   }
   //if the number of remaining individuals is even, we have to operate one more crossover on the last 2 individuals
@@ -115,48 +124,62 @@ void Population::crossover(int nbElite, const std::vector<int>& ATClength, const
     draw = Rcpp::runif(1,0,1)[0];
     if(draw <= p_crossover){
       do{
-        selectedNode = trunc(Rcpp::runif(1,0,ATCtree.nrow())[0]);
-      } while (ATClength[selectedNode] == 7);
-      upperBound = upperBounds[selectedNode];
-      
-      tmp = individuals_[individuals_.size()-2].second;
-      individuals_[individuals_.size()-2].second = crossoverMutation(individuals_[individuals_.size()-2].second, 
-                                                                    individuals_[individuals_.size()-1].second, ATCtree,
-                                                                    selectedNode, upperBound);
-      individuals_[individuals_.size()-1].second = crossoverMutation(individuals_[individuals_.size()-1].second, tmp,
-                                                                     ATCtree, selectedNode, upperBound);
+        do{
+          selectedNode = trunc(Rcpp::runif(1,0,ATCtree.nrow())[0]);
+        } while (ATClength[selectedNode] == 7);
+        upperBound = upperBounds[selectedNode];
+        
+        tmp = individuals_[individuals_.size()-2].second;
+        tmp1 = crossoverMutation(individuals_[individuals_.size()-2].second, 
+                                 individuals_[individuals_.size()-1].second, ATCtree,
+                                 selectedNode, upperBound);
+        //individuals_[individuals_.size()-2].second = crossoverMutation(individuals_[individuals_.size()-2].second, 
+        //                               individuals_[individuals_.size()-1].second, ATCtree,
+        //                               selectedNode, upperBound);
+        
+        tmp2 = crossoverMutation(individuals_[individuals_.size()-1].second, tmp,
+                                 ATCtree, selectedNode, upperBound);
+
+        //individuals_[individuals_.size()-1].second = crossoverMutation(individuals_[individuals_.size()-1].second, tmp,
+        //                               ATCtree, selectedNode, upperBound);
+      }while (!tmp1.isTrueCocktail(upperBounds) && !tmp2.isTrueCocktail(upperBounds));
+      individuals_[individuals_.size()-2].second = tmp1;
+      individuals_[individuals_.size()-1].second = tmp2;
     }
   }
 }
 
-void Population::mutate(int nbElite, double p_mutation, const Rcpp::DataFrame& ATCtree){
+void Population::mutate(int nbElite, double p_mutation, const Rcpp::DataFrame& ATCtree,
+                        const std::vector<int>& upperBounds, double alpha){
   double draw, drawMutation, chosenVertexIdx;
-  double alpha = 1; // TODO : put this as a parameter
   bool emptyCocktail;
   std::vector<std::pair<int,int>> vertex;
+  Individual tmp;
   
   for(int i = nbElite ;  i < individuals_.size() ; ++i){
-    draw = Rcpp::runif(1,0,1)[0];
-    //for each individual in the population we draw a number uniformly in [0;1]
-    // with probability p_mutation we mutate the individual i
+      draw = Rcpp::runif(1,0,1)[0];
+      //for each individual in the population we draw a number uniformly in [0;1]
+      // with probability p_mutation we mutate the individual i
     if(draw <= p_mutation){
       //we mutate with type 1 mutation or type 2 equiprobably
-      emptyCocktail = (individuals_[i].second.getMedications().size() == 0);
-      drawMutation = Rcpp::runif(1,0,1)[0];
-      if(drawMutation <= 0.5){
-        //type1 mutation
-        individuals_[i].second = type1Mutation(individuals_[i].second, ATCtree.nrow(), alpha, emptyCocktail);
-      }
-      else{
-        //type2 mutation
-        if(!emptyCocktail){
-          vertex = individuals_[i].second.getVertexList(ATCtree);
-          chosenVertexIdx = trunc(Rcpp::runif(1,0,vertex.size())[0]);
-          individuals_[i].second = type2Mutation(individuals_[i].second, ATCtree.nrow(), vertex[chosenVertexIdx]);
-        
+
+        emptyCocktail = (individuals_[i].second.getMedications().size() == 0);
+        drawMutation = Rcpp::runif(1,0,1)[0];
+        if(drawMutation <= 0.5){
+          //type1 mutation
+          tmp = type1Mutation(individuals_[i].second, ATCtree.nrow(), alpha, emptyCocktail);
         }
-      }
-      
+        else{
+          //type2 mutation
+          if(!emptyCocktail){
+            vertex = individuals_[i].second.getVertexList(ATCtree);
+            chosenVertexIdx = trunc(Rcpp::runif(1,0,vertex.size())[0]);
+            tmp = type2Mutation(individuals_[i].second, ATCtree.nrow(), vertex[chosenVertexIdx]);
+            
+          }
+        }
+      if(tmp.isTrueCocktail(upperBounds))
+        individuals_[i].second = tmp;
     }
   }
 }
