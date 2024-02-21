@@ -88,36 +88,33 @@ void Population::crossover(int nbElite, const std::vector<int>& ATClength, const
   int remainingIndividuals = individuals_.size() - nbElite;
   int selectedNode;
   int upperBound;
-  Individual tmp, tmp1, tmp2;
+  Individual tmp1, tmp2;
   double draw;
   
-
   for(int i = nbElite ; i < individuals_.size()-2; i+=2){
     draw = Rcpp::runif(1,0,1)[0];
     // With probability p_crossover we opperate a crossover, otherwise we let the individuals as it is
     if(draw <= p_crossover){
       do{
+        
         do{
           selectedNode = trunc(Rcpp::runif(1,0,ATCtree.nrow())[0]);
-        } while (ATClength[selectedNode] == 7);
+          } while (ATClength[selectedNode] == 7);
         
         upperBound = upperBounds[selectedNode];
         
-        tmp = individuals_[i].second;
-        tmp1 = crossoverMutation(individuals_[i].second, individuals_[i+1].second, ATCtree,
-                                 selectedNode, upperBound);
-        //individuals_[i].second = crossoverMutation(individuals_[i].second, individuals_[i+1].second, ATCtree,
-        //                                           selectedNode, upperBound);
-        tmp2 = crossoverMutation(individuals_[i+1].second, tmp, ATCtree,
-                                 selectedNode, upperBound);
-        //individuals_[i+1].second = crossoverMutation(individuals_[i+1].second, tmp, ATCtree,
-        //                                             selectedNode, upperBound);
+        tmp1 = crossoverMutation(individuals_[i].second, individuals_[i+1].second,
+                                 ATCtree, selectedNode, upperBound);
 
-      }while (!tmp1.isTrueCocktail(upperBounds) && !tmp2.isTrueCocktail(upperBounds));
+        tmp2 = crossoverMutation(individuals_[i+1].second, individuals_[i].second,
+                                 ATCtree, selectedNode, upperBound);
+
+        }while (!tmp1.isTrueCocktail(upperBounds) || !tmp2.isTrueCocktail(upperBounds));
       individuals_[i].second = tmp1;
       individuals_[i+1].second = tmp2;
     }
   }
+  
   //if the number of remaining individuals is even, we have to operate one more crossover on the last 2 individuals
   //otherwise we just have one individual so we just copy it (equivalent of doing nothing)
   if(remainingIndividuals %2 == 0){
@@ -129,24 +126,20 @@ void Population::crossover(int nbElite, const std::vector<int>& ATClength, const
         } while (ATClength[selectedNode] == 7);
         upperBound = upperBounds[selectedNode];
         
-        tmp = individuals_[individuals_.size()-2].second;
         tmp1 = crossoverMutation(individuals_[individuals_.size()-2].second, 
                                  individuals_[individuals_.size()-1].second, ATCtree,
                                  selectedNode, upperBound);
-        //individuals_[individuals_.size()-2].second = crossoverMutation(individuals_[individuals_.size()-2].second, 
-        //                               individuals_[individuals_.size()-1].second, ATCtree,
-        //                               selectedNode, upperBound);
-        
-        tmp2 = crossoverMutation(individuals_[individuals_.size()-1].second, tmp,
+
+        tmp2 = crossoverMutation(individuals_[individuals_.size()-1].second, 
+                                 individuals_[individuals_.size()-2].second,
                                  ATCtree, selectedNode, upperBound);
 
-        //individuals_[individuals_.size()-1].second = crossoverMutation(individuals_[individuals_.size()-1].second, tmp,
-        //                               ATCtree, selectedNode, upperBound);
       }while (!tmp1.isTrueCocktail(upperBounds) && !tmp2.isTrueCocktail(upperBounds));
       individuals_[individuals_.size()-2].second = tmp1;
       individuals_[individuals_.size()-1].second = tmp2;
     }
   }
+  
 }
 
 void Population::mutate(int nbElite, double p_mutation, const Rcpp::DataFrame& ATCtree,

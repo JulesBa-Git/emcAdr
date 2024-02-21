@@ -935,13 +935,6 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
 
     //operate a crossover over the mating pool 
     matingPool.crossover(nbElite, ATClength, upperBounds, ATCtree, p_crossover);
-
-    faux_cocktails =0;
-    for(const auto& ind : matingPool.getIndividuals()){
-      faux_cocktails += ind.second.isTrueCocktail(upperBounds) ? 0 : 1;
-    } 
-    
-    std::cout << "nombre de faux cocktail après crossover: " << faux_cocktails << '\n';
     
     //operate a mutation over the mating pool
     matingPool.mutate(nbElite, p_mutation, ATCtree, upperBounds, alpha);
