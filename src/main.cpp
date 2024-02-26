@@ -842,7 +842,7 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
                             const DataFrame& observations, int num_thread = 1, 
                             bool diversity = false, double p_crossover = .80,
                             double p_mutation = .01, int nbElite = 0, 
-                            int tournamentSize = 2, double alpha = 1){
+                            int tournamentSize = 2, double alpha = 1){ 
   //arguments verification
   if(p_crossover > 1 || p_crossover < 0 || nbIndividuals < 1 || p_mutation > 1 || p_mutation < 0 || epochs < 1){
     std::cerr << "problem in the values of the parameter in the call of this function \n";
@@ -888,7 +888,8 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
   
   //generate the initial population randomly (do we consider an Smax ?)
   double meanMedicationPerObs = meanMedications(observationsMedication) - 1;
-  Population population(ATCtree.nrow(), nbIndividuals, meanMedicationPerObs);
+  Population population(ATCtree.nrow(), nbIndividuals, meanMedicationPerObs,
+                        upperBounds);
   Population matingPool(nbIndividuals);
   
   std::vector<double> meanScore;

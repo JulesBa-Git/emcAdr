@@ -7,9 +7,19 @@ Population::Population(int nbIndividuals) : individuals_{}
   individuals_.reserve(nbIndividuals);
 }
 
-Population::Population(int treeSize, int nbIndividuals,double meanMedic) : individuals_{}{
+Population::Population(int treeSize, int nbIndividuals,double meanMedic,
+                       const std::vector<int>& upperBounds) : individuals_{}{
   std::vector<Individual> individuals = DFtoCPP_WOIndividual(treeSize, nbIndividuals, meanMedic);
   std::vector<double> fitnessVector(nbIndividuals);
+  
+  //we need to ensure that there is no false cocktail before we start
+  std::vector<int> newMed;
+  for(auto& ind : individuals){
+    while(!ind.isTrueCocktail(upperBounds)){
+      ind = newIndividualWithCocktailSize(treeSize, ind.getMedications().size(), 1,
+                                         ind.getTemperature())[0];
+    }
+  }
   
   individuals_.reserve(individuals.size());
   for(int i = 0 ; i < individuals.size(); ++i){
