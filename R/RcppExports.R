@@ -92,8 +92,8 @@ DistributionApproximation <- function(epochs, ATCtree, observations, temperature
 #'
 #'@return if no problem return the best cocktail we found (according to the fitness function which is the Relative Risk)
 #'@export
-GeneticAlgorithm <- function(epochs, nbIndividuals, ATCtree, observations, num_thread = 1L, diversity = FALSE, p_crossover = .80, p_mutation = .01, nbElite = 0L, tournamentSize = 2L, alpha = 1) {
-    .Call(`_emcAdr_GeneticAlgorithm`, epochs, nbIndividuals, ATCtree, observations, num_thread, diversity, p_crossover, p_mutation, nbElite, tournamentSize, alpha)
+GeneticAlgorithm <- function(epochs, nbIndividuals, ATCtree, observations, num_thread = 1L, diversity = FALSE, p_crossover = .80, p_mutation = .01, nbElite = 0L, tournamentSize = 2L, alpha = 1, summary = TRUE) {
+    .Call(`_emcAdr_GeneticAlgorithm`, epochs, nbIndividuals, ATCtree, observations, num_thread, diversity, p_crossover, p_mutation, nbElite, tournamentSize, alpha, summary)
 }
 
 #'The true RR distribution of cocktail of size 2
@@ -115,5 +115,9 @@ MetricCalc <- function(cocktail, ATClength, upperBounds, observationsMedication,
 
 computeMetrics <- function(df, ATCtree, observations, num_thread = 1L) {
     .Call(`_emcAdr_computeMetrics`, df, ATCtree, observations, num_thread)
+}
+
+hyperparam_test_genetic_algorithm <- function(epochs, nb_individuals, ATCtree, observations, nb_test_desired, mutation_rate, nb_elite, alphas, path = "./", num_thread = 1L) {
+    invisible(.Call(`_emcAdr_hyperparam_test_genetic_algorithm`, epochs, nb_individuals, ATCtree, observations, nb_test_desired, mutation_rate, nb_elite, alphas, path, num_thread))
 }
 

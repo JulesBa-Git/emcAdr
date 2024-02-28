@@ -2,6 +2,9 @@
 #include "MCMC.h"
 #include "Population.h"
 #include <iostream>
+#include <string_view>
+#include <fstream>
+#include <sstream>
 #ifdef _OPENMP
   #include <omp.h>
 #endif
@@ -842,7 +845,8 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
                             const DataFrame& observations, int num_thread = 1, 
                             bool diversity = false, double p_crossover = .80,
                             double p_mutation = .01, int nbElite = 0, 
-                            int tournamentSize = 2, double alpha = 1){ 
+                            int tournamentSize = 2, double alpha = 1,
+                            bool summary = true){ 
   //arguments verification
   if(p_crossover > 1 || p_crossover < 0 || nbIndividuals < 1 || p_mutation > 1 || p_mutation < 0 || epochs < 1){
     std::cerr << "problem in the values of the parameter in the call of this function \n";
@@ -906,13 +910,6 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
   //here we may want to have a more sophisticated stopping condition (like, if the RR is 
   //significantly high given the previous calculated distribution)
   for(int i =0; i < epochs; ++i){
-    int faux_cocktails =0;
-    for(const auto& ind : population.getIndividuals()){
-      faux_cocktails += ind.second.isTrueCocktail(upperBounds) ? 0 : 1;
-    }
-    
-    std::cout << "nombre de faux cocktail début boucle: " << faux_cocktails << '\n';
-    
     //1st : fit every individual
     population.evaluate(observationsMedication, observationsADR, upperBounds,
                         ADRCount, notADRCount, max_metric, num_thread);
@@ -947,7 +944,10 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
     meanScore.push_back(population.getMean());
     bestIndividualIndex = population.bestIndividual();
     bestScore.push_back(population.getIndividuals()[bestIndividualIndex].first);
-    population.printSummary(i, meanScore[i], bestIndividualIndex);
+    
+    if(summary)
+      population.printSummary(i, meanScore[i], bestIndividualIndex);
+    
     score_before_penalization.clear();
     
   }
@@ -1401,3 +1401,61 @@ Rcpp::DataFrame computeMetrics(const Rcpp::DataFrame& df, const DataFrame& ATCtr
                                  Rcpp::Named("CRR") = metrics["CRR"],
                                  Rcpp::Named("CSS") = metrics["CSS"]);            
 }  
+
+
+void print_list_in_file(const Rcpp::List& resultsGeneticAlgorithm,
+                        const std::string& filename){
+  std::ofstream ost(filename, std::ios::app);
+  if(!ost.is_open()){
+    std::cerr << "erreur ouverture fichier \n";
+  }
+  
+  Rcpp::List final_population = resultsGeneticAlgorithm["FinalPopulation"];
+  std::vector<std::vector<int>> cocktails = final_population["cocktails"];
+  std::vector<double> score = final_population["score"];
+  
+  std::vector<int> mean_score_per_epoch = resultsGeneticAlgorithm["meanFitnesses"];
+  std::vector<int> best_score_per_epoch = resultsGeneticAlgorithm["BestFitnesses"];
+  
+  //print cocktail + score 
+  int i = 0;
+  for(const auto& vec : cocktails){
+    for(int med : vec){
+      ost << med << ' ';
+    }
+    ost << score[i++] << '\n';
+  }
+  
+  //for each epoch we print "mean_score best_score"
+  for(int j = 0 ; j < mean_score_per_epoch.size() ; ++j){
+    ost << mean_score_per_epoch[j] << ' ' << best_score_per_epoch[j] << '\n';
+  }
+  ost.close();
+}
+//[[Rcpp::export]]
+void hyperparam_test_genetic_algorithm(int epochs, int nb_individuals, 
+                                       const DataFrame& ATCtree, 
+                                       const DataFrame& observations,
+                                       int nb_test_desired, 
+                                       const std::vector<double>& mutation_rate,
+                                       const std::vector<int>& nb_elite,
+                                       const std::vector<int>& alphas,
+                                       const std::string& path = "./",
+                                       int num_thread=1){
+  for(const auto& mr : mutation_rate){
+    for(const auto& ne : nb_elite){
+      for(const auto& alpha : alphas){
+        for(int i = 0; i < nb_test_desired; ++i){
+          auto out = GeneticAlgorithm(epochs, nb_individuals, ATCtree, observations,
+                                      num_thread, true, 0.8, mr, ne, 2, alpha,
+                                      false);
+          std::ostringstream filename;
+          filename << path << epochs << "e_" << nb_individuals << "ind_" << mr << "mr_" <<
+            ne << "ne_" << alpha << "alpha.txt";
+          
+          print_list_in_file(out, filename.str());
+        }
+      }
+    }
+  }
+}

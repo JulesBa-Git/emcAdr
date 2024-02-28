@@ -87,8 +87,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // GeneticAlgorithm
-Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCtree, const DataFrame& observations, int num_thread, bool diversity, double p_crossover, double p_mutation, int nbElite, int tournamentSize, double alpha);
-RcppExport SEXP _emcAdr_GeneticAlgorithm(SEXP epochsSEXP, SEXP nbIndividualsSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP num_threadSEXP, SEXP diversitySEXP, SEXP p_crossoverSEXP, SEXP p_mutationSEXP, SEXP nbEliteSEXP, SEXP tournamentSizeSEXP, SEXP alphaSEXP) {
+Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCtree, const DataFrame& observations, int num_thread, bool diversity, double p_crossover, double p_mutation, int nbElite, int tournamentSize, double alpha, bool summary);
+RcppExport SEXP _emcAdr_GeneticAlgorithm(SEXP epochsSEXP, SEXP nbIndividualsSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP num_threadSEXP, SEXP diversitySEXP, SEXP p_crossoverSEXP, SEXP p_mutationSEXP, SEXP nbEliteSEXP, SEXP tournamentSizeSEXP, SEXP alphaSEXP, SEXP summarySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -103,7 +103,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type nbElite(nbEliteSEXP);
     Rcpp::traits::input_parameter< int >::type tournamentSize(tournamentSizeSEXP);
     Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
-    rcpp_result_gen = Rcpp::wrap(GeneticAlgorithm(epochs, nbIndividuals, ATCtree, observations, num_thread, diversity, p_crossover, p_mutation, nbElite, tournamentSize, alpha));
+    Rcpp::traits::input_parameter< bool >::type summary(summarySEXP);
+    rcpp_result_gen = Rcpp::wrap(GeneticAlgorithm(epochs, nbIndividuals, ATCtree, observations, num_thread, diversity, p_crossover, p_mutation, nbElite, tournamentSize, alpha, summary));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -166,6 +167,25 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// hyperparam_test_genetic_algorithm
+void hyperparam_test_genetic_algorithm(int epochs, int nb_individuals, const DataFrame& ATCtree, const DataFrame& observations, int nb_test_desired, const std::vector<double>& mutation_rate, const std::vector<int>& nb_elite, const std::vector<int>& alphas, const std::string& path, int num_thread);
+RcppExport SEXP _emcAdr_hyperparam_test_genetic_algorithm(SEXP epochsSEXP, SEXP nb_individualsSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP nb_test_desiredSEXP, SEXP mutation_rateSEXP, SEXP nb_eliteSEXP, SEXP alphasSEXP, SEXP pathSEXP, SEXP num_threadSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type epochs(epochsSEXP);
+    Rcpp::traits::input_parameter< int >::type nb_individuals(nb_individualsSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
+    Rcpp::traits::input_parameter< int >::type nb_test_desired(nb_test_desiredSEXP);
+    Rcpp::traits::input_parameter< const std::vector<double>& >::type mutation_rate(mutation_rateSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type nb_elite(nb_eliteSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type alphas(alphasSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type path(pathSEXP);
+    Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
+    hyperparam_test_genetic_algorithm(epochs, nb_individuals, ATCtree, observations, nb_test_desired, mutation_rate, nb_elite, alphas, path, num_thread);
+    return R_NilValue;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_ATCtoNumeric", (DL_FUNC) &_emcAdr_ATCtoNumeric, 2},
@@ -173,11 +193,12 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_incorporateOustandingRRToDistribution", (DL_FUNC) &_emcAdr_incorporateOustandingRRToDistribution, 2},
     {"_emcAdr_EMC", (DL_FUNC) &_emcAdr_EMC, 11},
     {"_emcAdr_DistributionApproximation", (DL_FUNC) &_emcAdr_DistributionApproximation, 10},
-    {"_emcAdr_GeneticAlgorithm", (DL_FUNC) &_emcAdr_GeneticAlgorithm, 11},
+    {"_emcAdr_GeneticAlgorithm", (DL_FUNC) &_emcAdr_GeneticAlgorithm, 12},
     {"_emcAdr_trueDistributionSizeTwoCocktail", (DL_FUNC) &_emcAdr_trueDistributionSizeTwoCocktail, 4},
     {"_emcAdr_trueDistributionSizeThreeCocktail", (DL_FUNC) &_emcAdr_trueDistributionSizeThreeCocktail, 4},
     {"_emcAdr_MetricCalc", (DL_FUNC) &_emcAdr_MetricCalc, 7},
     {"_emcAdr_computeMetrics", (DL_FUNC) &_emcAdr_computeMetrics, 4},
+    {"_emcAdr_hyperparam_test_genetic_algorithm", (DL_FUNC) &_emcAdr_hyperparam_test_genetic_algorithm, 10},
     {NULL, NULL, 0}
 };
 
