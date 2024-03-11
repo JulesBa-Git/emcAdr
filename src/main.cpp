@@ -1493,7 +1493,7 @@ void hyperparam_test_genetic_algorithm(int epochs, int nb_individuals,
   }
 }
 
-using answer_set = std::vector<std::vector<int>>;
+/*using answer_set = std::vector<std::vector<int>>;
 
 std::vector<int> recup_cocktail(std::string_view line){
   std::istringstream stream(line.data());
@@ -1537,4 +1537,4 @@ void analyse_resultats(const answer_set& reponses, const std::string& input_file
     }
   }
   input.close();
-}
+                       }*/
