@@ -118,6 +118,11 @@ void Population::crossover(int nbElite, const std::vector<int>& ATClength, const
 
         tmp2 = crossoverMutation(individuals_[i+1].second, individuals_[i].second,
                                  ATCtree, selectedNode, upperBound);
+        
+        std::cout << "crossover entre \n";
+        individuals_[i].second.printMedications();
+        std::cout << "et : \n";
+        individuals_[i+1].second.printMedications();
 
         }while (!tmp1.isTrueCocktail(upperBounds) || !tmp2.isTrueCocktail(upperBounds));
       individuals_[i].second = tmp1;

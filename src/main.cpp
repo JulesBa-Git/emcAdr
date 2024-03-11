@@ -5,6 +5,7 @@
 #include <string_view>
 #include <fstream>
 #include <sstream>
+
 #ifdef _OPENMP
   #include <omp.h>
 #endif
@@ -910,6 +911,13 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
   //here we may want to have a more sophisticated stopping condition (like, if the RR is 
   //significantly high given the previous calculated distribution)
   for(int i =0; i < epochs; ++i){
+    int nb_faux = 0;
+    std::cout << "nombre de faux cocktail début: " << nb_faux << '\n';
+    //do we apply the diversity mechanism ?
+    if(diversity){
+      population.penalize(depth,father);
+    }
+    
     //1st : fit every individual
     population.evaluate(observationsMedication, observationsADR, upperBounds,
                         ADRCount, notADRCount, max_metric, num_thread);
@@ -917,6 +925,7 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
     for(const auto& ind : population.getIndividuals()){
       score_before_penalization.push_back(ind.first);
     }
+    
     
     //do we apply the diversity mechanism ?
     if(diversity){
@@ -934,12 +943,33 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
     //operate a crossover over the mating pool 
     matingPool.crossover(nbElite, ATClength, upperBounds, ATCtree, p_crossover);
     
+    nb_faux = 0;
+    for(const auto& ind : matingPool.getIndividuals()){
+      nb_faux += ind.second.isTrueCocktail(upperBounds) ? 0 : 1;
+    }
+    
+    std::cout << "nombre de faux cocktail apres crossover : " << nb_faux << '\n';
+    
     //operate a mutation over the mating pool
     matingPool.mutate(nbElite, p_mutation, ATCtree, upperBounds, alpha);
+    
+    nb_faux = 0;
+    for(const auto& ind : matingPool.getIndividuals()){
+      nb_faux += ind.second.isTrueCocktail(upperBounds) ? 0 : 1;
+    }
+    
+    std::cout << "nombre de faux cocktail apres mutation : " << nb_faux << '\n';
     
     //3rd : replace the population
     population = matingPool;
     matingPool.clear();
+    
+    nb_faux = 0;
+    for(const auto& ind : population.getIndividuals()){
+      nb_faux += ind.second.isTrueCocktail(upperBounds) ? 0 : 1;
+    }
+    
+    std::cout << "nombre de faux cocktail apres remplacement de population : " << nb_faux << '\n';
     
     meanScore.push_back(population.getMean());
     bestIndividualIndex = population.bestIndividual();
@@ -1445,14 +1475,13 @@ void hyperparam_test_genetic_algorithm(int epochs, int nb_individuals,
   for(const auto& mr : mutation_rate){
     for(const auto& ne : nb_elite){
       for(const auto& alpha : alphas){
+        std::ostringstream filename;
+        filename << path << epochs << "e_" << nb_individuals << "ind_" << mr << "mr_" <<
+          ne << "ne_" << alpha << "alpha.txt";
         for(int i = 0; i < nb_test_desired; ++i){
           auto out = GeneticAlgorithm(epochs, nb_individuals, ATCtree, observations,
                                       num_thread, true, 0.8, mr, ne, 2, alpha,
                                       false);
-          std::ostringstream filename;
-          filename << path << epochs << "e_" << nb_individuals << "ind_" << mr << "mr_" <<
-            ne << "ne_" << alpha << "alpha.txt";
-          
           print_list_in_file(out, filename.str());
         }
       }
