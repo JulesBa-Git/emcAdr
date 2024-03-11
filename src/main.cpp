@@ -5,6 +5,7 @@
 #include <string_view>
 #include <fstream>
 #include <sstream>
+#include <filesystem>
 
 #ifdef _OPENMP
   #include <omp.h>
@@ -866,6 +867,8 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
   }
 #endif
   
+  
+  
   //since there is a diversity mechanism, we may not want to set an upper bound
   // to the metric (here Phypergeometric), so we put it equal to INT_MAX
   // we may want to put this as a parameter
@@ -883,7 +886,8 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
   std::vector<int> upperBounds = ATCtree["upperBound"];
   std::vector<int> depth, father;
   std::tie(depth, father) = treeDepthFather(ATClength);
-
+  
+    
   int ADRCount = 0;
   for(const auto& adr : observationsADR){
     if(adr)
@@ -1487,4 +1491,50 @@ void hyperparam_test_genetic_algorithm(int epochs, int nb_individuals,
       }
     }
   }
+}
+
+using answer_set = std::vector<std::vector<int>>;
+
+std::vector<int> recup_cocktail(std::string_view line){
+  std::istringstream stream(line.data());
+  int medoc;
+  std::vector<int> returned_vec;
+  
+  while(stream >> medoc){
+    returned_vec.push_back(medoc);
+  }
+  returned_vec.pop_back();
+  
+  return returned_vec;
+}
+
+void analyse_resultats(const answer_set& reponses, const std::string& input_filename,
+                       int repetition){
+  
+  std::ifstream input(input_filename);
+  if(!input.is_open()){
+    std::cerr << "erreur ouverture du fichier " << input_filename << "\n";
+  }
+  int epochs = std::stoi(input_filename.substr(0,input_filename.find('e')).data());
+  int nb_individuals = std::stoi(input_filename.substr(input_filename.find('_')+1,
+                                                       input_filename.find('i')).data());
+  
+  std::vector<answer_set> cocktail_par_essai;
+  std::string line;
+  cocktail_par_essai.reserve(repetition);
+  
+  for(int i = 0; i < repetition; ++i){
+    answer_set tmp;
+    for(int j = 0; j < nb_individuals;++j){
+      std::getline(input, line);
+      tmp.push_back(recup_cocktail(line));
+    }
+    //ici, pour chaque cocktail solution -> trouver le cocktail dans tmp le + proche 
+    // et l'écrire dans un fichier avec la distance correspondante
+    cocktail_par_essai.push_back(tmp);
+    for(int j = 0; j < epochs; ++j){
+      std::getline(input, line);
+    }
+  }
+  input.close();
 }
