@@ -915,8 +915,7 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
   //here we may want to have a more sophisticated stopping condition (like, if the RR is 
   //significantly high given the previous calculated distribution)
   for(int i =0; i < epochs; ++i){
-    int nb_faux = 0;
-    std::cout << "nombre de faux cocktail début: " << nb_faux << '\n';
+    
     //do we apply the diversity mechanism ?
     if(diversity){
       population.penalize(depth,father);
@@ -947,33 +946,13 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
     //operate a crossover over the mating pool 
     matingPool.crossover(nbElite, ATClength, upperBounds, ATCtree, p_crossover);
     
-    nb_faux = 0;
-    for(const auto& ind : matingPool.getIndividuals()){
-      nb_faux += ind.second.isTrueCocktail(upperBounds) ? 0 : 1;
-    }
-    
-    std::cout << "nombre de faux cocktail apres crossover : " << nb_faux << '\n';
-    
     //operate a mutation over the mating pool
     matingPool.mutate(nbElite, p_mutation, ATCtree, upperBounds, alpha);
     
-    nb_faux = 0;
-    for(const auto& ind : matingPool.getIndividuals()){
-      nb_faux += ind.second.isTrueCocktail(upperBounds) ? 0 : 1;
-    }
-    
-    std::cout << "nombre de faux cocktail apres mutation : " << nb_faux << '\n';
-    
+
     //3rd : replace the population
     population = matingPool;
     matingPool.clear();
-    
-    nb_faux = 0;
-    for(const auto& ind : population.getIndividuals()){
-      nb_faux += ind.second.isTrueCocktail(upperBounds) ? 0 : 1;
-    }
-    
-    std::cout << "nombre de faux cocktail apres remplacement de population : " << nb_faux << '\n';
     
     meanScore.push_back(population.getMean());
     bestIndividualIndex = population.bestIndividual();
@@ -1473,7 +1452,7 @@ void hyperparam_test_genetic_algorithm(int epochs, int nb_individuals,
                                        int nb_test_desired, 
                                        const std::vector<double>& mutation_rate,
                                        const std::vector<int>& nb_elite,
-                                       const std::vector<int>& alphas,
+                                       const std::vector<double>& alphas,
                                        const std::string& path = "./",
                                        int num_thread=1){
   for(const auto& mr : mutation_rate){
@@ -1493,9 +1472,9 @@ void hyperparam_test_genetic_algorithm(int epochs, int nb_individuals,
   }
 }
 
-/*using answer_set = std::vector<std::vector<int>>;
+using answer_set = std::vector<std::vector<int>>;
 
-std::vector<int> recup_cocktail(std::string_view line){
+std::vector<int> recup_cocktail(const std::string& line){
   std::istringstream stream(line.data());
   int medoc;
   std::vector<int> returned_vec;
@@ -1508,8 +1487,50 @@ std::vector<int> recup_cocktail(std::string_view line){
   return returned_vec;
 }
 
-void analyse_resultats(const answer_set& reponses, const std::string& input_filename,
-                       int repetition){
+
+void analyze(const std::vector<std::vector<int>>& cocktail_trouves,
+             const std::vector<std::vector<int>>& vraies_reponses,
+             const std::string& input_filename, const std::vector<int>& depth,
+             const std::vector<int> father,
+             const std::string& output_filename = "analytics.txt"){
+  
+  std::ofstream out(output_filename, std::ios::app);
+  std::vector<std::vector<int>> population_cocktails = cocktail_trouves;
+  for(const auto& solution : vraies_reponses){
+    population_cocktails.insert(population_cocktails.begin(), solution);
+    Population pop_tmp(population_cocktails);
+    
+    IntMatrix M;
+    std::vector<int> indexM;
+    
+    std::tie(M, indexM) = pop_tmp.pretraitement(depth,father);
+    RealMatrix S = pop_tmp.similarity(M, indexM);
+    
+    //now we have to find the cocktail that is the most similar to the 
+    // good solution
+    int i_max = 1;
+    double max_sim = S[0][1]; // we start at (0,1) because (0,0) is 
+    // a comparaison between the real solution and himself
+    for(int i = 2 ; i < population_cocktails.size(); ++i){
+      if(max_sim < S[0][i]){
+        i_max = i;
+        max_sim = S[0][i];
+      }
+    }
+    out << input_filename << " | ";
+    for(const auto& med : solution)
+      out << med << " ";
+    out << "| ";
+    for(const auto& med : population_cocktails[i_max])
+      out << med << " ";
+    out << "| " << max_sim;
+  }
+}
+
+//[[Rcpp::export]]
+void analyse_resultats(const std::vector<std::vector<int>>& reponses,
+                       const std::string& input_filename,
+                       int repetition, const DataFrame& ATCtree){
   
   std::ifstream input(input_filename);
   if(!input.is_open()){
@@ -1519,22 +1540,29 @@ void analyse_resultats(const answer_set& reponses, const std::string& input_file
   int nb_individuals = std::stoi(input_filename.substr(input_filename.find('_')+1,
                                                        input_filename.find('i')).data());
   
-  std::vector<answer_set> cocktail_par_essai;
+  std::vector<std::vector<std::vector<int>>> cocktail_par_essai;
   std::string line;
   cocktail_par_essai.reserve(repetition);
   
   for(int i = 0; i < repetition; ++i){
-    answer_set tmp;
+    std::vector<std::vector<int>> tmp;
     for(int j = 0; j < nb_individuals;++j){
       std::getline(input, line);
       tmp.push_back(recup_cocktail(line));
     }
-    //ici, pour chaque cocktail solution -> trouver le cocktail dans tmp le + proche 
-    // et l'écrire dans un fichier avec la distance correspondante
     cocktail_par_essai.push_back(tmp);
     for(int j = 0; j < epochs; ++j){
       std::getline(input, line);
     }
   }
   input.close();
-                       }*/
+  
+  std::vector<int> ATClength = ATCtree["ATC_length"];
+  
+  std::vector<int> depth, father;
+  std::tie(depth, father) = treeDepthFather(ATClength);
+  
+  for(int i = 0; i < repetition ; ++i){
+    analyze(cocktail_par_essai[i], reponses, input_filename, depth, father);
+  }
+}

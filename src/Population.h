@@ -11,6 +11,7 @@ class Population{
 public:
   Population() = default;
   Population(int nbIndividuals);
+  Population(const std::vector<std::vector<int>>&);
   Population(int treeSize, int nbIndividuals,double meanMedic,
              const std::vector<int>& upperBounds);
   Population(const Population& pop);

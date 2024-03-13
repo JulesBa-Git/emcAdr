@@ -121,3 +121,7 @@ hyperparam_test_genetic_algorithm <- function(epochs, nb_individuals, ATCtree, o
     invisible(.Call(`_emcAdr_hyperparam_test_genetic_algorithm`, epochs, nb_individuals, ATCtree, observations, nb_test_desired, mutation_rate, nb_elite, alphas, path, num_thread))
 }
 
+analyse_resultats <- function(reponses, input_filename, repetition, ATCtree) {
+    invisible(.Call(`_emcAdr_analyse_resultats`, reponses, input_filename, repetition, ATCtree))
+}
+

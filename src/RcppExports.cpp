@@ -168,7 +168,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // hyperparam_test_genetic_algorithm
-void hyperparam_test_genetic_algorithm(int epochs, int nb_individuals, const DataFrame& ATCtree, const DataFrame& observations, int nb_test_desired, const std::vector<double>& mutation_rate, const std::vector<int>& nb_elite, const std::vector<int>& alphas, const std::string& path, int num_thread);
+void hyperparam_test_genetic_algorithm(int epochs, int nb_individuals, const DataFrame& ATCtree, const DataFrame& observations, int nb_test_desired, const std::vector<double>& mutation_rate, const std::vector<int>& nb_elite, const std::vector<double>& alphas, const std::string& path, int num_thread);
 RcppExport SEXP _emcAdr_hyperparam_test_genetic_algorithm(SEXP epochsSEXP, SEXP nb_individualsSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP nb_test_desiredSEXP, SEXP mutation_rateSEXP, SEXP nb_eliteSEXP, SEXP alphasSEXP, SEXP pathSEXP, SEXP num_threadSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -179,10 +179,23 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type nb_test_desired(nb_test_desiredSEXP);
     Rcpp::traits::input_parameter< const std::vector<double>& >::type mutation_rate(mutation_rateSEXP);
     Rcpp::traits::input_parameter< const std::vector<int>& >::type nb_elite(nb_eliteSEXP);
-    Rcpp::traits::input_parameter< const std::vector<int>& >::type alphas(alphasSEXP);
+    Rcpp::traits::input_parameter< const std::vector<double>& >::type alphas(alphasSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type path(pathSEXP);
     Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
     hyperparam_test_genetic_algorithm(epochs, nb_individuals, ATCtree, observations, nb_test_desired, mutation_rate, nb_elite, alphas, path, num_thread);
+    return R_NilValue;
+END_RCPP
+}
+// analyse_resultats
+void analyse_resultats(const std::vector<std::vector<int>>& reponses, const std::string& input_filename, int repetition, const DataFrame& ATCtree);
+RcppExport SEXP _emcAdr_analyse_resultats(SEXP reponsesSEXP, SEXP input_filenameSEXP, SEXP repetitionSEXP, SEXP ATCtreeSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type reponses(reponsesSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type input_filename(input_filenameSEXP);
+    Rcpp::traits::input_parameter< int >::type repetition(repetitionSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
+    analyse_resultats(reponses, input_filename, repetition, ATCtree);
     return R_NilValue;
 END_RCPP
 }
@@ -199,6 +212,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_MetricCalc", (DL_FUNC) &_emcAdr_MetricCalc, 7},
     {"_emcAdr_computeMetrics", (DL_FUNC) &_emcAdr_computeMetrics, 4},
     {"_emcAdr_hyperparam_test_genetic_algorithm", (DL_FUNC) &_emcAdr_hyperparam_test_genetic_algorithm, 10},
+    {"_emcAdr_analyse_resultats", (DL_FUNC) &_emcAdr_analyse_resultats, 4},
     {NULL, NULL, 0}
 };
 

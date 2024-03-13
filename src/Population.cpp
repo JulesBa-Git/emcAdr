@@ -7,6 +7,15 @@ Population::Population(int nbIndividuals) : individuals_{}
   individuals_.reserve(nbIndividuals);
 }
 
+Population::Population(const std::vector<std::vector<int>>& drugs_set) : individuals_{}
+{
+  individuals_.reserve(drugs_set.size());
+  
+  for(const auto& drugs : drugs_set){
+    individuals_.emplace_back(std::make_pair(0.0, Individual(drugs)));
+  }
+}
+
 Population::Population(int treeSize, int nbIndividuals,double meanMedic,
                        const std::vector<int>& upperBounds) : individuals_{}{
   std::vector<Individual> individuals = DFtoCPP_WOIndividual(treeSize, nbIndividuals, meanMedic);
@@ -196,7 +205,7 @@ std::pair<IntMatrix, std::vector<int>> Population::pretraitement(const std::vect
                   });
   M.resize(number_of_medication);
   for(auto& line : M){
-    line.reserve(6);
+    line.reserve(6); // depth of the tree
   }
   
   std::vector<int> idx;
