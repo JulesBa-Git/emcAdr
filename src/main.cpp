@@ -1523,7 +1523,7 @@ void analyze(const std::vector<std::vector<int>>& cocktail_trouves,
     out << "| ";
     for(const auto& med : population_cocktails[i_max])
       out << med << " ";
-    out << "| " << max_sim;
+    out << "| " << max_sim << '\n';
   }
 }
 
