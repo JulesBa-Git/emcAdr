@@ -1537,7 +1537,8 @@ void analyse_resultats(const std::vector<std::vector<int>>& reponses,
     std::cerr << "erreur ouverture du fichier " << input_filename << "\n";
     return;
   }
-  int epochs = std::stoi(input_filename.substr(0,input_filename.find('e')).data());
+  int epochs = std::stoi(input_filename.substr(input_filename.find('/')+1,
+                                               input_filename.find('e')).data());
   int nb_individuals = std::stoi(input_filename.substr(input_filename.find('_')+1,
                                                        input_filename.find('i')).data());
   
