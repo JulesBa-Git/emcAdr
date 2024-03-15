@@ -293,6 +293,7 @@ double Population::dist_norm(int i, int j, const IntMatrix& M, const std::vector
 
 RealMatrix Population::similarity(const IntMatrix& M, const std::vector<int>& idx) const{
   RealMatrix S = initSimilarityMatrix();
+
   for(int i = 0 ; i < idx.size()-1; ++i){
     S[i][i] = 1; // a cocktail have a perfect similarity with himself
     for(int j = i+1; j < idx.size(); ++j){
@@ -307,6 +308,7 @@ RealMatrix Population::similarity(const IntMatrix& M, const std::vector<int>& id
       }
     }
   }
+  S[idx.size()-1][idx.size()-1] = 1;
   return S;
 }
 

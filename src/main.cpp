@@ -912,6 +912,7 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
   std::vector<double> score_before_penalization;
   score_before_penalization.reserve(population.getIndividuals().size());
   
+  
   //here we may want to have a more sophisticated stopping condition (like, if the RR is 
   //significantly high given the previous calculated distribution)
   for(int i =0; i < epochs; ++i){
@@ -1014,6 +1015,7 @@ Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataF
   }
   
   int notADRCount = observationsMedication.size() - ADRCount;
+
   
   //for the moment the distribution is bounded by 0 and 30
   const int distribSize = 300;
@@ -1499,6 +1501,7 @@ void analyze(const std::vector<std::vector<int>>& cocktail_trouves,
   for(const auto& solution : vraies_reponses){
     population_cocktails.insert(population_cocktails.begin(), solution);
     Population pop_tmp(population_cocktails);
+    population_cocktails.erase(population_cocktails.begin());
     
     IntMatrix M;
     std::vector<int> indexM;
