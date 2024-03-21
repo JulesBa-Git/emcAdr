@@ -912,7 +912,6 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
   std::vector<double> score_before_penalization;
   score_before_penalization.reserve(population.getIndividuals().size());
   
-  
   //here we may want to have a more sophisticated stopping condition (like, if the RR is 
   //significantly high given the previous calculated distribution)
   for(int i =0; i < epochs; ++i){
@@ -1490,18 +1489,18 @@ std::vector<int> recup_cocktail(const std::string& line){
 }
 
 
-void analyze(const std::vector<std::vector<int>>& cocktail_trouves,
+void analyze(const std::deque<std::vector<int>>& cocktail_trouves,
              const std::vector<std::vector<int>>& vraies_reponses,
              const std::string& input_filename, const std::vector<int>& depth,
              const std::vector<int> father,
              const std::string& output_filename = "analytics.txt"){
   
   std::ofstream out(output_filename, std::ios::app);
-  std::vector<std::vector<int>> population_cocktails = cocktail_trouves;
+  std::deque<std::vector<int>> population_cocktails = cocktail_trouves;
   for(const auto& solution : vraies_reponses){
-    population_cocktails.insert(population_cocktails.begin(), solution);
-    Population pop_tmp(population_cocktails);
-    population_cocktails.erase(population_cocktails.begin());
+    population_cocktails.push_front(solution);
+    Population pop_tmp({population_cocktails.begin(),population_cocktails.end()});
+    
     
     IntMatrix M;
     std::vector<int> indexM;
@@ -1527,6 +1526,7 @@ void analyze(const std::vector<std::vector<int>>& cocktail_trouves,
     for(const auto& med : population_cocktails[i_max])
       out << med << " ";
     out << "| " << max_sim << '\n';
+    population_cocktails.pop_front();
   }
 }
 
@@ -1545,12 +1545,12 @@ void analyse_resultats(const std::vector<std::vector<int>>& reponses,
   int nb_individuals = std::stoi(input_filename.substr(input_filename.find('_')+1,
                                                        input_filename.find('i')).data());
   
-  std::vector<std::vector<std::vector<int>>> cocktail_par_essai;
+  std::vector<std::deque<std::vector<int>>> cocktail_par_essai;
   std::string line;
   cocktail_par_essai.reserve(repetition);
   
   for(int i = 0; i < repetition; ++i){
-    std::vector<std::vector<int>> tmp;
+    std::deque<std::vector<int>> tmp;
     for(int j = 0; j < nb_individuals;++j){
       std::getline(input, line);
       tmp.push_back(recup_cocktail(line));
