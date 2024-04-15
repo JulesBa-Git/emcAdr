@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <filesystem>
+#include <set>
 
 #ifdef _OPENMP
   #include <omp.h>
@@ -1488,6 +1489,20 @@ std::vector<int> recup_cocktail(const std::string& line){
   return returned_vec;
 }
 
+std::pair<double, std::vector<int>> recup_solution(const std::string& line){
+  std::istringstream stream(line.data());
+  
+  std::vector<int> vec;
+  double number;
+  
+  while(stream >> number){
+    vec.push_back(number);
+  }
+  
+  vec.pop_back();
+  
+  return {number, vec};
+}
 
 void analyze(const std::deque<std::vector<int>>& cocktail_trouves,
              const std::vector<std::vector<int>>& vraies_reponses,
@@ -1570,4 +1585,109 @@ void analyse_resultats(const std::vector<std::vector<int>>& reponses,
   for(int i = 0; i < repetition ; ++i){
     analyze(cocktail_par_essai[i], reponses, input_filename, depth, father);
   }
+}
+
+void print_most_similar(const std::deque<std::pair<double, std::vector<int>>>& sol,
+                        const std::vector<std::vector<int>>& reponses,
+                        const std::vector<int>& depth, const std::vector<int> father,
+                        const std::string& input_filename,
+                        const std::string& output_filename = "solution_rank.txt"){
+  std::ofstream out(output_filename, std::ios::app);
+  out << input_filename << " : \n";
+  
+  auto find_sol = sol;
+  
+  for(int i = 0; i < reponses.size(); ++i){
+    find_sol.push_front({0.0, reponses[i]});
+  }
+  
+  std::vector<std::vector<int>> vec_sol_tmp;
+  vec_sol_tmp.reserve(find_sol.size());
+  for(const auto& pair : find_sol){
+    vec_sol_tmp.push_back(pair.second);
+  }
+  
+  Population population_cocktail({vec_sol_tmp.begin(),vec_sol_tmp.end()});
+  
+  IntMatrix M;
+  std::vector<int> indexM;
+  
+  std::tie(M, indexM) = population_cocktail.pretraitement(depth,father);
+  RealMatrix S = population_cocktail.similarity(M, indexM);
+  
+  //we go from reponses.size() to find_sol.size() because we added the real
+  // solution in the deque
+  for(int i = reponses.size(); i < find_sol.size(); ++i){
+    int jmax = 0;
+    double max_sim = S[i][jmax];
+    
+    for(int j = 1; j < reponses.size(); ++j){
+      if(max_sim < S[i][j]){
+        max_sim = S[i][j];
+        jmax = j;
+      }
+    }
+    
+    out << "Rank " << i - reponses.size() + 1 << " | ";
+    for(int a : find_sol[i].second){
+      out << a << ' ';
+    }
+    out << "| ";
+    for(int a : find_sol[jmax].second){
+      out << a << ' ';
+    }
+    out << "| similarity : " << max_sim << " | score : " << find_sol[i].first << '\n';
+  }
+  
+}
+
+
+//[[Rcpp::export]]
+void analyse_resultats_2(const std::vector<std::vector<int>>& reponses,
+                       const std::string& input_filename,
+                       int repetition, const DataFrame& ATCtree){
+  std::ifstream input(input_filename);
+  if(!input.is_open()){
+    std::cerr << "erreur ouverture du fichier " << input_filename << "\n";
+    return;
+  }
+  int epochs = std::stoi(input_filename.substr(input_filename.find('/')+1,
+                                               input_filename.find('e')).data());
+  int nb_individuals = std::stoi(input_filename.substr(input_filename.find('_')+1,
+                                                       input_filename.find('i')).data());
+  
+  std::vector<std::pair<double, std::vector<int>>> solutions;
+  
+  std::string line;
+  solutions.reserve(repetition*nb_individuals);
+  
+  for(int i = 0; i < repetition; ++i){
+    for(int j = 0; j < nb_individuals;++j){
+      std::getline(input, line);
+      solutions.push_back(recup_solution(line));
+    } 
+    
+    for(int j = 0; j < epochs; ++j){
+      std::getline(input, line);
+    } 
+  }
+  input.close();
+  
+  //remove all duplicates by constructing a set
+  std::set<
+    std::pair<double, std::vector<int>>,
+    std::greater<std::pair<double, std::vector<int>>>
+  > set_sol(solutions.begin(), solutions.end());
+  
+  solutions.clear();
+  solutions.reserve(set_sol.size());
+  std::move(set_sol.begin(), set_sol.end(), std::back_inserter(solutions));
+  
+  
+  std::vector<int> ATClength = ATCtree["ATC_length"];
+  std::vector<int> depth, father;
+  std::tie(depth, father) = treeDepthFather(ATClength);
+
+  print_most_similar({solutions.begin(),solutions.end()}, reponses, depth, father,
+                     input_filename);
 }

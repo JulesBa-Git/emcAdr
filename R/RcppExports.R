@@ -125,3 +125,7 @@ analyse_resultats <- function(reponses, input_filename, repetition, ATCtree) {
     invisible(.Call(`_emcAdr_analyse_resultats`, reponses, input_filename, repetition, ATCtree))
 }
 
+analyse_resultats_2 <- function(reponses, input_filename, repetition, ATCtree) {
+    invisible(.Call(`_emcAdr_analyse_resultats_2`, reponses, input_filename, repetition, ATCtree))
+}
+

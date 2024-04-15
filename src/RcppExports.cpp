@@ -199,6 +199,19 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// analyse_resultats_2
+void analyse_resultats_2(const std::vector<std::vector<int>>& reponses, const std::string& input_filename, int repetition, const DataFrame& ATCtree);
+RcppExport SEXP _emcAdr_analyse_resultats_2(SEXP reponsesSEXP, SEXP input_filenameSEXP, SEXP repetitionSEXP, SEXP ATCtreeSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type reponses(reponsesSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type input_filename(input_filenameSEXP);
+    Rcpp::traits::input_parameter< int >::type repetition(repetitionSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
+    analyse_resultats_2(reponses, input_filename, repetition, ATCtree);
+    return R_NilValue;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_ATCtoNumeric", (DL_FUNC) &_emcAdr_ATCtoNumeric, 2},
@@ -213,6 +226,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_computeMetrics", (DL_FUNC) &_emcAdr_computeMetrics, 4},
     {"_emcAdr_hyperparam_test_genetic_algorithm", (DL_FUNC) &_emcAdr_hyperparam_test_genetic_algorithm, 10},
     {"_emcAdr_analyse_resultats", (DL_FUNC) &_emcAdr_analyse_resultats, 4},
+    {"_emcAdr_analyse_resultats_2", (DL_FUNC) &_emcAdr_analyse_resultats_2, 4},
     {NULL, NULL, 0}
 };
 
