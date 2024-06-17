@@ -291,6 +291,52 @@ double Population::dist_norm(int i, int j, const IntMatrix& M, const std::vector
   return cost / (static_cast<double>(initial_length) * insertion_cost);
 }
 
+double Population::dist(int i, int j, const IntMatrix& M, const std::vector<int>& idx) const{
+  //if j == idx.size -1 the last index of a medication of C_j is M.size()-1 (last row of M)
+  int max_idx_j = j == idx.size()-1 ? M.size() : idx[j+1];
+  int max_idx_i = idx[i+1];
+  int min_idx_i = idx[i], min_idx_j = idx[j];
+  double ATC_height = 5;
+  
+  std::vector<int> indexC1(max_idx_i - min_idx_i);
+  std::iota(indexC1.begin(), indexC1.end(), min_idx_i);
+  std::vector<int> indexC2(max_idx_j - min_idx_j);
+  std::iota(indexC2.begin(), indexC2.end(), min_idx_j);
+  
+  std::vector<int> deleteC1;
+  deleteC1.reserve(indexC1.size());
+  int depth = 0;
+  double cost = 0;
+  
+  while(!indexC1.empty() && !indexC2.empty()){
+    for(const auto& idx1 : indexC1){
+      for(const auto& idx2 : indexC2){
+        if(M[idx1][depth] == M[idx2][depth]){
+          deleteC1.push_back(idx1);
+          cost+= depth;
+          indexC2.erase(std::remove(indexC2.begin(), indexC2.end(), idx2),
+                        indexC2.end());
+          break;
+        } 
+      }
+    }
+    indexC1.erase(std::remove_if(indexC1.begin(), indexC1.end(), 
+                                 [&deleteC1](int value){
+                                   return std::find(deleteC1.begin(), deleteC1.end(), value) != deleteC1.end();
+                                 }), indexC1.end());
+    deleteC1.clear();
+    ++depth;
+  }
+  
+  // we add to the cost the cost of adding remaining drugs, the cost is :
+  //number of drugs to add times cost of adding which is (ATC_tree height / 2)
+  // and the ATC height is 5
+  double insertion_cost = (ATC_height/2.0);
+  cost += (indexC1.size() + indexC2.size()) * insertion_cost; 
+  
+  return cost;
+}
+
 RealMatrix Population::similarity(const IntMatrix& M, const std::vector<int>& idx) const{
   RealMatrix S = initSimilarityMatrix();
 
@@ -310,6 +356,31 @@ RealMatrix Population::similarity(const IntMatrix& M, const std::vector<int>& id
   }
   S[idx.size()-1][idx.size()-1] = 1;
   return S;
+}
+
+RealMatrix Population::dissimilarity(const IntMatrix& M,
+                                     const std::vector<int>& idx,
+                                     bool normalize) const{
+  RealMatrix D = initSimilarityMatrix();
+  double dissim;
+  for(int i = 0; i < idx.size()-1; ++i){
+    D[i][i] = 0;
+    for(int j = i+1; j < idx.size(); ++j){
+      if(D[i][j] == -1){
+        
+        if(normalize){
+          dissim = dist_norm(i,j,M,idx);
+        }else{
+          dissim = dist(i,j,M,idx);
+        }
+        D[i][j] = dissim;
+        D[j][i] = dissim;
+      }
+    }
+  }
+  
+  D[idx.size()-1][idx.size()-1] = 0;
+  return D;
 }
 
 

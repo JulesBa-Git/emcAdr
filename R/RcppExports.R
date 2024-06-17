@@ -125,7 +125,27 @@ analyse_resultats <- function(reponses, input_filename, repetition, ATCtree) {
     invisible(.Call(`_emcAdr_analyse_resultats`, reponses, input_filename, repetition, ATCtree))
 }
 
-analyse_resultats_2 <- function(reponses, input_filename, repetition, ATCtree) {
-    invisible(.Call(`_emcAdr_analyse_resultats_2`, reponses, input_filename, repetition, ATCtree))
+analyse_resultats_2 <- function(reponses, input_filename, repetition, ATCtree, have_solution) {
+    invisible(.Call(`_emcAdr_analyse_resultats_2`, reponses, input_filename, repetition, ATCtree, have_solution))
+}
+
+get_dissimilarity_from_list <- function(genetic_results, ATCtree) {
+    .Call(`_emcAdr_get_dissimilarity_from_list`, genetic_results, ATCtree)
+}
+
+get_dissimilarity <- function(filename, ATCtree, normalization = TRUE) {
+    .Call(`_emcAdr_get_dissimilarity`, filename, ATCtree, normalization)
+}
+
+get_answer_class <- function(filename, answer) {
+    .Call(`_emcAdr_get_answer_class`, filename, answer)
+}
+
+dmvnrm_arma <- function(X, mean, sigma_k, w) {
+    .Call(`_emcAdr_dmvnrm_arma`, X, mean, sigma_k, w)
+}
+
+FWD_EM <- function(X, K, eps, w_i, max_steps) {
+    .Call(`_emcAdr_FWD_EM`, X, K, eps, w_i, max_steps)
 }
 

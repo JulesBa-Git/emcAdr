@@ -1641,11 +1641,33 @@ void print_most_similar(const std::deque<std::pair<double, std::vector<int>>>& s
   
 }
 
+void print_without_solutions(const std::deque<std::pair<double, std::vector<int>>>& sol,
+                             const std::vector<std::string>& actives_principles,
+                             const std::string& input_filename,
+                             const std::string& output_filename = "solution_rank.txt"){
+  std::ofstream out(output_filename, std::ios::app);
+  out << input_filename << " : \n";
+  
+  auto find_sol = sol;
+  
+  //we go from reponses.size() to find_sol.size() because we added the real
+  // solution in the deque
+  for(int i = 0; i < sol.size(); ++i){
+    
+    out << "Rank " << i+1 << " | ";
+    for(int a : sol[i].second){
+      out << actives_principles[a] << " ; ";
+    }
+    out << " | score : " << sol[i].first << '\n';
+  }
+}
+
 
 //[[Rcpp::export]]
 void analyse_resultats_2(const std::vector<std::vector<int>>& reponses,
                        const std::string& input_filename,
-                       int repetition, const DataFrame& ATCtree){
+                       int repetition, const DataFrame& ATCtree,
+                       bool have_solution){
   std::ifstream input(input_filename);
   if(!input.is_open()){
     std::cerr << "erreur ouverture du fichier " << input_filename << "\n";
@@ -1688,6 +1710,300 @@ void analyse_resultats_2(const std::vector<std::vector<int>>& reponses,
   std::vector<int> depth, father;
   std::tie(depth, father) = treeDepthFather(ATClength);
 
-  print_most_similar({solutions.begin(),solutions.end()}, reponses, depth, father,
-                     input_filename);
+  if(have_solution){
+    print_most_similar({solutions.begin(),solutions.end()}, reponses, depth, father,
+                       input_filename);
+  }
+  else{
+    print_without_solutions({solutions.begin(),solutions.end()}, ATCtree["Name"],
+                            input_filename);
+  }
+}
+
+std::vector<std::vector<double>> dissim(const Population& pop,
+                                        const std::vector<int>& depth,
+                                        const std::vector<int>& father,
+                                        bool normalization){
+  IntMatrix M;
+  std::vector<int> indexM;
+  
+  std::tie(M, indexM) = pop.pretraitement(depth,father);
+  RealMatrix D = pop.dissimilarity(M, indexM, normalization);
+  
+  return D;
+}
+
+//[[Rcpp::export]]
+std::vector<std::vector<double>> get_dissimilarity_from_list(const Rcpp::List& genetic_results,
+                                                   const DataFrame& ATCtree){
+  Rcpp::List population_list = genetic_results["FinalPopulation"];
+  std::vector<std::vector<int>> cocktails = population_list["cocktails"];
+  std::vector<int> ATClength = ATCtree["ATC_length"];
+  std::vector<int> depth, father;
+  std::tie(depth, father) = treeDepthFather(ATClength);
+  
+  Population population(cocktails);
+
+  return dissim(population, depth, father, true);
+}
+
+//[[Rcpp::export]]
+std::vector<std::vector<double>> get_dissimilarity(
+                                                   const std::string& filename,
+                                                   const DataFrame& ATCtree,
+                                                   bool normalization = true){
+  std::vector<int> ATClength = ATCtree["ATC_length"];
+  std::vector<std::vector<int>> cocktails;
+  std::vector<int> current_cocktail;
+  
+  std::vector<int> depth, father;
+  std::tie(depth, father) = treeDepthFather(ATClength);
+  
+  std::string line;
+  std::ifstream input(filename);
+  if(!input.is_open()){
+    std::cerr << "erreur ouverture du fichier " << filename << "\n";
+    return {};
+  }
+  
+  std::getline(input,line); // we don't want the first line as it is a title
+  
+  while(std::getline(input, line)){
+    int beg_cocktail = line.find('|');
+    int end_cocktail = line.substr(beg_cocktail+1).find('|');
+    std::string cocktail = line.substr(beg_cocktail + 1, end_cocktail);
+    // 3.8 is the expected number of char in the id of a randomly picked 
+    // drug in the ATC tree (2014tree)
+    int approximated_cocktail_size = cocktail.size() / 3.8;
+    current_cocktail.reserve(approximated_cocktail_size);
+    
+    int med;
+    std::istringstream iss(cocktail);
+    while(iss >> med){
+      current_cocktail.push_back(med);
+    }
+    cocktails.push_back(current_cocktail);
+    current_cocktail.clear();
+    
+  }
+  
+  Population population(cocktails);
+  
+  return dissim(population, depth, father, normalization);
+}
+
+//[[Rcpp::export]]
+Rcpp::DataFrame get_answer_class(const std::string& filename,
+                                  const std::vector<std::string>& answer){
+  std::vector<std::string> cocktails;
+  std::string current_cocktail;
+  std::vector<int> classe;
+  classe.reserve(100);
+  std::vector<double> similarity;
+  similarity.reserve(100);
+  
+  std::vector<double> scores;
+  scores.reserve(100);
+  
+  std::string line;
+  std::ifstream input(filename);
+  if(!input.is_open()){
+    std::cerr << "erreur ouverture du fichier " << filename << "\n";
+    return {};
+  }
+  
+  std::getline(input,line); // we don't want the first line as it is a title
+  
+  while(std::getline(input, line)){
+    //find cocktail
+    int beg_cocktail = line.find('|')+1;
+    int end_cocktail = line.find('|', beg_cocktail);
+    cocktails.push_back(line.substr(beg_cocktail , end_cocktail-beg_cocktail));
+    
+    //find solution
+    int beg_solution = end_cocktail+2;
+    int end_solution = line.find('|', beg_solution) -1;
+    std::string current_solution = line.substr(beg_solution, end_solution-beg_solution);
+    
+    int i =0;
+    while(i < answer.size() && current_solution.compare(answer[i]) != 0){
+      ++i;
+    }
+    classe.push_back(i);
+    
+    //find similarity
+    int beg_similarity = line.find(':') +1;
+    int end_similarity = line.find('|', beg_similarity) -1;
+    similarity.push_back(std::stod(line.substr(beg_similarity, end_similarity-beg_similarity)));
+    
+    int beg_score = line.find(':',end_similarity +2)+1;
+    scores.push_back(std::stod(line.substr(beg_score, line.size() - beg_score)));
+  }
+  
+  return Rcpp::DataFrame::create(Rcpp::Named("cocktail") = cocktails,
+                                 Rcpp::Named("class") = classe,
+                                 Rcpp::Named("similarity") = similarity,
+                                 Rcpp::Named("score") = scores);
+}
+
+
+///////////////////////// FIXED WEIGHT EM WITH COMPONENT SELECTION -> REFACTOR THE CODE IF IT WORKS WELL ///////////////////////////
+
+arma::vec initialize_uniform_mixture_pi(int K_high){
+  return arma::vec(K_high,arma::fill::ones) / K_high;
+}
+
+arma::mat initialize_mu_using_kmeans(const arma::mat& X, int K_high){
+  arma::mat centers;
+  bool status = arma::kmeans(centers, X.t(), K_high,arma::random_subset, 20, false);
+  if(!status){
+    Rcpp::stop("K-means clustering failed");
+  }
+  return centers.t();
+}
+
+arma::cube initialize_cov(const arma::mat& X, int K_high){
+  arma::mat cov_X = arma::cov(X);
+  arma::cube sigma(X.n_cols, X.n_cols, K_high);
+  for(int k = 0 ; k < K_high; ++k){
+    sigma.slice(k) = cov_X;
+  }
+  return sigma;
+}
+
+//[[Rcpp::export]]
+arma::vec dmvnrm_arma(const arma::mat& X, const arma::rowvec& mean,
+                      const arma::mat& sigma_k, const arma::vec& w){
+  int n = X.n_rows;
+  int dim = X.n_cols;
+  double log2pi = std::log(2.0 * M_PI);
+  
+  arma::vec densities(n);
+  
+  
+  for(int i = 0 ; i < n ; ++i){
+    arma::mat rooti = arma::inv(arma::trimatu(arma::chol((sigma_k/w(i)))));
+    double logdet = arma::sum(arma::log(rooti.diag()));
+    double constants = (-0.5 * (dim * log2pi)) + logdet;
+    
+    arma::rowvec z = (X.row(i) - mean) * rooti ;
+    densities(i) = constants - 0.5 * arma::dot(z,z);
+  }
+  
+  return arma::exp(densities);
+  
+}
+
+arma::rowvec update_mean(const arma::mat& X, const arma::vec& eta_k,
+                         const arma::vec& w_i){
+  auto schur_w_eta = w_i % eta_k;
+  arma::rowvec numerator = arma::sum((schur_w_eta) % X.each_col());
+  double denom = sum(schur_w_eta);
+  
+  return numerator / denom;
+}
+
+arma::mat compute_posteriors(const arma::mat& X, const arma::vec& pi_k,
+                             const arma::mat& mu_k, const arma::cube& Sigma_k,
+                             const arma::vec& w_i) {
+  
+  int n = X.n_rows;
+  int K = pi_k.n_elem;
+  arma::mat posteriors(n,K, arma::fill::zeros);
+  
+  for(int k = 0; k < K; ++k){
+    posteriors.col(k) = pi_k(k) * dmvnrm_arma(X, mu_k.row(k), Sigma_k.slice(k),
+                   w_i);
+  }
+  
+  arma::vec row_sums = arma::sum(posteriors, 1);
+  
+  posteriors.each_col() /= row_sums;
+  
+  return posteriors;
+}
+
+arma::mat update_covariance(const arma::mat& x, const arma::vec& eta_k,
+                            const arma::vec& w, const arma::rowvec& mu_k){
+  arma::mat new_sigma(x.n_cols, x.n_cols, arma::fill::zeros);
+  
+  for (int i = 0; i < x.n_rows; ++i) {
+    arma::rowvec x_i = x.row(i);
+    new_sigma += (w(i) * eta_k(i)) * ((x_i - mu_k).t() * (x_i - mu_k));
+  }
+  double total_weight = sum(eta_k);
+  return new_sigma / total_weight;
+}
+
+double compute_q_function(const arma::mat& X, const arma::vec& pi_k,
+                          const arma::mat& mu_k, const arma::cube& Sigma_k,
+                          const arma::vec& w_i, const arma::mat& posteriors) {
+  double q_function = 0.0;
+  int N = X.n_rows;
+  int K = pi_k.n_elem;
+  int D = X.n_cols;
+  double log2pi = std::log(2*M_PI);
+  for (int k = 0; k < K; ++k) {
+    arma::mat Sigma_k_weighted = Sigma_k.slice(k);
+    for (int i = 0; i < N; ++i) {
+      arma::rowvec x_i = X.row(i);
+      arma::mat adjusted_sigma = Sigma_k_weighted / w_i(i);
+      arma::mat rooti = arma::trans(arma::inv(arma::trimatu(arma::chol(adjusted_sigma))));
+      double logdet = 2.0 * arma::sum(arma::log(rooti.diag()));
+      double constants = -0.5 * (D * log2pi + logdet);
+      arma::vec z = rooti * (x_i.t() - mu_k.row(k).t());
+      double log_pdf = constants - 0.5 * arma::dot(z, z);
+       
+      q_function += posteriors(i, k) * (log(pi_k(k)) + log_pdf);
+    }
+  }
+   
+  return q_function;
+} 
+
+//[[Rcpp::export]]
+Rcpp::List FWD_EM(const arma::mat& X, int K, double eps, const arma::vec& w_i,
+                  int max_steps){
+  int r = 0;
+  int N = X.n_rows;
+  int D = X.n_cols;
+
+  double Q_r = std::numeric_limits<double>::infinity();
+  double absolute_diff_q = std::numeric_limits<double>::infinity();
+  
+  arma::vec pi_k = initialize_uniform_mixture_pi(K);
+  arma::mat mu_k = initialize_mu_using_kmeans(X, K);
+  arma::cube sigma_k = initialize_cov(X, K); // voir si on utilise la moyenne
+  //des clusters en X
+  
+  Rcpp::List theta_min;
+  arma::mat posteriors(N,K, arma::fill::zeros);
+  
+  do{
+    //E-step
+    posteriors = compute_posteriors(X, pi_k, mu_k, sigma_k, w_i);
+    
+    //M-step
+    arma::vec N_k = arma::sum(posteriors,0).t();
+    pi_k = N_k / static_cast<double>(N);
+    
+    for(int k = 0; k < K; ++k){
+      mu_k.row(k) = update_mean(X, posteriors.col(k), w_i);
+      sigma_k.slice(k) = update_covariance(X, posteriors.col(k), w_i, mu_k.row(k));
+    }
+    
+    double Q_r_1 = compute_q_function(X, pi_k,mu_k, sigma_k, w_i, posteriors);
+    
+    absolute_diff_q = std::abs(Q_r_1 - Q_r);
+    ++r;
+    Q_r = Q_r_1;
+    
+  } while (r < max_steps && absolute_diff_q > eps);
+  
+  return Rcpp::List::create(Rcpp::Named("posteriors") = posteriors, 
+                            Rcpp::Named("pi") = pi_k, 
+                            Rcpp::Named("mu") = mu_k,
+                            Rcpp::Named("sigma") = sigma_k,
+                            Rcpp::Named("Q_r") = Q_r,
+                            Rcpp::Named("iter") = r);
 }

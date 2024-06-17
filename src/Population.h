@@ -48,7 +48,12 @@ public:
   
   double dist_norm(int i, int j, const IntMatrix& M, const std::vector<int>& idx) const;
   
+  double dist(int i, int j, const IntMatrix& M, const std::vector<int>& idx) const;
+  
   RealMatrix similarity(const IntMatrix& M, const std::vector<int>& idx) const;
+  
+  RealMatrix dissimilarity(const IntMatrix& M, const std::vector<int>& idx,
+                           bool normalize = true) const;
   
   void penalize(const std::vector<int>& depth, const std::vector<int>& father);
   

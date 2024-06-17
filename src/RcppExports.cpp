@@ -200,16 +200,83 @@ BEGIN_RCPP
 END_RCPP
 }
 // analyse_resultats_2
-void analyse_resultats_2(const std::vector<std::vector<int>>& reponses, const std::string& input_filename, int repetition, const DataFrame& ATCtree);
-RcppExport SEXP _emcAdr_analyse_resultats_2(SEXP reponsesSEXP, SEXP input_filenameSEXP, SEXP repetitionSEXP, SEXP ATCtreeSEXP) {
+void analyse_resultats_2(const std::vector<std::vector<int>>& reponses, const std::string& input_filename, int repetition, const DataFrame& ATCtree, bool have_solution);
+RcppExport SEXP _emcAdr_analyse_resultats_2(SEXP reponsesSEXP, SEXP input_filenameSEXP, SEXP repetitionSEXP, SEXP ATCtreeSEXP, SEXP have_solutionSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type reponses(reponsesSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type input_filename(input_filenameSEXP);
     Rcpp::traits::input_parameter< int >::type repetition(repetitionSEXP);
     Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
-    analyse_resultats_2(reponses, input_filename, repetition, ATCtree);
+    Rcpp::traits::input_parameter< bool >::type have_solution(have_solutionSEXP);
+    analyse_resultats_2(reponses, input_filename, repetition, ATCtree, have_solution);
     return R_NilValue;
+END_RCPP
+}
+// get_dissimilarity_from_list
+std::vector<std::vector<double>> get_dissimilarity_from_list(const Rcpp::List& genetic_results, const DataFrame& ATCtree);
+RcppExport SEXP _emcAdr_get_dissimilarity_from_list(SEXP genetic_resultsSEXP, SEXP ATCtreeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type genetic_results(genetic_resultsSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_dissimilarity_from_list(genetic_results, ATCtree));
+    return rcpp_result_gen;
+END_RCPP
+}
+// get_dissimilarity
+std::vector<std::vector<double>> get_dissimilarity(const std::string& filename, const DataFrame& ATCtree, bool normalization);
+RcppExport SEXP _emcAdr_get_dissimilarity(SEXP filenameSEXP, SEXP ATCtreeSEXP, SEXP normalizationSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type filename(filenameSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
+    Rcpp::traits::input_parameter< bool >::type normalization(normalizationSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_dissimilarity(filename, ATCtree, normalization));
+    return rcpp_result_gen;
+END_RCPP
+}
+// get_answer_class
+Rcpp::DataFrame get_answer_class(const std::string& filename, const std::vector<std::string>& answer);
+RcppExport SEXP _emcAdr_get_answer_class(SEXP filenameSEXP, SEXP answerSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type filename(filenameSEXP);
+    Rcpp::traits::input_parameter< const std::vector<std::string>& >::type answer(answerSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_answer_class(filename, answer));
+    return rcpp_result_gen;
+END_RCPP
+}
+// dmvnrm_arma
+arma::vec dmvnrm_arma(const arma::mat& X, const arma::rowvec& mean, const arma::mat& sigma_k, const arma::vec& w);
+RcppExport SEXP _emcAdr_dmvnrm_arma(SEXP XSEXP, SEXP meanSEXP, SEXP sigma_kSEXP, SEXP wSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::rowvec& >::type mean(meanSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type sigma_k(sigma_kSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type w(wSEXP);
+    rcpp_result_gen = Rcpp::wrap(dmvnrm_arma(X, mean, sigma_k, w));
+    return rcpp_result_gen;
+END_RCPP
+}
+// FWD_EM
+Rcpp::List FWD_EM(const arma::mat& X, int K, double eps, const arma::vec& w_i, int max_steps);
+RcppExport SEXP _emcAdr_FWD_EM(SEXP XSEXP, SEXP KSEXP, SEXP epsSEXP, SEXP w_iSEXP, SEXP max_stepsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type w_i(w_iSEXP);
+    Rcpp::traits::input_parameter< int >::type max_steps(max_stepsSEXP);
+    rcpp_result_gen = Rcpp::wrap(FWD_EM(X, K, eps, w_i, max_steps));
+    return rcpp_result_gen;
 END_RCPP
 }
 
@@ -226,7 +293,12 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_computeMetrics", (DL_FUNC) &_emcAdr_computeMetrics, 4},
     {"_emcAdr_hyperparam_test_genetic_algorithm", (DL_FUNC) &_emcAdr_hyperparam_test_genetic_algorithm, 10},
     {"_emcAdr_analyse_resultats", (DL_FUNC) &_emcAdr_analyse_resultats, 4},
-    {"_emcAdr_analyse_resultats_2", (DL_FUNC) &_emcAdr_analyse_resultats_2, 4},
+    {"_emcAdr_analyse_resultats_2", (DL_FUNC) &_emcAdr_analyse_resultats_2, 5},
+    {"_emcAdr_get_dissimilarity_from_list", (DL_FUNC) &_emcAdr_get_dissimilarity_from_list, 2},
+    {"_emcAdr_get_dissimilarity", (DL_FUNC) &_emcAdr_get_dissimilarity, 3},
+    {"_emcAdr_get_answer_class", (DL_FUNC) &_emcAdr_get_answer_class, 2},
+    {"_emcAdr_dmvnrm_arma", (DL_FUNC) &_emcAdr_dmvnrm_arma, 4},
+    {"_emcAdr_FWD_EM", (DL_FUNC) &_emcAdr_FWD_EM, 5},
     {NULL, NULL, 0}
 };
 
