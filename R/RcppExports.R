@@ -141,6 +141,10 @@ get_answer_class <- function(filename, answer) {
     .Call(`_emcAdr_get_answer_class`, filename, answer)
 }
 
+ATC_idx_to_string <- function(patients, ATCtree) {
+    .Call(`_emcAdr_ATC_idx_to_string`, patients, ATCtree)
+}
+
 dmvnrm_arma <- function(X, mean, sigma_k, w) {
     .Call(`_emcAdr_dmvnrm_arma`, X, mean, sigma_k, w)
 }

@@ -1846,6 +1846,25 @@ Rcpp::DataFrame get_answer_class(const std::string& filename,
                                  Rcpp::Named("score") = scores);
 }
 
+//[[Rcpp::export]]
+std::vector<std::vector<std::string>> ATC_idx_to_string(
+                                  const std::vector<std::vector<int>>& patients,
+                                  const std::vector<std::string>& ATCtree){
+  std::vector<std::vector<std::string>> converted_input;
+  converted_input.reserve(patients.size());
+  
+  std::vector<std::string> tmp;
+  for(const auto& pat : patients){
+    for(auto atc_code : pat){
+      tmp.push_back(ATCtree[atc_code]);
+    }
+    converted_input.push_back(tmp);
+    tmp.clear();
+  }
+  
+  return converted_input;
+}
+
 
 ///////////////////////// FIXED WEIGHT EM WITH COMPONENT SELECTION -> REFACTOR THE CODE IF IT WORKS WELL ///////////////////////////
 
