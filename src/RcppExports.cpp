@@ -251,14 +251,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // ATC_idx_to_string
-std::vector<std::vector<std::string>> ATC_idx_to_string(const std::vector<std::vector<int>>& patients, const std::vector<std::string>& ATCtree);
-RcppExport SEXP _emcAdr_ATC_idx_to_string(SEXP patientsSEXP, SEXP ATCtreeSEXP) {
+std::vector<std::vector<std::string>> ATC_idx_to_string(const std::vector<std::vector<int>>& patients, const std::vector<std::string>& ATCName);
+RcppExport SEXP _emcAdr_ATC_idx_to_string(SEXP patientsSEXP, SEXP ATCNameSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type patients(patientsSEXP);
-    Rcpp::traits::input_parameter< const std::vector<std::string>& >::type ATCtree(ATCtreeSEXP);
-    rcpp_result_gen = Rcpp::wrap(ATC_idx_to_string(patients, ATCtree));
+    Rcpp::traits::input_parameter< const std::vector<std::string>& >::type ATCName(ATCNameSEXP);
+    rcpp_result_gen = Rcpp::wrap(ATC_idx_to_string(patients, ATCName));
     return rcpp_result_gen;
 END_RCPP
 }

@@ -29,6 +29,9 @@ NULL
 #'Function used to compare diverse metrics used in Disproportionality analysis
 NULL
 
+#'Convert ATC index used in the algorithm to name of the node in the ATC tree
+NULL
+
 #'The Evolutionary MCMC method that runs the random walk
 #'
 #'@param n : number of step 
@@ -141,8 +144,8 @@ get_answer_class <- function(filename, answer) {
     .Call(`_emcAdr_get_answer_class`, filename, answer)
 }
 
-ATC_idx_to_string <- function(patients, ATCtree) {
-    .Call(`_emcAdr_ATC_idx_to_string`, patients, ATCtree)
+ATC_idx_to_string <- function(patients, ATCName) {
+    .Call(`_emcAdr_ATC_idx_to_string`, patients, ATCName)
 }
 
 dmvnrm_arma <- function(X, mean, sigma_k, w) {

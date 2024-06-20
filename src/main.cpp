@@ -1846,17 +1846,22 @@ Rcpp::DataFrame get_answer_class(const std::string& filename,
                                  Rcpp::Named("score") = scores);
 }
 
-//[[Rcpp::export]]
-std::vector<std::vector<std::string>> ATC_idx_to_string(
-                                  const std::vector<std::vector<int>>& patients,
-                                  const std::vector<std::string>& ATCtree){
+//'Convert ATC index used in the algorithm to name of the node in the ATC tree
+ //'
+ //'@param patients : A List containing ATC code, (e.g. the output of the aproximation distribution function)
+ //'@param ATCName : The Name column of the ATC tree, corresponding to each node of the tree
+ //'@return the name of ATC code in "patients"
+ //'@export
+ //[[Rcpp::export]]
+std::vector<std::vector<std::string>> ATC_idx_to_string(const std::vector<std::vector<int>>& patients,
+                                                      const std::vector<std::string>& ATCName){
   std::vector<std::vector<std::string>> converted_input;
   converted_input.reserve(patients.size());
   
   std::vector<std::string> tmp;
   for(const auto& pat : patients){
     for(auto atc_code : pat){
-      tmp.push_back(ATCtree[atc_code]);
+      tmp.push_back(ATCName[atc_code]);
     }
     converted_input.push_back(tmp);
     tmp.clear();
