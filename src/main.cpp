@@ -1720,6 +1720,73 @@ void analyse_resultats_2(const std::vector<std::vector<int>>& reponses,
   }
 }
 
+
+//'Print every cocktail found during the genetic algorithm 
+//'
+//'@param input_filenames : A List containing filename of hyperparam_test_genetic_algorithm output file
+//'@param ATCtree : The ATC tree
+//'@param csv_filename : Name of the output file
+//'
+//'@export
+//[[Rcpp::export]]
+void print_csv(const std::vector<std::string>& input_filenames,
+               int repetition, const DataFrame& ATCtree,
+               const std::string& csv_filename = "solutions.csv" ){
+  std::vector<std::pair<double, std::vector<int>>> solutions;
+  
+  for(const auto& filename : input_filenames){
+    std::ifstream input(filename);
+    if(!input.is_open()){
+      std::cerr << "erreur ouverture du fichier " << filename << "\n";
+      return;
+    }
+    
+    int epochs = std::stoi(filename.substr(filename.find('/')+1,
+                                           filename.find('e')).data());
+    int nb_individuals = std::stoi(filename.substr(filename.find('_')+1,
+                                                   filename.find('i')).data());
+    
+    std::string line;
+    solutions.reserve(solutions.capacity() + repetition*nb_individuals);
+    
+    for(int i = 0; i < repetition; ++i){
+      for(int j = 0; j < nb_individuals;++j){
+        std::getline(input, line);
+        solutions.push_back(recup_solution(line));
+      } 
+      
+      for(int j = 0; j < epochs; ++j){
+        std::getline(input, line);
+      } 
+    }
+    
+    input.close();
+  }
+  
+  std::set<
+    std::pair<double, std::vector<int>>,
+    std::greater<std::pair<double, std::vector<int>>>
+  > set_sol(solutions.begin(), solutions.end());
+  
+  std::ofstream output(csv_filename);
+  if(!output.is_open()){
+    std::cerr << "erreur ouverture du fichier " << csv_filename << "\n";
+    return;
+  }
+  std::vector<int> ATCName = ATCtree["Name"];
+  
+  output << "score ; Cocktail \n";
+  
+  for(const auto& sol : solutions){
+    output << sol.first << ";";
+    for(auto ite = sol.second.begin(); ite != sol.second.end()-1; ++ite){
+      output << ATCName[*ite] << ":"; 
+    }
+    output << ATCName[*(sol.second.end()-1)] << "\n";
+  }
+  output.close();
+}
+
 std::vector<std::vector<double>> dissim(const Population& pop,
                                         const std::vector<int>& depth,
                                         const std::vector<int>& father,

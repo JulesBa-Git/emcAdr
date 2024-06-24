@@ -132,6 +132,17 @@ analyse_resultats_2 <- function(reponses, input_filename, repetition, ATCtree, h
     invisible(.Call(`_emcAdr_analyse_resultats_2`, reponses, input_filename, repetition, ATCtree, have_solution))
 }
 
+#'Print every cocktail found during the genetic algorithm 
+#'
+#'@param input_filenames : A List containing filename of hyperparam_test_genetic_algorithm output file
+#'@param ATCtree : The ATC tree
+#'@param csv_filename : Name of the output file
+#'
+#'@export
+print_csv <- function(input_filenames, repetition, ATCtree, csv_filename = "solutions.csv") {
+    invisible(.Call(`_emcAdr_print_csv`, input_filenames, repetition, ATCtree, csv_filename))
+}
+
 get_dissimilarity_from_list <- function(genetic_results, ATCtree) {
     .Call(`_emcAdr_get_dissimilarity_from_list`, genetic_results, ATCtree)
 }
