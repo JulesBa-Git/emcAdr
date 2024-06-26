@@ -1752,7 +1752,9 @@ void print_csv(const std::vector<std::string>& input_filenames,
     for(int i = 0; i < repetition; ++i){
       for(int j = 0; j < nb_individuals;++j){
         std::getline(input, line);
-        solutions.push_back(recup_solution(line));
+        auto tmp = recup_solution(line);
+        if(tmp.first > 0)
+          solutions.push_back(tmp);
       } 
       
       for(int j = 0; j < epochs; ++j){
