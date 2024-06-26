@@ -986,14 +986,151 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
                             Rcpp::Named("FinalPopulation") = returnedPop);
 }
 
-//'The true RR distribution of cocktail of size 2
+
+//'The true distribution of drugs
 //'
 //'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
-//'@return the RR distribution among size 2 cocktail
+//'@param obervations : population of patients on which we want to compute the risk distribution
+//'@param beta : minimum number of cocktail takers 
+//'@param max_risk : maximum risk, at which point the risk is considered exceptional (outliers)
+//'
+//'@return the risk distribution among drugs
 //'@export
- //[[Rcpp::export]]
+//[[Rcpp::export]]
+Rcpp::List trueDistributionDrugs(const DataFrame& ATCtree, const DataFrame& observations,
+                                 int beta, int max_risk = 100, int num_thread = 1){
+ 
+#ifdef _OPENMP
+ if(num_thread < 1 || num_thread > omp_get_num_procs()){
+   std::cerr << "Wrong thread number, it should be between 1 and " 
+             << omp_get_num_procs() << " \n";
+   return Rcpp::List();
+ }
+#endif
+ 
+ Rcpp::List observationsMedicationTmp = observations["patientATC"];
+ std::vector<std::vector<int>> observationsMedication;
+ observationsMedication.reserve(observationsMedicationTmp.size());
+ Rcpp::LogicalVector observationsADR = observations["patientADR"];
+ std::vector<int> upperBounds = ATCtree["upperBound"];
+ int ADRCount = std::count(observationsADR.begin(), observationsADR.end(), true);
+ 
+ for(int i =0; i < observationsMedicationTmp.size(); ++i){
+   observationsMedication.push_back(observationsMedicationTmp[i]);
+ }
+ 
+ int notADRCount = observationsMedication.size() - ADRCount;
+ 
+ 
+ //for the moment the distribution is bounded by 0 and 100
+ const int distribSize = max_risk *10;
+ std::vector<unsigned int> RRDistribution(distribSize);
+ std::vector<unsigned int> RRDistributionGreaterBeta(distribSize);
+ 
+ unsigned int nbCocktailNotInPopulation = 0;
+ std::vector<double> outstandingRR{};
+ outstandingRR.reserve(10);
+ std::vector<double> outstandingRRBeta{};
+ outstandingRRBeta.reserve(10);
+ 
+ std::pair<double, std::pair<int,int>> computeRROutput;
+ std::pair<double, std::pair<int,int>> computePhyperOutput;
+ 
+ int compteur = 0;
+ 
+ int nbResults = 100; // we keep the 100 best individuals
+ double minRR = 0, minRRbeta = 0;
+ double minPhyper = 0, minPhyperBeta = 0;
+ std::vector<std::pair<Individual,double>> bestResults;
+ bestResults.reserve(nbResults);
+ std::vector<std::pair<Individual,double>> bestResultsBeta;
+ bestResultsBeta.reserve(nbResults);
+ std::pair<Individual, double> currentResult;
+ 
+ Individual indiv{};
+ indiv.setTemperature(1);
+ int med;
+ for(int i = 0 ; i < ATCtree.nrow() - 1 ; ++i){
+   med = i;
+
+   indiv.setMedications({med});
+   std::cout << ++compteur << '\n';
+   //computeRROutput = indiv.computeRR(observationsMedication, observationsADR, upperBounds, 8000, num_thread);
+   computePhyperOutput = indiv.computePHypergeom(observationsMedication, observationsADR,
+                                                 upperBounds, ADRCount, notADRCount,
+                                                 8000, num_thread);
+   if(computePhyperOutput.second.second > 0){ // if the cocktail belongs to F
+     if(computePhyperOutput.first < max_risk){
+       int index = 10 * computePhyperOutput.first;
+       ++RRDistribution[index];
+       if(computePhyperOutput.second.second > beta){
+         ++RRDistributionGreaterBeta[index];
+       }
+     }
+     else{
+       if(computePhyperOutput.second.second > beta){
+         outstandingRRBeta.push_back(computePhyperOutput.first);
+       }
+       outstandingRR.push_back(computePhyperOutput.first);
+     }
+     
+     //keep the best results
+     currentResult = std::make_pair(indiv, computePhyperOutput.first);
+     minPhyper = addToBestCocktails(bestResults, currentResult, nbResults, minPhyper,
+                                    upperBounds);
+     
+     if(computePhyperOutput.second.second > beta){
+       minPhyperBeta = addToBestCocktails(bestResultsBeta, currentResult, nbResults,
+                                          minPhyperBeta, upperBounds);
+     }
+     
+   
+   }
+ }
+ 
+ //create the vector of the best cocktail
+ std::vector<std::vector<int>> returnedMed{};
+ returnedMed.reserve(bestResults.size());
+ std::vector<double>returnedRR{};
+ returnedRR.reserve(bestResults.size());
+ 
+ for(const auto &pair : bestResults){
+   returnedMed.push_back(pair.first.getMedications());
+   returnedRR.push_back(pair.second);
+ }
+ 
+ //create the returned vector of the best cocktail taken by more than beta person
+ std::vector<std::vector<int>> returnedMedBeta{};
+ returnedMedBeta.reserve(bestResultsBeta.size());
+ std::vector<double>returnedRRBeta{};
+ returnedRRBeta.reserve(bestResultsBeta.size());
+ 
+ for(const auto &pair : bestResultsBeta){
+   returnedMedBeta.push_back(pair.first.getMedications());
+   returnedRRBeta.push_back(pair.second);
+ }
+ 
+ return Rcpp::List::create(Rcpp::Named("Distribution") = RRDistribution,
+                           Rcpp::Named("Filtered_distribution") = RRDistributionGreaterBeta,
+                           Rcpp::Named("Outstanding_risk") = outstandingRR,
+                           Rcpp::Named("Best_cocktails") = returnedMed,
+                           Rcpp::Named("Best_cocktails_beta") = returnedMedBeta,
+                           Rcpp::Named("Best_risks") = returnedRR,
+                           Rcpp::Named("Best_risks_beta") = returnedRRBeta);
+}
+
+//'The true distribution of size 2 cocktails
+//'
+//'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
+//'@param obervations : population of patients on which we want to compute the risk distribution
+//'@param beta : minimum number of cocktail takers 
+//'@param max_risk : maximum risk, at which point the risk is considered exceptional (outliers)
+//'
+//'@return the risk distribution among size 2 cocktails
+//'@export
+//[[Rcpp::export]]
 Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataFrame& observations,
-                                           int beta, int num_thread = 1){
+                                           int beta, int max_risk = 100, int num_thread = 1){
   
 #ifdef _OPENMP
   if(num_thread < 1 || num_thread > omp_get_num_procs()){
@@ -1018,7 +1155,7 @@ Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataF
 
   
   //for the moment the distribution is bounded by 0 and 30
-  const int distribSize = 300;
+  const int distribSize = max_risk *10;
   std::vector<unsigned int> RRDistribution(distribSize);
   std::vector<unsigned int> RRDistributionGreaterBeta(distribSize);
   
@@ -1058,7 +1195,7 @@ Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataF
                                                     upperBounds, ADRCount, notADRCount,
                                                     8000, num_thread);
       if(computePhyperOutput.second.second > 0){ // if the cocktail belongs to F
-        if(computePhyperOutput.first < 30){
+        if(computePhyperOutput.first < max_risk){
           int index = 10 * computePhyperOutput.first;
           ++RRDistribution[index];
           if(computePhyperOutput.second.second > beta){

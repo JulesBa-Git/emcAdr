@@ -99,13 +99,30 @@ GeneticAlgorithm <- function(epochs, nbIndividuals, ATCtree, observations, num_t
     .Call(`_emcAdr_GeneticAlgorithm`, epochs, nbIndividuals, ATCtree, observations, num_thread, diversity, p_crossover, p_mutation, nbElite, tournamentSize, alpha, summary)
 }
 
-#'The true RR distribution of cocktail of size 2
+#'The true distribution of drugs
 #'
 #'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
-#'@return the RR distribution among size 2 cocktail
+#'@param obervations : population of patients on which we want to compute the risk distribution
+#'@param beta : minimum number of cocktail takers 
+#'@param max_risk : maximum risk, at which point the risk is considered exceptional (outliers)
+#'
+#'@return the risk distribution among drugs
 #'@export
-trueDistributionSizeTwoCocktail <- function(ATCtree, observations, beta, num_thread = 1L) {
-    .Call(`_emcAdr_trueDistributionSizeTwoCocktail`, ATCtree, observations, beta, num_thread)
+trueDistributionDrugs <- function(ATCtree, observations, beta, max_risk = 100L, num_thread = 1L) {
+    .Call(`_emcAdr_trueDistributionDrugs`, ATCtree, observations, beta, max_risk, num_thread)
+}
+
+#'The true distribution of size 2 cocktails
+#'
+#'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
+#'@param obervations : population of patients on which we want to compute the risk distribution
+#'@param beta : minimum number of cocktail takers 
+#'@param max_risk : maximum risk, at which point the risk is considered exceptional (outliers)
+#'
+#'@return the risk distribution among size 2 cocktails
+#'@export
+trueDistributionSizeTwoCocktail <- function(ATCtree, observations, beta, max_risk = 100L, num_thread = 1L) {
+    .Call(`_emcAdr_trueDistributionSizeTwoCocktail`, ATCtree, observations, beta, max_risk, num_thread)
 }
 
 trueDistributionSizeThreeCocktail <- function(ATCtree, observations, beta, num_thread = 1L) {
