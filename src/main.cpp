@@ -1916,7 +1916,7 @@ void print_csv(const std::vector<std::string>& input_filenames,
   
   output << "score ; Cocktail \n";
   
-  for(const auto& sol : solutions){
+  for(const auto& sol : set_sol){
     output << sol.first << ";";
     for(auto ite = sol.second.begin(); ite != sol.second.end()-1; ++ite){
       output << ATCName[*ite] << ":"; 
