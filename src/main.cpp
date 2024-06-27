@@ -1912,7 +1912,7 @@ void print_csv(const std::vector<std::string>& input_filenames,
     std::cerr << "erreur ouverture du fichier " << csv_filename << "\n";
     return;
   }
-  std::vector<int> ATCName = ATCtree["Name"];
+  std::vector<std::string> ATCName = ATCtree["Name"];
   
   output << "score ; Cocktail \n";
   
