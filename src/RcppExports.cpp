@@ -230,15 +230,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // print_csv
-void print_csv(const std::vector<std::string>& input_filenames, int repetition, const DataFrame& ATCtree, const std::string& csv_filename);
-RcppExport SEXP _emcAdr_print_csv(SEXP input_filenamesSEXP, SEXP repetitionSEXP, SEXP ATCtreeSEXP, SEXP csv_filenameSEXP) {
+void print_csv(const std::vector<std::string>& input_filenames, const DataFrame& observations, int repetition, const DataFrame& ATCtree, const std::string& csv_filename);
+RcppExport SEXP _emcAdr_print_csv(SEXP input_filenamesSEXP, SEXP observationsSEXP, SEXP repetitionSEXP, SEXP ATCtreeSEXP, SEXP csv_filenameSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::vector<std::string>& >::type input_filenames(input_filenamesSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
     Rcpp::traits::input_parameter< int >::type repetition(repetitionSEXP);
     Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type csv_filename(csv_filenameSEXP);
-    print_csv(input_filenames, repetition, ATCtree, csv_filename);
+    print_csv(input_filenames, observations, repetition, ATCtree, csv_filename);
     return R_NilValue;
 END_RCPP
 }
@@ -336,7 +337,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_hyperparam_test_genetic_algorithm", (DL_FUNC) &_emcAdr_hyperparam_test_genetic_algorithm, 10},
     {"_emcAdr_analyse_resultats", (DL_FUNC) &_emcAdr_analyse_resultats, 4},
     {"_emcAdr_analyse_resultats_2", (DL_FUNC) &_emcAdr_analyse_resultats_2, 5},
-    {"_emcAdr_print_csv", (DL_FUNC) &_emcAdr_print_csv, 4},
+    {"_emcAdr_print_csv", (DL_FUNC) &_emcAdr_print_csv, 5},
     {"_emcAdr_get_dissimilarity_from_list", (DL_FUNC) &_emcAdr_get_dissimilarity_from_list, 2},
     {"_emcAdr_get_dissimilarity", (DL_FUNC) &_emcAdr_get_dissimilarity, 3},
     {"_emcAdr_get_answer_class", (DL_FUNC) &_emcAdr_get_answer_class, 2},

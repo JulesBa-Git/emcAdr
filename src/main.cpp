@@ -1867,8 +1867,19 @@ void analyse_resultats_2(const std::vector<std::vector<int>>& reponses,
 //'@export
 //[[Rcpp::export]]
 void print_csv(const std::vector<std::string>& input_filenames,
+               const DataFrame& observations,
                int repetition, const DataFrame& ATCtree,
                const std::string& csv_filename = "solutions.csv" ){
+  Rcpp::List observationsMedicationTmp = observations["patientATC"];
+  std::vector<std::vector<int>> observationsMedication;
+  observationsMedication.reserve(observationsMedicationTmp.size());
+  for(int i =0; i < observationsMedicationTmp.size(); ++i){
+    observationsMedication.push_back(observationsMedicationTmp[i]);
+  }
+  
+  Rcpp::LogicalVector observationsADR = observations["patientADR"];
+
+  
   std::vector<std::pair<double, std::vector<int>>> solutions;
   
   for(const auto& filename : input_filenames){
@@ -1914,15 +1925,20 @@ void print_csv(const std::vector<std::string>& input_filenames,
   }
   std::vector<std::string> ATCName = ATCtree["Name"];
   
-  output << "score ; Cocktail \n";
+  output << "score ; Cocktail ; n patient taking C ; n patient taking C and having AE \n";
   
   for(const auto& sol : set_sol){
+    Individual c{sol.second};
+    auto pair = c.computePHypergeom(observationsMedication, observationsADR,
+                                    ATCtree["upperBound"], 1,1,1,1).second;
     output << sol.first << ";";
     for(auto ite = sol.second.begin(); ite != sol.second.end()-1; ++ite){
       output << ATCName[*ite] << ":"; 
     }
-    output << ATCName[*(sol.second.end()-1)] << "\n";
+    output << ATCName[*(sol.second.end()-1)] << ";";
+    output << pair.second << ";" << pair.first << "\n";
   }
+  
   output.close();
 }
 

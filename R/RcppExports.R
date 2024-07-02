@@ -156,8 +156,8 @@ analyse_resultats_2 <- function(reponses, input_filename, repetition, ATCtree, h
 #'@param csv_filename : Name of the output file
 #'
 #'@export
-print_csv <- function(input_filenames, repetition, ATCtree, csv_filename = "solutions.csv") {
-    invisible(.Call(`_emcAdr_print_csv`, input_filenames, repetition, ATCtree, csv_filename))
+print_csv <- function(input_filenames, observations, repetition, ATCtree, csv_filename = "solutions.csv") {
+    invisible(.Call(`_emcAdr_print_csv`, input_filenames, observations, repetition, ATCtree, csv_filename))
 }
 
 get_dissimilarity_from_list <- function(genetic_results, ATCtree) {
