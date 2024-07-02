@@ -23,7 +23,7 @@ hclust_genetic_solution <- function(genetic_results,ATCtree, dist.normalize = T,
 }
 
 #' @export
-tsne_genetic <- function(genetic_results,ATCtree, dist.normalize = T){
+tsne_genetic <- function(genetic_results,ATCtree, true_solutions,dim=2, dist.normalize = T){
   library(tsne)
   if(dist.normalize){
     divergence <- get_dissimilarity(genetic_results, ATCtree)
@@ -33,11 +33,11 @@ tsne_genetic <- function(genetic_results,ATCtree, dist.normalize = T){
   divergence <- do.call(rbind,divergence)
   divergence <- as.dist(divergence)
   
-  tsn <- tsne(divergence, k=2)
+  tsn <- tsne(divergence, k=dim)
   tsne_df <- data.frame(tsn)
   
   info_df <- get_answer_class(genetic_results,
-                              c("2590 2740", "47 1393", "888 659"))
+                              true_solutions)
   colnames(tsne_df) <- c("x","y")
   merged_df <- cbind(tsne_df, info_df)
   
