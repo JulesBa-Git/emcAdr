@@ -1925,7 +1925,7 @@ void print_csv(const std::vector<std::string>& input_filenames,
   }
   std::vector<std::string> ATCName = ATCtree["Name"];
   
-  output << "score ; Cocktail ; n patient taking C ; n patient taking C and having AE \n ; RR";
+  output << "score ; Cocktail ; n patient taking C ; n patient taking C and having AE ; RR \n";
   
   for(const auto& sol : set_sol){
     Individual c{sol.second};
