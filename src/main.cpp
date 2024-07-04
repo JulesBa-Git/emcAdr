@@ -1925,18 +1925,20 @@ void print_csv(const std::vector<std::string>& input_filenames,
   }
   std::vector<std::string> ATCName = ATCtree["Name"];
   
-  output << "score ; Cocktail ; n patient taking C ; n patient taking C and having AE \n";
+  output << "score ; Cocktail ; n patient taking C ; n patient taking C and having AE \n ; RR";
   
   for(const auto& sol : set_sol){
     Individual c{sol.second};
     auto pair = c.computePHypergeom(observationsMedication, observationsADR,
                                     ATCtree["upperBound"], 1,1,1,1).second;
+    
+    double RR = c.computeRR(observationsMedicationTmp, observationsADR, ATCtree);
     output << sol.first << ";";
     for(auto ite = sol.second.begin(); ite != sol.second.end()-1; ++ite){
       output << ATCName[*ite] << ":"; 
     }
     output << ATCName[*(sol.second.end()-1)] << ";";
-    output << pair.second << ";" << pair.first << "\n";
+    output << pair.second << ";" << pair.first << ";" << RR << "\n";
   }
   
   output.close();
