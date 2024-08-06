@@ -1637,7 +1637,7 @@ std::pair<double, std::vector<int>> recup_solution(const std::string& line){
   }
   
   vec.pop_back();
-  
+  std::sort(vec.begin(),vec.end());
   return {number, vec};
 }
 
