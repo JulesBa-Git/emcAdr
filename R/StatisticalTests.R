@@ -12,19 +12,19 @@ p_value_greater_than_empirical <- function(empirical_distribution, sampled_value
   # the histogramToDitribution function it should already be sorted)
   if(isFiltered){
     if(includeZeroValue){
+      empirical_distribution_array <- histogramToDitribution(empirical_distribution$FilteredDistribution)
+      }else{
       empirical_distribution_array <- histogramToDitribution(empirical_distribution$FilteredDistribution[2:length(
         empirical_distribution$FilteredDistribution)])
-    }else{
-      empirical_distribution_array <- histogramToDitribution(empirical_distribution$FilteredDistribution)
-    }
+      }
     empirical_distribution_array <- append(empirical_distribution_array, empirical_distribution$OutstandingRR)
   }
   else{
     if(includeZeroValue){
+      empirical_distribution_array <- histogramToDitribution(empirical_distribution$Distribution)
+    }else{
       empirical_distribution_array <- histogramToDitribution(empirical_distribution$Distribution[2:length(
         empirical_distribution$Distribution)])
-    }else{
-      empirical_distribution_array <- histogramToDitribution(empirical_distribution$Distribution)
     }
     empirical_distribution_array <- append(empirical_distribution_array, empirical_distribution$OutstandingRR)
   }
