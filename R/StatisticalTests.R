@@ -3,18 +3,29 @@
 #' @param empirical_distribution A numeric vector of values representing the empirical distribution (return value of DistributionAproximation function)
 #' @param sampled_value A numeric value representing the sampled value
 #' @param isFiltered A boolean representing if we want to use the filtered distribution or the distribution as is (False by default)
+#' @param includeZeroValue A boolean that indicate if you want to take into account the null score (False by default)
 #' @return A numeric value representing the empirical p-value
 #'
 #' @export
-p_value_greater_than_empirical <- function(empirical_distribution, sampled_value, isFiltered = F) {
+p_value_greater_than_empirical <- function(empirical_distribution, sampled_value, isFiltered = F, includeZeroValue = F) {
   # Sort empirical distribution in ascending order (if the distribution comes. from 
   # the histogramToDitribution function it should already be sorted)
   if(isFiltered){
-    empirical_distribution_array <- histogramToDitribution(empirical_distribution$FilteredDistribution)
+    if(includeZeroValue){
+      empirical_distribution_array <- histogramToDitribution(empirical_distribution$FilteredDistribution[2:length(
+        empirical_distribution$FilteredDistribution)])
+    }else{
+      empirical_distribution_array <- histogramToDitribution(empirical_distribution$FilteredDistribution)
+    }
     empirical_distribution_array <- append(empirical_distribution_array, empirical_distribution$OutstandingRR)
   }
   else{
-    empirical_distribution_array <- histogramToDitribution(empirical_distribution$Distribution)
+    if(includeZeroValue){
+      empirical_distribution_array <- histogramToDitribution(empirical_distribution$Distribution[2:length(
+        empirical_distribution$Distribution)])
+    }else{
+      empirical_distribution_array <- histogramToDitribution(empirical_distribution$Distribution)
+    }
     empirical_distribution_array <- append(empirical_distribution_array, empirical_distribution$OutstandingRR)
   }
   
