@@ -23,6 +23,10 @@ incorporateOustandingRRToDistribution <- function(outstandingRR, RRmax) {
     .Call(`_emcAdr_incorporateOustandingRRToDistribution`, outstandingRR, RRmax)
 }
 
+p_value_of_genetic_size_k <- function(distribution_output, filename, k) {
+    .Call(`_emcAdr_p_value_of_genetic_size_k`, distribution_output, filename, k)
+}
+
 #'The true RR distribution of cocktail of size 3
 NULL
 

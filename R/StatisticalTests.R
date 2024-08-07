@@ -1,13 +1,13 @@
 #' Calculate p-value of sampled value being greater than empirical distribution
 #'
 #' @param empirical_distribution A numeric vector of values representing the empirical distribution (return value of DistributionAproximation function)
-#' @param sampled_value A numeric value representing the sampled value
+#' @param sampled_values A scalar or a vector of real valued number representing the sampled value (score to be tested)
 #' @param isFiltered A boolean representing if we want to use the filtered distribution or the distribution as is (False by default)
 #' @param includeZeroValue A boolean that indicate if you want to take into account the null score (False by default)
 #' @return A numeric value representing the empirical p-value
 #'
 #' @export
-p_value_greater_than_empirical <- function(empirical_distribution, sampled_value, isFiltered = F, includeZeroValue = F) {
+p_value_greater_than_empirical <- function(empirical_distribution, sampled_values, isFiltered = F, includeZeroValue = F) {
   # Sort empirical distribution in ascending order (if the distribution comes. from 
   # the histogramToDitribution function it should already be sorted)
   if(isFiltered){
@@ -31,14 +31,18 @@ p_value_greater_than_empirical <- function(empirical_distribution, sampled_value
   
   empirical_distribution_array <- sort(empirical_distribution_array)
   
-  # Calculate ECDF value for sampled value
-  ecdf_value <- sum(empirical_distribution_array <= sampled_value) / length(empirical_distribution_array)
-  # we may use the ecdf function provided by R but here we have no package to import
+  p_values <- numeric(length(sampled_values))
   
-  # Calculate p-value
-  p_value <- 1 - ecdf_value
+  # Iterate over each sampled value
+  for (i in seq_along(sampled_values)) {
+    # Calculate ECDF value for the current sampled value
+    ecdf_value <- sum(empirical_distribution_array <= sampled_values[i]) / length(empirical_distribution_array)
+    
+    # Calculate p-value
+    p_values[i] <- 1 - ecdf_value
+  }
   
-  return (p_value) 
+  return(p_values) 
 }
 
 #' Calculate the divergence between 2 distributions (the true Distribution and the learned one)

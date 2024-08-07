@@ -2,6 +2,8 @@
 #include <vector>
 #include <numeric>
 #include <iostream>
+#include <sstream>
+#include <algorithm>
 using Rcpp::DataFrame;
 
 
@@ -95,6 +97,74 @@ Rcpp::NumericVector incorporateOustandingRRToDistribution(const std::vector<doub
   
   return Rcpp::wrap(returnedVec);
 }
+
+bool hasExtension(const std::string& filename, const std::string& extension){
+  size_t dotPos = filename.rfind('.');
+  
+  std::string fileExtension = dotPos == std::string::npos ? "" : filename.substr(dotPos);
+  
+  return fileExtension == extension;
+}
+
+std::vector<double> p_value_csv_file_size_k(const Rcpp::List& distribution_output,
+                                            std::ifstream& input, int k){
+  std::string line;
+  std::vector<std::string> cellVec;
+  cellVec.reserve(5);
+  
+  std::vector<double> solutions;
+  solutions.reserve(100);
+  
+  Rcpp::Function compute_p_value = Rf_findFun(Rf_install("p_value_greater_than_empirical"),
+                                              R_GlobalEnv);
+  
+  while(std::getline(input, line)){
+    std::stringstream rowToAnalyze(line);
+    std::string cell;
+    
+    int i = 0;
+    //we only need the first 2 cells
+    while(std::getline(rowToAnalyze, cell, ';')){
+      cellVec.push_back(cell);
+    }
+    
+    //if the cocktail is of the right size, we compute his p_value
+    if(std::count(cellVec[1].begin(), cellVec[1].end(), ':') == k){
+      solutions.push_back(Rcpp::as<double>(compute_p_value(distribution_output,
+                                          std::stod(cellVec[0]),
+                                          false)));
+    }
+    else{
+      solutions.push_back(INT_MIN);
+    }
+    cellVec.clear();
+  }
+  return solutions;
+}
+
+// gérer le test sur l'extension fichier dans la fonction supérieur (celle 
+// qui lance la boucle pour tous les k) dans le but d'ouvrir le buffer de fichier
+// une seule fois 
+//[[Rcpp::export]]
+std::vector<double> p_value_of_genetic_size_k(const Rcpp::List& distribution_output, 
+                                              const std::string& filename,int k
+                                              ){
+  std::vector<double> p_values;
+  if(hasExtension(filename,".txt")){
+    std::cout << ".txt file not supported for now \n";
+  }
+  else if(hasExtension(filename, ".csv")){
+    std::ifstream ifstr(filename);
+    if(!ifstr.is_open()){
+      std::cerr << "the file " << filename << " has failed to open\n";
+      return p_values;
+    }
+    p_values = p_value_csv_file_size_k(distribution_output, ifstr, k);
+  }
+  
+  return p_values;
+}
+
 /*** R
 library(emcAdr)
 #to test (there is hard coded path)

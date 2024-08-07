@@ -45,6 +45,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// p_value_of_genetic_size_k
+std::vector<double> p_value_of_genetic_size_k(const Rcpp::List& distribution_output, const std::string& filename, int k);
+RcppExport SEXP _emcAdr_p_value_of_genetic_size_k(SEXP distribution_outputSEXP, SEXP filenameSEXP, SEXP kSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type distribution_output(distribution_outputSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type filename(filenameSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    rcpp_result_gen = Rcpp::wrap(p_value_of_genetic_size_k(distribution_output, filename, k));
+    return rcpp_result_gen;
+END_RCPP
+}
 // EMC
 Rcpp::List EMC(int n, const DataFrame& ATCtree, const DataFrame& observations, double P_type1, double P_type2, double P_crossover, int nbIndividuals, int nbResults, double alpha, Rcpp::Nullable<Rcpp::List> startingIndividuals, Rcpp::Nullable<Rcpp::NumericVector> startingTemperatures);
 RcppExport SEXP _emcAdr_EMC(SEXP nSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP P_type1SEXP, SEXP P_type2SEXP, SEXP P_crossoverSEXP, SEXP nbIndividualsSEXP, SEXP nbResultsSEXP, SEXP alphaSEXP, SEXP startingIndividualsSEXP, SEXP startingTemperaturesSEXP) {
@@ -326,6 +339,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_ATCtoNumeric", (DL_FUNC) &_emcAdr_ATCtoNumeric, 2},
     {"_emcAdr_histogramToDitribution", (DL_FUNC) &_emcAdr_histogramToDitribution, 1},
     {"_emcAdr_incorporateOustandingRRToDistribution", (DL_FUNC) &_emcAdr_incorporateOustandingRRToDistribution, 2},
+    {"_emcAdr_p_value_of_genetic_size_k", (DL_FUNC) &_emcAdr_p_value_of_genetic_size_k, 3},
     {"_emcAdr_EMC", (DL_FUNC) &_emcAdr_EMC, 11},
     {"_emcAdr_DistributionApproximation", (DL_FUNC) &_emcAdr_DistributionApproximation, 10},
     {"_emcAdr_GeneticAlgorithm", (DL_FUNC) &_emcAdr_GeneticAlgorithm, 12},
