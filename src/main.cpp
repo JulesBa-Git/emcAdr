@@ -823,7 +823,8 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
                             Rcpp::Named("bestCockatils") = returnedMed, Rcpp::Named("bestRR") = returnedRR,
                             Rcpp::Named("FilteredDistribution") = RRDistributionGreaterBeta,
                             Rcpp::Named("bestCocktailsBeta") = returnedMedBeta,
-                            Rcpp::Named("bestRRBeta") = returnedRRBeta);
+                            Rcpp::Named("bestRRBeta") = returnedRRBeta,
+                            Rcpp::Named("cocktailSize") = Smax);
 }
 
 //'Genetic algorithm, trying to reach the best cocktail (the one which maximize

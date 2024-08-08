@@ -60,6 +60,7 @@ void ATCtoNumeric(DataFrame& patients,const DataFrame& tree) {
   
 }
 
+
 //'Convert the histogram returned by the DistributionApproximation function, to a real number ditribution
 //'(that can be used in a test for example) 
 //'
@@ -106,64 +107,92 @@ bool hasExtension(const std::string& filename, const std::string& extension){
   return fileExtension == extension;
 }
 
-std::vector<double> p_value_csv_file_size_k(const Rcpp::List& distribution_output,
-                                            std::ifstream& input, int k){
-  std::string line;
-  std::vector<std::string> cellVec;
-  cellVec.reserve(5);
+
+std::vector<std::vector<std::string>> read_csv_genetic(std::ifstream& ifstr,
+                                                       const char& sep = ';'){
   
-  std::vector<double> solutions;
-  solutions.reserve(100);
+  std::vector<std::vector<std::string>> file;
+  
+  file.reserve(500);
+
+  std::string line;
+  while(std::getline(ifstr,line)){
+    std::vector<std::string> row;
+    row.reserve(6);
+    
+    std::stringstream ss(line);
+    std::string cell;
+    
+    while(std::getline(ss, cell, sep)){
+      row.push_back(cell);
+    }
+    file.push_back(row);
+  }
+  
+  file.shrink_to_fit();
+  return file;
+}
+
+//' Used to add the p_value to each cocktail of a csv_file that is an
+ //' output of the genetic algorithm
+ //' @param distribution_outputs A list of distribution of cocktails of different sizes
+ //' in order to compute the p_value for multiple cocktail sizes
+ //' @param filename The file name of the .csv file containing the output
+ //' @param filtered_distribution Does the p-values have to be computed using filtered distribution
+ //' or normal distribution (filtered distribution by default)
+ //' @param sep The separator used in the csv file (';' by default)
+ //' @return Add the p_values to the file \p filename
+ //' @export
+ // [[Rcpp::export]]
+void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const std::string& filename,
+                                            bool filtred_distribution = true,
+                                            const char& sep = ';'){
+  
+  if(!hasExtension(filename,".csv")){
+    std::cerr << "file extension not supported for now \n";
+    return;
+  }
+  
+  std::ifstream ifstr(filename);
+  if(!ifstr.is_open()){
+    std::cerr << "the file " << filename << " has failed to open\n";
+    return;
+  }
+  
+  std::vector<std::vector<std::string>> file = read_csv_genetic(ifstr, sep);
+  
+  ifstr.close();
   
   Rcpp::Function compute_p_value = Rf_findFun(Rf_install("p_value_greater_than_empirical"),
                                               R_GlobalEnv);
-  
-  while(std::getline(input, line)){
-    std::stringstream rowToAnalyze(line);
-    std::string cell;
+  file[0].push_back("; p_value");
+  for(const auto& list : distribution_outputs){
+    int k = list["cocktailSize"];
     
-    int i = 0;
-    //we only need the first 2 cells
-    while(std::getline(rowToAnalyze, cell, ';')){
-      cellVec.push_back(cell);
+    for(auto it = file.begin()+1 ; it != file.end(); ++it){
+      if(std::count((*it)[1].begin(), (*it)[1].end(), ':') == k){
+        (*it).push_back(Rcpp::as<std::string>(compute_p_value(list, std::stod((*it)[0]),
+                                                             false)));
+      }
     }
-    
-    //if the cocktail is of the right size, we compute his p_value
-    if(std::count(cellVec[1].begin(), cellVec[1].end(), ':') == k){
-      solutions.push_back(Rcpp::as<double>(compute_p_value(distribution_output,
-                                          std::stod(cellVec[0]),
-                                          false)));
-    }
-    else{
-      solutions.push_back(INT_MIN);
-    }
-    cellVec.clear();
   }
-  return solutions;
+
+  std::ofstream ofstr(filename);
+  if(!ofstr.is_open()){
+    std::cerr << "the file " << filename << " has failed to open (to output results)\n";
+    return;
+  }
+  
+  for(const auto& line : file){
+    int line_size = line.size();
+    for(int i = 0; i < line_size -1; ++i){
+      ofstr << line[i] << ';' ;
+    }
+    ofstr << line[line_size-1] << "\n";
+  }
+  
 }
 
-// gérer le test sur l'extension fichier dans la fonction supérieur (celle 
-// qui lance la boucle pour tous les k) dans le but d'ouvrir le buffer de fichier
-// une seule fois 
-//[[Rcpp::export]]
-std::vector<double> p_value_of_genetic_size_k(const Rcpp::List& distribution_output, 
-                                              const std::string& filename,int k
-                                              ){
-  std::vector<double> p_values;
-  if(hasExtension(filename,".txt")){
-    std::cout << ".txt file not supported for now \n";
-  }
-  else if(hasExtension(filename, ".csv")){
-    std::ifstream ifstr(filename);
-    if(!ifstr.is_open()){
-      std::cerr << "the file " << filename << " has failed to open\n";
-      return p_values;
-    }
-    p_values = p_value_csv_file_size_k(distribution_output, ifstr, k);
-  }
-  
-  return p_values;
-}
 
 /*** R
 library(emcAdr)
