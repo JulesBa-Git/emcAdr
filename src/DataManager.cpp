@@ -4,6 +4,8 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
+#include <fstream>
+#include <string>
 using Rcpp::DataFrame;
 
 
@@ -99,6 +101,7 @@ Rcpp::NumericVector incorporateOustandingRRToDistribution(const std::vector<doub
   return Rcpp::wrap(returnedVec);
 }
 
+
 bool hasExtension(const std::string& filename, const std::string& extension){
   size_t dotPos = filename.rfind('.');
   
@@ -108,9 +111,7 @@ bool hasExtension(const std::string& filename, const std::string& extension){
 }
 
 
-std::vector<std::vector<std::string>> read_csv_genetic(std::ifstream& ifstr,
-                                                       const char& sep = ';'){
-  
+std::vector<std::vector<std::string>> read_csv_genetic(std::ifstream& ifstr, char sep = ';'){
   std::vector<std::vector<std::string>> file;
   
   file.reserve(500);
@@ -133,9 +134,9 @@ std::vector<std::vector<std::string>> read_csv_genetic(std::ifstream& ifstr,
   return file;
 }
 
+
 std::vector<std::vector<std::string>> check_extension_and_read_csv(
-  const std::string& filename, const char& sep 
-){
+  const std::string& filename, char sep){
   
   std::vector<std::vector<std::string>> file;
   if(!hasExtension(filename,".csv")){
@@ -158,22 +159,21 @@ std::vector<std::vector<std::string>> check_extension_and_read_csv(
   return file;
 }
 
+
 //' Used to add the p_value to each cocktail of a csv_file that is an
- //' output of the genetic algorithm
- //' @param distribution_outputs A list of distribution of cocktails of different sizes
- //' in order to compute the p_value for multiple cocktail sizes
- //' @param filename The file name of the .csv file containing the output
- //' @param filtered_distribution Does the p-values have to be computed using filtered distribution
- //' or normal distribution (filtered distribution by default)
- //' @param sep The separator used in the csv file (';' by default)
- //' @return Add the p_values to the file \p filename
- //' @export
- // [[Rcpp::export]]
+//' output of the genetic algorithm
+//' @param distribution_outputs A list of distribution of cocktails of different sizes
+//' in order to compute the p_value for multiple cocktail sizes
+//' @param filename The file name of the .csv file containing the output
+//' @param filtered_distribution Does the p-values have to be computed using filtered distribution
+//' or normal distribution (filtered distribution by default)
+//' @param sep The separator used in the csv file (';' by default)
+//[[Rcpp::export]]
 void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const std::string& filename,
                                             bool filtred_distribution = true,
-                                            const char& sep = ';'){
+                                            const std::string & sep = ";"){
   
-  std::vector<std::vector<std::string>> file = check_extension_and_read_csv(filename, sep);
+  std::vector<std::vector<std::string>> file = check_extension_and_read_csv(filename, sep[0]);
   if(file.size() == 0 ){
     std::cerr << "No cocktail to recover\n";
     return;
@@ -181,7 +181,7 @@ void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const
   
   Rcpp::Function compute_p_value = Rf_findFun(Rf_install("p_value_greater_than_empirical"),
                                               R_GlobalEnv);
-  file[0].push_back("; p_value");
+  file[0].push_back(" p_value");
   for(const auto& list : distribution_outputs){
     int k = list["cocktailSize"];
     
@@ -209,17 +209,18 @@ void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const
   
 }
 
-//'Function used to convert your genetic algorithm results that are stored into 
-//'a .csv file to a Datastructure that can be used by the clustering algorithm
-//'@param ATC_name the ATC_name column of the ATC tree
-//'@param filename Name of the file where the results are located
-//'@param sep the separator to use when opening the csv file (';' by default)
-//'@return An Rcpp::List that can be used by other algorithms (e.g. clustering algorithm)
-//[[Rcpp::export]]
+//' Function used to convert your genetic algorithm results that are stored into 
+//' a .csv file to a Data structure that can be used by the clustering algorithm
+//' @param ATC_name the ATC_name column of the ATC tree
+//' @param filename Name of the file where the results are located
+//' @param sep the separator to use when opening the csv file (';' by default)
+//' @return An R List that can be used by other algorithms (e.g. clustering algorithm)
+// [[Rcpp::export]]
 Rcpp::List csv_to_population(const std::vector<std::string>& ATC_name,
-                                  const std::string& filename, const char & sep = ';'){
+                                  const std::string& filename,
+                                  const std::string & sep = ";"){
   
-  std::vector<std::vector<std::string>> file = check_extension_and_read_csv(filename, sep);
+  std::vector<std::vector<std::string>> file = check_extension_and_read_csv(filename, sep[0]);
   if(file.size() == 0 ){
     std::cerr << "No cocktail to recover\n";
     return Rcpp::List();
@@ -242,11 +243,11 @@ Rcpp::List csv_to_population(const std::vector<std::string>& ATC_name,
     }
     rowth_cocktail.shrink_to_fit();
     cocktails.push_back(rowth_cocktail);
-    rowth_cocktail.clear();
   }
   
-  return Rcpp::List(Rcpp::wrap(cocktails));
+  return Rcpp::wrap(cocktails);
 }
+
 
 /*** R
 library(emcAdr)
