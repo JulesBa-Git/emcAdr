@@ -133,6 +133,31 @@ std::vector<std::vector<std::string>> read_csv_genetic(std::ifstream& ifstr,
   return file;
 }
 
+std::vector<std::vector<std::string>> check_extension_and_read_csv(
+  const std::string& filename, const char& sep 
+){
+  
+  std::vector<std::vector<std::string>> file;
+  if(!hasExtension(filename,".csv")){
+    std::cerr << "file extension not supported for now \n";
+    file.resize(0);
+    return file;
+  }
+  
+  std::ifstream ifstr(filename);
+  if(!ifstr.is_open()){
+    std::cerr << "the file " << filename << " has failed to open\n";
+    file.resize(0);
+    return file;
+  }
+  
+  file = read_csv_genetic(ifstr, sep);
+  
+  ifstr.close();
+  
+  return file;
+}
+
 //' Used to add the p_value to each cocktail of a csv_file that is an
  //' output of the genetic algorithm
  //' @param distribution_outputs A list of distribution of cocktails of different sizes
@@ -148,20 +173,11 @@ void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const
                                             bool filtred_distribution = true,
                                             const char& sep = ';'){
   
-  if(!hasExtension(filename,".csv")){
-    std::cerr << "file extension not supported for now \n";
+  std::vector<std::vector<std::string>> file = check_extension_and_read_csv(filename, sep);
+  if(file.size() == 0 ){
+    std::cerr << "No cocktail to recover\n";
     return;
   }
-  
-  std::ifstream ifstr(filename);
-  if(!ifstr.is_open()){
-    std::cerr << "the file " << filename << " has failed to open\n";
-    return;
-  }
-  
-  std::vector<std::vector<std::string>> file = read_csv_genetic(ifstr, sep);
-  
-  ifstr.close();
   
   Rcpp::Function compute_p_value = Rf_findFun(Rf_install("p_value_greater_than_empirical"),
                                               R_GlobalEnv);
@@ -170,7 +186,7 @@ void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const
     int k = list["cocktailSize"];
     
     for(auto it = file.begin()+1 ; it != file.end(); ++it){
-      if(std::count((*it)[1].begin(), (*it)[1].end(), ':') == k){
+      if(std::count((*it)[1].begin(), (*it)[1].end(), ':') == k-1){
         (*it).push_back(Rcpp::as<std::string>(compute_p_value(list, std::stod((*it)[0]),
                                                              false)));
       }
@@ -193,6 +209,44 @@ void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const
   
 }
 
+//'Function used to convert your genetic algorithm results that are stored into 
+//'a .csv file to a Datastructure that can be used by the clustering algorithm
+//'@param ATC_name the ATC_name column of the ATC tree
+//'@param filename Name of the file where the results are located
+//'@param sep the separator to use when opening the csv file (';' by default)
+//'@return An Rcpp::List that can be used by other algorithms (e.g. clustering algorithm)
+//[[Rcpp::export]]
+Rcpp::List csv_to_population(const std::vector<std::string>& ATC_name,
+                                  const std::string& filename, const char & sep = ';'){
+  
+  std::vector<std::vector<std::string>> file = check_extension_and_read_csv(filename, sep);
+  if(file.size() == 0 ){
+    std::cerr << "No cocktail to recover\n";
+    return Rcpp::List();
+  }
+  std::vector<std::vector<int>> cocktails;
+  cocktails.reserve(file.size());
+  
+  for(const auto& row : file){
+    std::string drug;
+    std::stringstream ss(row[1]);
+    
+    std::vector<int> rowth_cocktail;
+    rowth_cocktail.reserve(7);
+    
+    while(std::getline(ss, drug, ':')){
+      auto it = std::find(ATC_name.begin(), ATC_name.end(), drug);
+      if(it != ATC_name.end()){
+        rowth_cocktail.push_back(std::distance(ATC_name.begin(), it));
+      }
+    }
+    rowth_cocktail.shrink_to_fit();
+    cocktails.push_back(rowth_cocktail);
+    rowth_cocktail.clear();
+  }
+  
+  return Rcpp::List(Rcpp::wrap(cocktails));
+}
 
 /*** R
 library(emcAdr)
