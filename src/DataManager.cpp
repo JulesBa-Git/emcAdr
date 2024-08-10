@@ -181,16 +181,24 @@ void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const
   
   Rcpp::Function compute_p_value = Rf_findFun(Rf_install("p_value_greater_than_empirical"),
                                               R_GlobalEnv);
+  
   file[0].push_back(" p_value");
-  for(const auto& list : distribution_outputs){
+  
+  for(const Rcpp::List& list : distribution_outputs){
     int k = list["cocktailSize"];
+    
+    
     
     for(auto it = file.begin()+1 ; it != file.end(); ++it){
       if(std::count((*it)[1].begin(), (*it)[1].end(), ':') == k-1){
-        (*it).push_back(Rcpp::as<std::string>(compute_p_value(list, std::stod((*it)[0]),
-                                                             false)));
+        (*it).push_back(std::to_string(
+                          Rcpp::as<double>(
+                            compute_p_value(list, std::stod((*it)[0]),false)
+                          )
+                        ));
       }
     }
+    
   }
 
   std::ofstream ofstr(filename);
