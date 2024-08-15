@@ -1037,8 +1037,6 @@ Rcpp::List trueDistributionDrugs(const DataFrame& ATCtree, const DataFrame& obse
  std::pair<double, std::pair<int,int>> computeRROutput;
  std::pair<double, std::pair<int,int>> computePhyperOutput;
  
- int compteur = 0;
- 
  int nbResults = 100; // we keep the 100 best individuals
  double minRR = 0, minRRbeta = 0;
  double minPhyper = 0, minPhyperBeta = 0;
@@ -1055,7 +1053,6 @@ Rcpp::List trueDistributionDrugs(const DataFrame& ATCtree, const DataFrame& obse
    med = i;
 
    indiv.setMedications({med});
-   std::cout << ++compteur << '\n';
    //computeRROutput = indiv.computeRR(observationsMedication, observationsADR, upperBounds, 8000, num_thread);
    computePhyperOutput = indiv.computePHypergeom(observationsMedication, observationsADR,
                                                  upperBounds, ADRCount, notADRCount,
@@ -1170,8 +1167,6 @@ Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataF
   std::pair<double, std::pair<int,int>> computeRROutput;
   std::pair<double, std::pair<int,int>> computePhyperOutput;
   
-  int compteur = 0;
-  
   int nbResults = 100; // we keep the 100 best individuals
   double minRR = 0, minRRbeta = 0;
   double minPhyper = 0, minPhyperBeta = 0;
@@ -1190,7 +1185,6 @@ Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataF
     for(int j = i+1 ; j < ATCtree.nrow(); ++j){
       med[1] = j;
       indiv.setMedications(med);
-      std::cout << ++compteur << '\n';
       //computeRROutput = indiv.computeRR(observationsMedication, observationsADR, upperBounds, 8000, num_thread);
       computePhyperOutput = indiv.computePHypergeom(observationsMedication, observationsADR,
                                                     upperBounds, ADRCount, notADRCount,
