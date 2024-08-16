@@ -256,6 +256,30 @@ Rcpp::List csv_to_population(const std::vector<std::string>& ATC_name,
   return Rcpp::wrap(cocktails);
 }
 
+//' Function used to convert integer cocktails (like the one outputed by the distributionApproximation function)
+//' to string cocktail in order to make them more readable
+//' 
+//' @param cocktails cocktails vector to be converted
+//' @param ATC_name The ATC_name column of the ATC tree
+//' 
+//' @return The equivalent of \p cocktails with integer changed to string
+// [[Rcpp::export]]
+std::vector<std::vector<std::string>> int_cocktail_to_string_cocktail(
+    const std::vector<std::vector<int>>& cocktails, const std::vector<std::string>& ATC_name){
+  std::vector<std::vector<std::string>> string_cocktails;
+  string_cocktails.reserve(cocktails.size());
+  
+  for(const auto& cocktail : cocktails){
+    std::vector<std::string> current_string_cocktail;
+    current_string_cocktail.reserve(cocktail.size());
+    for(const auto& med : cocktail)
+      current_string_cocktail.push_back(ATC_name[med]);
+    
+    string_cocktails.push_back(current_string_cocktail);
+  }
+  
+  return string_cocktails;
+}
 
 /*** R
 library(emcAdr)

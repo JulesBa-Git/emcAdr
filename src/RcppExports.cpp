@@ -71,6 +71,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// int_cocktail_to_string_cocktail
+std::vector<std::vector<std::string>> int_cocktail_to_string_cocktail(const std::vector<std::vector<int>>& cocktails, const std::vector<std::string>& ATC_name);
+RcppExport SEXP _emcAdr_int_cocktail_to_string_cocktail(SEXP cocktailsSEXP, SEXP ATC_nameSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type cocktails(cocktailsSEXP);
+    Rcpp::traits::input_parameter< const std::vector<std::string>& >::type ATC_name(ATC_nameSEXP);
+    rcpp_result_gen = Rcpp::wrap(int_cocktail_to_string_cocktail(cocktails, ATC_name));
+    return rcpp_result_gen;
+END_RCPP
+}
 // EMC
 Rcpp::List EMC(int n, const DataFrame& ATCtree, const DataFrame& observations, double P_type1, double P_type2, double P_crossover, int nbIndividuals, int nbResults, double alpha, Rcpp::Nullable<Rcpp::List> startingIndividuals, Rcpp::Nullable<Rcpp::NumericVector> startingTemperatures);
 RcppExport SEXP _emcAdr_EMC(SEXP nSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP P_type1SEXP, SEXP P_type2SEXP, SEXP P_crossoverSEXP, SEXP nbIndividualsSEXP, SEXP nbResultsSEXP, SEXP alphaSEXP, SEXP startingIndividualsSEXP, SEXP startingTemperaturesSEXP) {
@@ -354,6 +366,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_incorporateOustandingRRToDistribution", (DL_FUNC) &_emcAdr_incorporateOustandingRRToDistribution, 2},
     {"_emcAdr_p_value_csv_file", (DL_FUNC) &_emcAdr_p_value_csv_file, 4},
     {"_emcAdr_csv_to_population", (DL_FUNC) &_emcAdr_csv_to_population, 3},
+    {"_emcAdr_int_cocktail_to_string_cocktail", (DL_FUNC) &_emcAdr_int_cocktail_to_string_cocktail, 2},
     {"_emcAdr_EMC", (DL_FUNC) &_emcAdr_EMC, 11},
     {"_emcAdr_DistributionApproximation", (DL_FUNC) &_emcAdr_DistributionApproximation, 10},
     {"_emcAdr_GeneticAlgorithm", (DL_FUNC) &_emcAdr_GeneticAlgorithm, 12},

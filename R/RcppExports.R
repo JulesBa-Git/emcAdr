@@ -45,6 +45,17 @@ csv_to_population <- function(ATC_name, filename, sep = ";") {
     .Call(`_emcAdr_csv_to_population`, ATC_name, filename, sep)
 }
 
+#' Function used to convert integer cocktails (like the one outputed by the distributionApproximation function)
+#' to string cocktail in order to make them more readable
+#' 
+#' @param cocktails cocktails vector to be converted
+#' @param ATC_name The ATC_name column of the ATC tree
+#' 
+#' @return The equivalent of \p cocktails with integer changed to string
+int_cocktail_to_string_cocktail <- function(cocktails, ATC_name) {
+    .Call(`_emcAdr_int_cocktail_to_string_cocktail`, cocktails, ATC_name)
+}
+
 #'The true RR distribution of cocktail of size 3
 NULL
 
