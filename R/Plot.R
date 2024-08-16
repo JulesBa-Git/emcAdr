@@ -34,6 +34,44 @@ plot_evolution <- function(list, mean_color = "#F2A900", best_color = "#008080",
           legend.text = element_text(face = "bold", size = unit(12, "pt")),
           legend.position = "top")
 }
+#' Make a Quantile-Quantile diagram from the output of the MCMC algorithm (DistributionAproximation)
+#' and the algorithm that exhaustively calculates the distribution
+#' 
+#' @param estimated Outputed object of DistributionApproximation function
+#' @param true Outputed object of either DistributionApproximation function or True distribution
+#' computation function
+#' @param filtered Make use of the classic distributuion estimation or of the filtred one
+#' (number of patient taking the cocktail > beta)
+#' @param color The color of the dashed line of the qq-plot
+#' 
+#' @import ggplot2
+#' @export
+qq_plot_output <- function(estimated, true, filtered = F, color = "steelblue"){
+  library(ggplot2)
+  if(filtered){
+    estimated_distribution <- histogramToDitribution(estimated$FilteredDistribution[2:length(estimated$FilteredDistribution)])
+    true_distribution <- histogramToDitribution(true$FilteredDistribution[2:length(true$FilteredDistribution)])
+  }
+  else{
+    estimated_distribution <- histogramToDitribution(estimated$Distribution[2:length(estimated$Distribution)])
+    true_distribution <- histogramToDitribution(true$Distribution[2:length(true$Distribution)])
+  }
+  
+  num_quantiles <- min(length(estimated_distribution), length(true_distribution))
+  
+  probs <- seq(0,1, length.out = num_quantiles)
+  
+  quantiles_estim <- quantile(estimated_distribution, probs)
+  quantiles_true <- quantile(true_distribution, probs)
+  
+  qq_df <- data.frame(estimated_quantiles = quantiles_estim, true_quantiles = quantiles_true)
+  
+  ggplot(qq_df, aes(x = estimated_quantiles, y = true_quantiles)) +
+    geom_point() +
+    geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = color) + # Adds a reference line y = x
+    theme_minimal() +
+    labs(x = "Estimated Distribution", y = "True Distribution", title = "QQ Plot of Estimated vs True distribution")
+}
 
 #' Plot the histogram of the approximation of the RR distribution 
 #' @param freq_array The returned value of DistributionApproximation function
