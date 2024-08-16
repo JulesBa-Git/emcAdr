@@ -51,7 +51,7 @@ csv_to_population <- function(ATC_name, filename, sep = ";") {
 #' @param cocktails cocktails vector to be converted
 #' @param ATC_name The ATC_name column of the ATC tree
 #' 
-#' @return The equivalent of \p cocktails with integer changed to string
+#' @return The equivalent of cocktails with integer changed to string
 int_cocktail_to_string_cocktail <- function(cocktails, ATC_name) {
     .Call(`_emcAdr_int_cocktail_to_string_cocktail`, cocktails, ATC_name)
 }

@@ -262,7 +262,7 @@ Rcpp::List csv_to_population(const std::vector<std::string>& ATC_name,
 //' @param cocktails cocktails vector to be converted
 //' @param ATC_name The ATC_name column of the ATC tree
 //' 
-//' @return The equivalent of \p cocktails with integer changed to string
+//' @return The equivalent of cocktails with integer changed to string
 // [[Rcpp::export]]
 std::vector<std::vector<std::string>> int_cocktail_to_string_cocktail(
     const std::vector<std::vector<int>>& cocktails, const std::vector<std::string>& ATC_name){
