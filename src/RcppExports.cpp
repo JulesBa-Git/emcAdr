@@ -318,18 +318,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// ATC_idx_to_string
-std::vector<std::vector<std::string>> ATC_idx_to_string(const std::vector<std::vector<int>>& patients, const std::vector<std::string>& ATCName);
-RcppExport SEXP _emcAdr_ATC_idx_to_string(SEXP patientsSEXP, SEXP ATCNameSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type patients(patientsSEXP);
-    Rcpp::traits::input_parameter< const std::vector<std::string>& >::type ATCName(ATCNameSEXP);
-    rcpp_result_gen = Rcpp::wrap(ATC_idx_to_string(patients, ATCName));
-    return rcpp_result_gen;
-END_RCPP
-}
 // dmvnrm_arma
 arma::vec dmvnrm_arma(const arma::mat& X, const arma::rowvec& mean, const arma::mat& sigma_k, const arma::vec& w);
 RcppExport SEXP _emcAdr_dmvnrm_arma(SEXP XSEXP, SEXP meanSEXP, SEXP sigma_kSEXP, SEXP wSEXP) {
@@ -382,7 +370,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_get_dissimilarity_from_list", (DL_FUNC) &_emcAdr_get_dissimilarity_from_list, 2},
     {"_emcAdr_get_dissimilarity", (DL_FUNC) &_emcAdr_get_dissimilarity, 3},
     {"_emcAdr_get_answer_class", (DL_FUNC) &_emcAdr_get_answer_class, 2},
-    {"_emcAdr_ATC_idx_to_string", (DL_FUNC) &_emcAdr_ATC_idx_to_string, 2},
     {"_emcAdr_dmvnrm_arma", (DL_FUNC) &_emcAdr_dmvnrm_arma, 4},
     {"_emcAdr_FWD_EM", (DL_FUNC) &_emcAdr_FWD_EM, 5},
     {NULL, NULL, 0}
