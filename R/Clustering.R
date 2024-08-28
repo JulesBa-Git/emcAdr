@@ -43,3 +43,9 @@ tsne_genetic <- function(genetic_results,ATCtree, true_solutions,dim=2, dist.nor
   
   return (merged_df)
 }
+
+clustering_from_df <- function(df_genetic_results, ATCtree, 
+                               dim=2, dist.normalize = T){
+  library(tsne)
+  
+}

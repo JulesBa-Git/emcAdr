@@ -71,6 +71,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// string_list_to_int_cocktails
+Rcpp::List string_list_to_int_cocktails(const std::vector<std::string>& ATC_name, const std::vector<std::string>& lines);
+RcppExport SEXP _emcAdr_string_list_to_int_cocktails(SEXP ATC_nameSEXP, SEXP linesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::vector<std::string>& >::type ATC_name(ATC_nameSEXP);
+    Rcpp::traits::input_parameter< const std::vector<std::string>& >::type lines(linesSEXP);
+    rcpp_result_gen = Rcpp::wrap(string_list_to_int_cocktails(ATC_name, lines));
+    return rcpp_result_gen;
+END_RCPP
+}
 // int_cocktail_to_string_cocktail
 std::vector<std::vector<std::string>> int_cocktail_to_string_cocktail(const std::vector<std::vector<int>>& cocktails, const std::vector<std::string>& ATC_name);
 RcppExport SEXP _emcAdr_int_cocktail_to_string_cocktail(SEXP cocktailsSEXP, SEXP ATC_nameSEXP) {
@@ -354,6 +366,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_incorporateOustandingRRToDistribution", (DL_FUNC) &_emcAdr_incorporateOustandingRRToDistribution, 2},
     {"_emcAdr_p_value_csv_file", (DL_FUNC) &_emcAdr_p_value_csv_file, 4},
     {"_emcAdr_csv_to_population", (DL_FUNC) &_emcAdr_csv_to_population, 3},
+    {"_emcAdr_string_list_to_int_cocktails", (DL_FUNC) &_emcAdr_string_list_to_int_cocktails, 2},
     {"_emcAdr_int_cocktail_to_string_cocktail", (DL_FUNC) &_emcAdr_int_cocktail_to_string_cocktail, 2},
     {"_emcAdr_EMC", (DL_FUNC) &_emcAdr_EMC, 11},
     {"_emcAdr_DistributionApproximation", (DL_FUNC) &_emcAdr_DistributionApproximation, 10},

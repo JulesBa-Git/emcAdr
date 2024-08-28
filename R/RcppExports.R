@@ -45,6 +45,15 @@ csv_to_population <- function(ATC_name, filename, sep = ";") {
     .Call(`_emcAdr_csv_to_population`, ATC_name, filename, sep)
 }
 
+#' Function used to convert a string vector of drugs in form "drug1:drug2" to 
+#' a vector of index of the ATC tree ex: c(ATC_index(drug1), ATC_index(drugs2))
+#' @param ATC_name the ATC_name column of the ATC tree
+#' @param lines A string vector of drugs cocktail in the form "drug1:drug2:...:drug_n"
+#' @return An R List that can be used by other algorithms (e.g. clustering algorithm)
+string_list_to_int_cocktails <- function(ATC_name, lines) {
+    .Call(`_emcAdr_string_list_to_int_cocktails`, ATC_name, lines)
+}
+
 #' Function used to convert integer cocktails (like the one outputed by the distributionApproximation function)
 #' to string cocktail in order to make them more readable
 #' 

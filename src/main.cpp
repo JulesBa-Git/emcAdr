@@ -2012,6 +2012,19 @@ std::vector<std::vector<double>> get_dissimilarity(
 }
 
 //[[Rcpp::export]]
+std::vector<std::vector<double>>get_dissimilarity_from_cocktail(const std::vector<std::vector<int>>& cocktails,
+                                                                const DataFrame& ATCtree,
+                                                                bool normalization = true){
+  std::vector<int> ATClength = ATCtree["ATC_length"];
+  std::vector<int> depth, father;
+  std::tie(depth, father) = treeDepthFather(ATClength);
+  
+  Population population(cocktails);
+  
+  return dissim(population, depth, father, normalization);
+}
+
+//[[Rcpp::export]]
 Rcpp::DataFrame get_answer_class(const std::string& filename,
                                   const std::vector<std::string>& answer){
   std::vector<std::string> cocktails;

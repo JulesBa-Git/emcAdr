@@ -117,6 +117,9 @@ std::vector<std::vector<std::string>> read_csv_genetic(std::ifstream& ifstr, cha
   file.reserve(500);
 
   std::string line;
+  //read the header of the csv file
+  std::getline(ifstr,line);
+  
   while(std::getline(ifstr,line)){
     std::vector<std::string> row;
     row.reserve(6);
@@ -254,6 +257,36 @@ Rcpp::List csv_to_population(const std::vector<std::string>& ATC_name,
   }
   
   return Rcpp::wrap(cocktails);
+}
+
+//' Function used to convert a string vector of drugs in form "drug1:drug2" to 
+//' a vector of index of the ATC tree ex: c(ATC_index(drug1), ATC_index(drugs2))
+//' @param ATC_name the ATC_name column of the ATC tree
+//' @param lines A string vector of drugs cocktail in the form "drug1:drug2:...:drug_n"
+//' @return An R List that can be used by other algorithms (e.g. clustering algorithm)
+// [[Rcpp::export]]
+Rcpp::List string_list_to_int_cocktails(const std::vector<std::string>& ATC_name,
+                                        const std::vector<std::string>& lines){
+  std::vector<std::vector<int>> cocktails;
+  cocktails.reserve(lines.size());
+  
+  for(const auto& line : lines){
+    std::string drug;
+    std::stringstream ss(line);
+    
+    std::vector<int> rowth_cocktail;
+    rowth_cocktail.reserve(7);
+    
+    while(std::getline(ss, drug, ':')){
+      auto it = std::find(ATC_name.begin(), ATC_name.end(), drug);
+      if(it != ATC_name.end()){
+        rowth_cocktail.push_back(std::distance(ATC_name.begin(), it));
+      } 
+    }
+    rowth_cocktail.shrink_to_fit();
+    cocktails.push_back(rowth_cocktail);
+  }
+   return Rcpp::wrap(cocktails);
 }
 
 //' Function used to convert integer cocktails (like the one outputed by the distributionApproximation function)
