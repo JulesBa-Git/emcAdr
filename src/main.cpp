@@ -1719,6 +1719,77 @@ void analyse_resultats(const std::vector<std::vector<int>>& reponses,
   }
 }
 
+//[[Rcpp::export]]
+Rcpp::DataFrame true_results_dissimilarity_and_class(std::deque<std::vector<int>> cocktails,
+                                                     const std::deque<std::vector<int>>& solutions,
+                                                     const DataFrame& ATCtree){
+  std::vector<short> classes;
+  std::vector<double> similarity;
+  
+  classes.reserve(cocktails.size());
+  similarity.reserve(similarity.size());
+  
+  std::vector<int> ATClength = ATCtree["ATC_length"];
+  std::vector<int> depth, father;
+  std::tie(depth, father) = treeDepthFather(ATClength);
+  
+  for(const auto& sol : solutions){
+      cocktails.push_front(sol);
+  }
+  
+  Population population({cocktails.begin(),cocktails.end()});
+  
+  IntMatrix M;
+  std::vector<int> indexM;
+  
+  std::tie(M, indexM) = population.pretraitement(depth,father);
+  RealMatrix S = population.similarity(M, indexM);
+  
+  for(int i = solutions.size(); i < cocktails.size(); ++i){
+    int jmax = 0;
+    double max_sim = S[i][jmax];
+    for(int j = 1 ; j < solutions.size(); ++j){
+      if(S[i][j] > S[i][jmax]){
+        max_sim = S[i][j];
+        jmax = j;
+      }
+    }
+    classes.push_back(jmax);
+    similarity.push_back(max_sim);
+  }
+  return Rcpp::DataFrame::create(Rcpp::Named("class") = classes,
+                         Rcpp::Named("similarity") = similarity);
+}
+
+//[[Rcpp::export]]
+std::vector<std::vector<double>> test_func(const std::vector<int>& ATClength){
+  
+  std::vector<int> depth, father;
+  std::tie(depth, father) = treeDepthFather(ATClength);
+  
+  std::vector<std::vector<int>> cocktails = {{1903},{521, 904, 1696, 1903, 4731}};
+  Population population({cocktails.begin(),cocktails.end()});
+  
+  IntMatrix M;
+  std::vector<int> indexM;
+  
+  std::tie(M, indexM) = population.pretraitement(depth,father);
+  
+  std::cout << "M\n";
+  for(const auto& row : M){
+    for(const auto& i : row){
+      std::cout<<i << " ";
+    }
+    std::cout<<"\n";
+  }
+  
+  std::cout << std::count(M[0].begin(),M[0].end(), M[0][0]) << std::endl;
+  std::cout << std::count(M[1].begin(),M[1].end(), M[1][0]) << std::endl;
+  RealMatrix D = population.dissimilarity(M, indexM, false);
+  
+  return D;
+}
+
 void print_most_similar(const std::deque<std::pair<double, std::vector<int>>>& sol,
                         const std::vector<std::vector<int>>& reponses,
                         const std::vector<int>& depth, const std::vector<int> father,
@@ -2011,9 +2082,10 @@ std::vector<std::vector<double>> get_dissimilarity(
   return dissim(population, depth, father, normalization);
 }
 
+
 //[[Rcpp::export]]
-std::vector<std::vector<double>>get_dissimilarity_from_cocktail(const std::vector<std::vector<int>>& cocktails,
-                                                                const DataFrame& ATCtree,
+std::vector<std::vector<double>> get_dissimilarity_from_cocktail(const std::vector<std::vector<int>>& cocktails,
+                                                                const Rcpp::DataFrame& ATCtree,
                                                                 bool normalization = true){
   std::vector<int> ATClength = ATCtree["ATC_length"];
   std::vector<int> depth, father;

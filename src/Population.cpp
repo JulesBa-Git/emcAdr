@@ -243,7 +243,7 @@ RealMatrix Population::initSimilarityMatrix() const{
   
   return sim;
 }
-
+//refactor with dist
 double Population::dist_norm(int i, int j, const IntMatrix& M, const std::vector<int>& idx) const{
   //if j == idx.size -1 the last index of a medication of C_j is M.size()-1 (last row of M)
   int max_idx_j = j == idx.size()-1 ? M.size() : idx[j+1];
@@ -266,8 +266,15 @@ double Population::dist_norm(int i, int j, const IntMatrix& M, const std::vector
     for(const auto& idx1 : indexC1){
       for(const auto& idx2 : indexC2){
         if(M[idx1][depth] == M[idx2][depth]){
+          if(M[idx1] == M[idx2]){
+            cost+=0;
+          }else{
+            cost+= depth - 
+              std::min(std::count(M[idx1].begin(),M[idx1].end(), M[idx1][0]),
+                       std::count(M[idx2].begin(),M[idx2].end(), M[idx2][0])) +
+                         1;
+          }
           deleteC1.push_back(idx1);
-          cost+= depth;
           indexC2.erase(std::remove(indexC2.begin(), indexC2.end(), idx2),
                         indexC2.end());
           break;
@@ -312,8 +319,17 @@ double Population::dist(int i, int j, const IntMatrix& M, const std::vector<int>
     for(const auto& idx1 : indexC1){
       for(const auto& idx2 : indexC2){
         if(M[idx1][depth] == M[idx2][depth]){
+          //allow to compare cocktail that are not drug cocktails
+          if(M[idx1] == M[idx2]){
+            cost+=0;
+          }else{
+            cost+= depth - 
+              std::min(std::count(M[idx1].begin(),M[idx1].end(), M[idx1][0]),
+                       std::count(M[idx2].begin(),M[idx2].end(), M[idx2][0])) +
+                         1;
+          }
           deleteC1.push_back(idx1);
-          cost+= depth;
+          //cost+= depth;
           indexC2.erase(std::remove(indexC2.begin(), indexC2.end(), idx2),
                         indexC2.end());
           break;

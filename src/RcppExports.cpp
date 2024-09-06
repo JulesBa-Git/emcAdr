@@ -265,6 +265,30 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// true_results_dissimilarity_and_class
+Rcpp::DataFrame true_results_dissimilarity_and_class(std::deque<std::vector<int>> cocktails, const std::deque<std::vector<int>>& solutions, const DataFrame& ATCtree);
+RcppExport SEXP _emcAdr_true_results_dissimilarity_and_class(SEXP cocktailsSEXP, SEXP solutionsSEXP, SEXP ATCtreeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::deque<std::vector<int>> >::type cocktails(cocktailsSEXP);
+    Rcpp::traits::input_parameter< const std::deque<std::vector<int>>& >::type solutions(solutionsSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
+    rcpp_result_gen = Rcpp::wrap(true_results_dissimilarity_and_class(cocktails, solutions, ATCtree));
+    return rcpp_result_gen;
+END_RCPP
+}
+// test_func
+std::vector<std::vector<double>> test_func(const std::vector<int>& ATClength);
+RcppExport SEXP _emcAdr_test_func(SEXP ATClengthSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type ATClength(ATClengthSEXP);
+    rcpp_result_gen = Rcpp::wrap(test_func(ATClength));
+    return rcpp_result_gen;
+END_RCPP
+}
 // analyse_resultats_2
 void analyse_resultats_2(const std::vector<std::vector<int>>& reponses, const std::string& input_filename, int repetition, const DataFrame& ATCtree, bool have_solution);
 RcppExport SEXP _emcAdr_analyse_resultats_2(SEXP reponsesSEXP, SEXP input_filenameSEXP, SEXP repetitionSEXP, SEXP ATCtreeSEXP, SEXP have_solutionSEXP) {
@@ -315,6 +339,19 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
     Rcpp::traits::input_parameter< bool >::type normalization(normalizationSEXP);
     rcpp_result_gen = Rcpp::wrap(get_dissimilarity(filename, ATCtree, normalization));
+    return rcpp_result_gen;
+END_RCPP
+}
+// get_dissimilarity_from_cocktail
+std::vector<std::vector<double>> get_dissimilarity_from_cocktail(const std::vector<std::vector<int>>& cocktails, const Rcpp::DataFrame& ATCtree, bool normalization);
+RcppExport SEXP _emcAdr_get_dissimilarity_from_cocktail(SEXP cocktailsSEXP, SEXP ATCtreeSEXP, SEXP normalizationSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type cocktails(cocktailsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::DataFrame& >::type ATCtree(ATCtreeSEXP);
+    Rcpp::traits::input_parameter< bool >::type normalization(normalizationSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_dissimilarity_from_cocktail(cocktails, ATCtree, normalization));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -378,10 +415,13 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_computeMetrics", (DL_FUNC) &_emcAdr_computeMetrics, 4},
     {"_emcAdr_hyperparam_test_genetic_algorithm", (DL_FUNC) &_emcAdr_hyperparam_test_genetic_algorithm, 10},
     {"_emcAdr_analyse_resultats", (DL_FUNC) &_emcAdr_analyse_resultats, 4},
+    {"_emcAdr_true_results_dissimilarity_and_class", (DL_FUNC) &_emcAdr_true_results_dissimilarity_and_class, 3},
+    {"_emcAdr_test_func", (DL_FUNC) &_emcAdr_test_func, 1},
     {"_emcAdr_analyse_resultats_2", (DL_FUNC) &_emcAdr_analyse_resultats_2, 5},
     {"_emcAdr_print_csv", (DL_FUNC) &_emcAdr_print_csv, 5},
     {"_emcAdr_get_dissimilarity_from_list", (DL_FUNC) &_emcAdr_get_dissimilarity_from_list, 2},
     {"_emcAdr_get_dissimilarity", (DL_FUNC) &_emcAdr_get_dissimilarity, 3},
+    {"_emcAdr_get_dissimilarity_from_cocktail", (DL_FUNC) &_emcAdr_get_dissimilarity_from_cocktail, 3},
     {"_emcAdr_get_answer_class", (DL_FUNC) &_emcAdr_get_answer_class, 2},
     {"_emcAdr_dmvnrm_arma", (DL_FUNC) &_emcAdr_dmvnrm_arma, 4},
     {"_emcAdr_FWD_EM", (DL_FUNC) &_emcAdr_FWD_EM, 5},

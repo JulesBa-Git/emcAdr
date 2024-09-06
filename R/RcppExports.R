@@ -184,6 +184,14 @@ analyse_resultats <- function(reponses, input_filename, repetition, ATCtree) {
     invisible(.Call(`_emcAdr_analyse_resultats`, reponses, input_filename, repetition, ATCtree))
 }
 
+true_results_dissimilarity_and_class <- function(cocktails, solutions, ATCtree) {
+    .Call(`_emcAdr_true_results_dissimilarity_and_class`, cocktails, solutions, ATCtree)
+}
+
+test_func <- function(ATClength) {
+    .Call(`_emcAdr_test_func`, ATClength)
+}
+
 analyse_resultats_2 <- function(reponses, input_filename, repetition, ATCtree, have_solution) {
     invisible(.Call(`_emcAdr_analyse_resultats_2`, reponses, input_filename, repetition, ATCtree, have_solution))
 }
@@ -205,6 +213,10 @@ get_dissimilarity_from_list <- function(genetic_results, ATCtree) {
 
 get_dissimilarity <- function(filename, ATCtree, normalization = TRUE) {
     .Call(`_emcAdr_get_dissimilarity`, filename, ATCtree, normalization)
+}
+
+get_dissimilarity_from_cocktail <- function(cocktails, ATCtree, normalization = TRUE) {
+    .Call(`_emcAdr_get_dissimilarity_from_cocktail`, cocktails, ATCtree, normalization)
 }
 
 get_answer_class <- function(filename, answer) {

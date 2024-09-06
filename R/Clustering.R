@@ -31,7 +31,7 @@ tsne_genetic <- function(genetic_results,ATCtree, true_solutions,dim=2, dist.nor
     divergence <- get_dissimilarity(genetic_results, ATCtree, F)
   }
   divergence <- do.call(rbind,divergence)
-  divergence <- as.dist(divergence)
+  #divergence <- as.dist(divergence)
   
   tsn <- tsne(divergence, k=dim)
   tsne_df <- data.frame(tsn)
