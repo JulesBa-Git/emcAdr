@@ -1786,7 +1786,7 @@ Rcpp::DataFrame computeMetrics_size3(const Rcpp::DataFrame& df, const DataFrame&
   std::vector<double> metricsResults;
   metricsResults.reserve(metrics.size());
   
-  int j = 0;
+  
   Rcpp::List CocktailList =  df["Cocktail"];
   for(const std::vector<int>& cocktail : CocktailList){
     metricsResults = MetricCalc_size3(cocktail, ATClength, upperBounds, 
@@ -1796,7 +1796,7 @@ Rcpp::DataFrame computeMetrics_size3(const Rcpp::DataFrame& df, const DataFrame&
     for(auto& pair : metrics){
       pair.second.push_back(metricsResults[i++]);
     }
-    std::cout << j++ <<"\n";
+    
   } 
   auto label = df["Label"];
   return Rcpp::DataFrame::create(Rcpp::Named("Label") = label,
