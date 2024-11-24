@@ -58,14 +58,13 @@ qq_plot_output <- function(estimated, true, filtered = F, color = "steelblue"){
   }
   
   num_quantiles <- min(length(estimated_distribution), length(true_distribution))
-  
   probs <- seq(0,1, length.out = num_quantiles)
   
   quantiles_estim <- quantile(estimated_distribution, probs)
   quantiles_true <- quantile(true_distribution, probs)
   
   qq_df <- data.frame(estimated_quantiles = quantiles_estim, true_quantiles = quantiles_true)
-  
+  View(qq_df)
   ggplot(qq_df, aes(x = estimated_quantiles, y = true_quantiles)) +
     geom_point() +
     geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = color) + # Adds a reference line y = x

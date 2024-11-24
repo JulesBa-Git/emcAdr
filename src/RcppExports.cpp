@@ -219,6 +219,40 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// MetricCalc_size3
+std::vector<double> MetricCalc_size3(const std::vector<int>& cocktail, const std::vector<int>& ATClength, const std::vector<int>& upperBounds, const std::vector<std::vector<int>>& observationsMedication, const Rcpp::LogicalVector& observationsADR, int ADRCount, int num_thread);
+RcppExport SEXP _emcAdr_MetricCalc_size3(SEXP cocktailSEXP, SEXP ATClengthSEXP, SEXP upperBoundsSEXP, SEXP observationsMedicationSEXP, SEXP observationsADRSEXP, SEXP ADRCountSEXP, SEXP num_threadSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type cocktail(cocktailSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type ATClength(ATClengthSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type upperBounds(upperBoundsSEXP);
+    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type observationsMedication(observationsMedicationSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::LogicalVector& >::type observationsADR(observationsADRSEXP);
+    Rcpp::traits::input_parameter< int >::type ADRCount(ADRCountSEXP);
+    Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
+    rcpp_result_gen = Rcpp::wrap(MetricCalc_size3(cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount, num_thread));
+    return rcpp_result_gen;
+END_RCPP
+}
+// MetricCalc_2
+std::vector<double> MetricCalc_2(const std::vector<int>& cocktail, const std::vector<int>& ATClength, const std::vector<int>& upperBounds, const std::vector<std::vector<int>>& observationsMedication, const Rcpp::LogicalVector& observationsADR, int ADRCount, int num_thread);
+RcppExport SEXP _emcAdr_MetricCalc_2(SEXP cocktailSEXP, SEXP ATClengthSEXP, SEXP upperBoundsSEXP, SEXP observationsMedicationSEXP, SEXP observationsADRSEXP, SEXP ADRCountSEXP, SEXP num_threadSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type cocktail(cocktailSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type ATClength(ATClengthSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type upperBounds(upperBoundsSEXP);
+    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type observationsMedication(observationsMedicationSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::LogicalVector& >::type observationsADR(observationsADRSEXP);
+    Rcpp::traits::input_parameter< int >::type ADRCount(ADRCountSEXP);
+    Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
+    rcpp_result_gen = Rcpp::wrap(MetricCalc_2(cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount, num_thread));
+    return rcpp_result_gen;
+END_RCPP
+}
 // computeMetrics
 Rcpp::DataFrame computeMetrics(const Rcpp::DataFrame& df, const DataFrame& ATCtree, const DataFrame& observations, int num_thread);
 RcppExport SEXP _emcAdr_computeMetrics(SEXP dfSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP num_threadSEXP) {
@@ -230,6 +264,20 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
     Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
     rcpp_result_gen = Rcpp::wrap(computeMetrics(df, ATCtree, observations, num_thread));
+    return rcpp_result_gen;
+END_RCPP
+}
+// computeMetrics_size3
+Rcpp::DataFrame computeMetrics_size3(const Rcpp::DataFrame& df, const DataFrame& ATCtree, const DataFrame& observations, int num_thread);
+RcppExport SEXP _emcAdr_computeMetrics_size3(SEXP dfSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP num_threadSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::DataFrame& >::type df(dfSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
+    Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
+    rcpp_result_gen = Rcpp::wrap(computeMetrics_size3(df, ATCtree, observations, num_thread));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -412,7 +460,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_trueDistributionSizeTwoCocktail", (DL_FUNC) &_emcAdr_trueDistributionSizeTwoCocktail, 5},
     {"_emcAdr_trueDistributionSizeThreeCocktail", (DL_FUNC) &_emcAdr_trueDistributionSizeThreeCocktail, 4},
     {"_emcAdr_MetricCalc", (DL_FUNC) &_emcAdr_MetricCalc, 7},
+    {"_emcAdr_MetricCalc_size3", (DL_FUNC) &_emcAdr_MetricCalc_size3, 7},
+    {"_emcAdr_MetricCalc_2", (DL_FUNC) &_emcAdr_MetricCalc_2, 7},
     {"_emcAdr_computeMetrics", (DL_FUNC) &_emcAdr_computeMetrics, 4},
+    {"_emcAdr_computeMetrics_size3", (DL_FUNC) &_emcAdr_computeMetrics_size3, 4},
     {"_emcAdr_hyperparam_test_genetic_algorithm", (DL_FUNC) &_emcAdr_hyperparam_test_genetic_algorithm, 10},
     {"_emcAdr_analyse_resultats", (DL_FUNC) &_emcAdr_analyse_resultats, 4},
     {"_emcAdr_true_results_dissimilarity_and_class", (DL_FUNC) &_emcAdr_true_results_dissimilarity_and_class, 3},

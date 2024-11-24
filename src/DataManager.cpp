@@ -118,7 +118,7 @@ std::vector<std::vector<std::string>> read_csv_genetic(std::ifstream& ifstr, cha
 
   std::string line;
   //read the header of the csv file
-  std::getline(ifstr,line);
+  //std::getline(ifstr,line);
   
   while(std::getline(ifstr,line)){
     std::vector<std::string> row;
@@ -209,6 +209,7 @@ void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const
     std::cerr << "the file " << filename << " has failed to open (to output results)\n";
     return;
   }
+
   
   for(const auto& line : file){
     int line_size = line.size();

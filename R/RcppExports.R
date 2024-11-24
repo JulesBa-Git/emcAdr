@@ -71,6 +71,9 @@ NULL
 #'Function used to compare diverse metrics used in Disproportionality analysis
 NULL
 
+#'Function used to compare diverse metrics used in Disproportionality analysis
+NULL
+
 #'The Evolutionary MCMC method that runs the random walk
 #'
 #'@param n : number of step 
@@ -172,8 +175,24 @@ MetricCalc <- function(cocktail, ATClength, upperBounds, observationsMedication,
     .Call(`_emcAdr_MetricCalc`, cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount, num_thread)
 }
 
+#'Function used to compare diverse metrics used in Disproportionality analysis
+#'
+#'@return RR and hypergeometric score among size 3 cocktail in "cocktail"
+#'@export
+MetricCalc_size3 <- function(cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount, num_thread = 1L) {
+    .Call(`_emcAdr_MetricCalc_size3`, cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount, num_thread)
+}
+
+MetricCalc_2 <- function(cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount, num_thread = 1L) {
+    .Call(`_emcAdr_MetricCalc_2`, cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount, num_thread)
+}
+
 computeMetrics <- function(df, ATCtree, observations, num_thread = 1L) {
     .Call(`_emcAdr_computeMetrics`, df, ATCtree, observations, num_thread)
+}
+
+computeMetrics_size3 <- function(df, ATCtree, observations, num_thread = 1L) {
+    .Call(`_emcAdr_computeMetrics_size3`, df, ATCtree, observations, num_thread)
 }
 
 hyperparam_test_genetic_algorithm <- function(epochs, nb_individuals, ATCtree, observations, nb_test_desired, mutation_rate, nb_elite, alphas, path = "./", num_thread = 1L) {

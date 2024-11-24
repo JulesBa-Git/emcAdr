@@ -1424,7 +1424,7 @@ double computeCSS(const std::pair<double, std::pair<int,int>>& RR1_and_2,
                                                       
   double RR1_interval975 = exp(tmp);
                                                       
-    // upper .975 interval for RR of Drug 1 use 
+    // upper .975 interval for RR of Drug 2 use 
   double RR2_N11 = RR2.second.first;
   double RR2_N1plus = RR2.second.second;
   double RR2_N0plus = popSize - RR2_N1plus;
@@ -1445,6 +1445,7 @@ double computeCSS(const std::pair<double, std::pair<int,int>>& RR1_and_2,
          0 : RR_1_et_2_interval025 / std::max(RR1_interval975,RR2_interval975);
 }
 
+
 //'Function used to compare diverse metrics used in Disproportionality analysis
  //'
  //'@return the RR distribution among size 2 cocktail
@@ -1458,7 +1459,7 @@ std::vector<double> MetricCalc(const std::vector<int> &cocktail,
                                int ADRCount, int num_thread = 1){
   
   std::vector<double> solution;
-  solution.reserve(5);
+  solution.reserve(6);
   
   double propADR = static_cast<double>(ADRCount) /
     static_cast<double>(observationsMedication.size());
@@ -1466,8 +1467,8 @@ std::vector<double> MetricCalc(const std::vector<int> &cocktail,
   Individual ind{cocktail};
   Individual ind_D1{{cocktail[0]}};
   Individual ind_D2{{cocktail[1]}};
-  //10 000 stads for the upper limit of the metrics we don't want any upper limit
-  // 10 000 should never be encoutered
+  //10 000 stands for the upper limit of the metrics we don't want any upper limit
+  // 10 000 should never be encountered
   auto RR_1_et_2 = ind.computeRR(observationsMedication, observationsADR, upperBounds,
                 10000, num_thread);
   solution.push_back(RR_1_et_2.first);
@@ -1499,8 +1500,217 @@ std::vector<double> MetricCalc(const std::vector<int> &cocktail,
                           observationsMedication.size());
   solution.push_back(CSS);
   
+  /*double Omega_Shrink = compute_Omega(ind_D1,ind_D2,ind, ATClength, upperBounds, 
+                                      observationsMedication, observationsADR);
+  solution.push_back(Omega_Shrink);*/
+  
   return solution;
 }
+
+//'Function used to compare diverse metrics used in Disproportionality analysis
+//'
+//'@return RR and hypergeometric score among size 3 cocktail in "cocktail"
+//'@export
+//[[Rcpp::export]]
+std::vector<double> MetricCalc_size3(const std::vector<int> &cocktail, 
+                                const std::vector<int>& ATClength,
+                                const std::vector<int>& upperBounds,
+                                const std::vector<std::vector<int>>& observationsMedication,
+                                const Rcpp::LogicalVector& observationsADR,
+                                int ADRCount, int num_thread = 1){
+ 
+ std::vector<double> solution;
+ solution.reserve(2);
+ 
+ double propADR = static_cast<double>(ADRCount) /
+   static_cast<double>(observationsMedication.size());
+ 
+ Individual ind{cocktail};
+ Individual ind_D1{{cocktail[0]}};
+ Individual ind_D2{{cocktail[1]}};
+ 
+
+ double RR_cocktail = 0.0;
+
+ RR_cocktail = ind.computeRR(observationsMedication, observationsADR, upperBounds,
+                              1000000, num_thread).first;
+ 
+ 
+ //phyper
+ double phyper = ind.computePHypergeom(observationsMedication, observationsADR,
+                                       upperBounds, ADRCount, 
+                                       observationsMedication.size() - ADRCount,
+                                       10000, num_thread).first;
+
+ solution.push_back(phyper);
+ solution.push_back(RR_cocktail);
+ 
+ return solution;
+}
+
+//'Function used to compare diverse metrics used in Disproportionality analysis
+ //'
+ //'@return multiple risk among size 2 cocktail
+ //'@export
+ //[[Rcpp::export]]
+ std::vector<double> MetricCalc_2(const std::vector<int> &cocktail, 
+                                  const std::vector<int>& ATClength,
+                                  const std::vector<int>& upperBounds,
+                                  const std::vector<std::vector<int>>& observationsMedication,
+                                  const Rcpp::LogicalVector& observationsADR,
+                                  int ADRCount, int num_thread = 1){
+   
+   std::vector<double> solution;
+   solution.reserve(5);
+   
+   double propADR = static_cast<double>(ADRCount) /
+     static_cast<double>(observationsMedication.size());
+   
+   Individual ind{cocktail};
+   Individual ind_D1{{cocktail[0]}};
+   Individual ind_D2{{cocktail[1]}};
+   
+   
+   int n000 = 0,n001 = 0;
+   int n100 = 0, n101 = 0;
+   int n011 = 0, n010 = 0;
+   int n111 = 0, n110 = 0;
+   bool have_D1 = false, have_D2 = false;
+   for(int i = 0 ; i < observationsMedication.size(); ++i){
+     have_D1 = ind_D1.matches(observationsMedication[i], upperBounds);
+     have_D2 = ind_D2.matches(observationsMedication[i], upperBounds);
+     if(!have_D1 && !have_D2){
+       if(observationsADR[i]){
+         ++n001;
+       }
+       else{
+         ++n000;
+       }
+     } 
+     else if(have_D1){
+       if(have_D2){
+         if(observationsADR[i])
+           ++n111;
+         else
+           ++n110;
+       }else{
+         if(observationsADR[i])
+           ++n101;
+         else
+           ++n100;
+       }
+     }
+     else{
+       if(observationsADR[i]){
+         ++n011;
+       } 
+       else{
+         ++n010;
+       } 
+     }
+   } 
+   
+   
+   double D1_rate = static_cast<double>(n101) / (static_cast<double>(n100 + n101));
+   double D2_rate = static_cast<double>(n011) / (static_cast<double>(n010 + n011));
+   double background_rate = static_cast<double>(n001) / (static_cast<double>(n000 + n001));
+   double D1_D2_rate = static_cast<double>(n111) / (static_cast<double>(n110 + n111));
+   int n00 = n001 + n000;
+   int n10 = n101 + n100;
+   int n01 = n011 + n010;
+   int n11 = n111 + n110;
+   
+   // RR
+   double RR_cocktail = 0.0;
+   if(n111 > 0){
+     RR_cocktail = (D1_D2_rate) / 
+       ((n001 + n011 + n101) / (static_cast<double>(n00 + n10 + n01)));
+   }
+   
+   
+   // PRR
+   double signal_PRR = 0;
+   
+   double RR1 = ((n101 + n111) / (static_cast<double>(n11 + n10))) /
+     ((n011 + n001) / (static_cast<double>(n01 + n00)));
+   
+   double RR2 = ((n011 + n111) / (static_cast<double>(n11 + n01))) /
+     ((n101 + n001) / (static_cast<double>(n10 + n00)));
+   
+   double SD_D1;
+   if((n101 != 0 || n111 !=0) && (n001 !=0 || n011 !=0)){
+     SD_D1 = std::sqrt((1.0/(static_cast<double>(n101+n111))) -
+       (1.0 / (static_cast<double>(n10+n11))) + (1.0/(static_cast<double>(n001+n011))) -
+       (1.0/(static_cast<double>(n01+n00))));
+   }else{
+     SD_D1 = 0;
+   }
+   
+   double SD_D2;
+   if((n101 != 0 || n001 !=0) && (n111 !=0 || n011 !=0)){
+     SD_D2 = std::sqrt((1.0/(static_cast<double>(n011+n111))) -
+       (1.0 / (static_cast<double>(n01+n11))) + (1.0/(static_cast<double>(n001+n101))) -
+       (1.0/(static_cast<double>(n10+n00))));
+   }else{
+     SD_D2 = 0;
+   }
+   
+   double SD_D1D2;
+   if((n101 + n001 + n011 !=0) && (n111 !=0)){
+     SD_D1D2 = std::sqrt((1.0/(static_cast<double>(n111))) -
+       (1.0 / (static_cast<double>(n11))) + (1.0/(static_cast<double>(n001+n101+n011))) -
+       (1.0/(static_cast<double>(n10+n00+n01))));
+   }else{
+     SD_D1D2 = 0;
+   }
+   
+   double PRR_D1_025 = std::exp((std::log(RR1) - 1.96*SD_D1));
+   double PRR_D2_025 = std::exp((std::log(RR2) - 1.96*SD_D2));
+   double PRR_D1D2_025 = std::exp((std::log(RR_cocktail) - 1.96*SD_D1D2));
+   if(n111 > 0)
+     signal_PRR = PRR_D1D2_025 > std::max(PRR_D1_025, PRR_D2_025) ? 1 : 0;
+   else
+     signal_PRR = 0;
+   
+   
+   //CSS
+   double PRR_D1_975 = std::exp((std::log(RR1) + 1.96*SD_D1));
+   double PRR_D2_975 = std::exp((std::log(RR2) + 1.96*SD_D2));
+   double CSS = 0.0;
+   if(n111 > 0)
+     CSS = PRR_D1D2_025 / std::max(PRR_D1_975,PRR_D2_975);
+   
+   
+   
+   //omega
+   double odds_ratio_r00 = background_rate / (1 - background_rate);
+   double odds_ratio_r10 = D1_rate / (1 - D1_rate);
+   double odds_ratio_r01 = D2_rate / (1 - D2_rate);
+   
+   double s11 = 1 - (1.0 / (std::max(odds_ratio_r00, odds_ratio_r10) + 
+                     std::max(odds_ratio_r00, odds_ratio_r01) - 
+                     odds_ratio_r00 + 1));
+
+   double omega = std::log2((n111 + 0.5) / (s11*n11 + 0.5));
+   Rcpp::NumericVector tmp{0.975};
+   double lower_bound_omegaIC = INT_MIN;
+   if(n111 > 0)
+     lower_bound_omegaIC = omega - (Rcpp::qnorm(tmp)[0] / (std::log(2) * std::sqrt(n111)));
+   
+   
+   //phyper
+   double phyper = ind.computePHypergeom(observationsMedication, observationsADR,
+                                         upperBounds, ADRCount, 
+                                         observationsMedication.size() - ADRCount,
+                                         10000, num_thread).first;
+   solution.push_back(CSS);
+   solution.push_back(phyper);
+   solution.push_back(lower_bound_omegaIC);
+   solution.push_back(signal_PRR);
+   solution.push_back(RR_cocktail);
+   
+   return solution;
+ }
 
 //[[Rcpp::export]]
 Rcpp::DataFrame computeMetrics(const Rcpp::DataFrame& df, const DataFrame& ATCtree,
@@ -1521,33 +1731,79 @@ Rcpp::DataFrame computeMetrics(const Rcpp::DataFrame& df, const DataFrame& ATCtr
     observationsMedication.push_back(observationsMedicationTmp[i]);
   }
 
-  std::unordered_map<std::string, std::vector<double>> metrics{{"CSS" , {}}, 
-                                                    {"CRR" , {}},
-                                                    {"pbinom" , {}},
-                                                    {"phyper" , {}},
-                                                    {"RR" , {}}};
+  std::unordered_map<std::string, std::vector<double>> metrics{{"RR" , {}}, 
+                                                    {"PRR" , {}},
+                                                    {"CSS" , {}},
+                                                    {"omega_025" , {}},
+                                                    {"phyper" , {}}};
   std::vector<double> metricsResults;
-  metricsResults.reserve(5);
+  metricsResults.reserve(metrics.size());
   
-  
+  int j = 0;
   Rcpp::List CocktailList =  df["Cocktail"];
   for(const std::vector<int>& cocktail : CocktailList){
-    metricsResults = MetricCalc(cocktail, ATClength, upperBounds, 
+    metricsResults = MetricCalc_2(cocktail, ATClength, upperBounds, 
                                 observationsMedication, observationsADR, ADRCount,
                                 num_thread);
+   
     int i = 0;
     for(auto& pair : metrics){
       pair.second.push_back(metricsResults[i++]);
     }
+    std::cout << j++ <<"\n";
   }
-  
-  return Rcpp::DataFrame::create(Rcpp::Named("Label") = df["Label"],
+  auto label = df["Label"];
+  return Rcpp::DataFrame::create(Rcpp::Named("Label") = label,
                                  Rcpp::Named("RR") = metrics["RR"],
                                  Rcpp::Named("phyper") = metrics["phyper"],
-                                 Rcpp::Named("pbinom") = metrics["pbinom"],
-                                 Rcpp::Named("CRR") = metrics["CRR"],
-                                 Rcpp::Named("CSS") = metrics["CSS"]);            
+                                 Rcpp::Named("PRR") = metrics["PRR"],
+                                 Rcpp::Named("CSS") = metrics["CSS"],
+                                 Rcpp::Named("omega_025") = metrics["omega_025"]);            
 }  
+
+
+//[[Rcpp::export]]
+Rcpp::DataFrame computeMetrics_size3(const Rcpp::DataFrame& df, const DataFrame& ATCtree,
+                               const DataFrame& observations, int num_thread = 1 ){
+  
+  std::vector<int> ATClength = ATCtree["ATC_length"];
+  std::vector<int> upperBounds = ATCtree["upperBound"];
+  
+  Rcpp::LogicalVector observationsADR = observations["patientADR"];
+  int ADRCount = std::count(observationsADR.begin(), observationsADR.end(), true);
+  
+  Rcpp::List observationsMedicationTmp = observations["patientATC"];
+  
+  
+  std::vector<std::vector<int>> observationsMedication;
+  observationsMedication.reserve(observationsMedicationTmp.size());
+  for(int i =0; i < observationsMedicationTmp.size(); ++i){
+    observationsMedication.push_back(observationsMedicationTmp[i]);
+  }
+  
+  std::unordered_map<std::string, std::vector<double>> metrics{{"RR" , {}}, 
+                                                               {"phyper" , {}}};
+  std::vector<double> metricsResults;
+  metricsResults.reserve(metrics.size());
+  
+  int j = 0;
+  Rcpp::List CocktailList =  df["Cocktail"];
+  for(const std::vector<int>& cocktail : CocktailList){
+    metricsResults = MetricCalc_size3(cocktail, ATClength, upperBounds, 
+                                  observationsMedication, observationsADR, ADRCount,
+                                  num_thread);
+    int i = 0;
+    for(auto& pair : metrics){
+      pair.second.push_back(metricsResults[i++]);
+    }
+    std::cout << j++ <<"\n";
+  } 
+  auto label = df["Label"];
+  return Rcpp::DataFrame::create(Rcpp::Named("Label") = label,
+                                 Rcpp::Named("RR") = metrics["RR"],
+                                 Rcpp::Named("phyper") = metrics["phyper"]);            
+}  
+
 
 
 void print_list_in_file(const Rcpp::List& resultsGeneticAlgorithm,
