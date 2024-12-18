@@ -1703,11 +1703,14 @@ std::vector<double> MetricCalc_size3(const std::vector<int> &cocktail,
                                          upperBounds, ADRCount, 
                                          observationsMedication.size() - ADRCount,
                                          10000, num_thread).first;
-   solution.push_back(CSS);
-   solution.push_back(phyper);
+   
    solution.push_back(lower_bound_omegaIC);
+   solution.push_back(n110);
    solution.push_back(signal_PRR);
    solution.push_back(RR_cocktail);
+   solution.push_back(n111);
+   solution.push_back(phyper);
+   solution.push_back(CSS);
    
    return solution;
  }
@@ -1731,11 +1734,15 @@ Rcpp::DataFrame computeMetrics(const Rcpp::DataFrame& df, const DataFrame& ATCtr
     observationsMedication.push_back(observationsMedicationTmp[i]);
   }
 
-  std::unordered_map<std::string, std::vector<double>> metrics{{"RR" , {}}, 
-                                                    {"PRR" , {}},
-                                                    {"CSS" , {}},
-                                                    {"omega_025" , {}},
-                                                    {"phyper" , {}}};
+  std::unordered_map<std::string, std::vector<double>> metrics{
+    {"n110", {}},
+    {"n111", {}},
+    {"RR" , {}}, 
+    {"PRR" , {}},
+    {"CSS" , {}},
+    {"omega_025" , {}},
+    {"phyper" , {}}};
+  
   std::vector<double> metricsResults;
   metricsResults.reserve(metrics.size());
   
@@ -1750,7 +1757,6 @@ Rcpp::DataFrame computeMetrics(const Rcpp::DataFrame& df, const DataFrame& ATCtr
     for(auto& pair : metrics){
       pair.second.push_back(metricsResults[i++]);
     }
-    std::cout << j++ <<"\n";
   }
   auto label = df["Label"];
   return Rcpp::DataFrame::create(Rcpp::Named("Label") = label,
@@ -1758,7 +1764,9 @@ Rcpp::DataFrame computeMetrics(const Rcpp::DataFrame& df, const DataFrame& ATCtr
                                  Rcpp::Named("phyper") = metrics["phyper"],
                                  Rcpp::Named("PRR") = metrics["PRR"],
                                  Rcpp::Named("CSS") = metrics["CSS"],
-                                 Rcpp::Named("omega_025") = metrics["omega_025"]);            
+                                 Rcpp::Named("omega_025") = metrics["omega_025"],
+                                 Rcpp::Named("n110") = metrics["n110"],
+                                 Rcpp::Named("n111") = metrics["n111"]);            
 }  
 
 
