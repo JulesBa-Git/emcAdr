@@ -65,6 +65,12 @@ int_cocktail_to_string_cocktail <- function(cocktails, ATC_name) {
     .Call(`_emcAdr_int_cocktail_to_string_cocktail`, cocktails, ATC_name)
 }
 
+#'The true distribution of the score among every single nodes of the ATC
+#'
+#'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
+#'@param observations : observation of the AE based on the medications of each patients
+NULL
+
 #'The true RR distribution of cocktail of size 3
 NULL
 
@@ -74,84 +80,91 @@ NULL
 #'Function used to compare diverse metrics used in Disproportionality analysis
 NULL
 
-#'The Evolutionary MCMC method that runs the random walk
+#'The MCMC method that runs the random walk on a single cocktail in order to estimate the distribution of score among cocktails of size Smax.
 #'
-#'@param n : number of step 
-#'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
-#'@param observation : real observation of the ADR based on the medications of each real patients
+#'@param epochs : number of steps for the MCMC algorithm
+#'@param ATCtree : ATC tree with upper bound of the DFS (without the root, also see on the github repo for an example)
+#'@param observations : real observation of the AE based on the medications of each patients
 #'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
 #'
-#'@param nbResults : number of results returned (best RR individuals), 5 by default
-#'@param nbIndividuals : number on individuals in the population, 5 by default
-#'@param startingIndividuals : starting individuals, randomly initialized by default 
-#'(same form as the observations)
-#'@param startingTemperatures : starting temperatures, randomly initialized by default
-#'@param P_type1/P_type2/P_crossover : probability to operate respectively type1 mutation, type2 mutation and crossover. Note :
-#'the probability to operate the swap is then 1 - sum(P_type1,P_type2,P_crossover). The sum must be less or equal to 1. 
-#'@param alpha : a hyperparameter allowing us to manage to probability of adding a drug to the cocktail. The probability
-#' to add a drug to the cocktail is the following : \eqn{\frac12}{\alpha/n} Where n is the original size of the cocktail. 1 is the default value.
-#'
-#'@return if no problem return an R List with : the distribution of RR we've met; bests individuals and the corresponding RRs. Otherwise the list is empty
-#'@export
-EMC <- function(n, ATCtree, observations, P_type1 = .25, P_type2 = .25, P_crossover = .25, nbIndividuals = 5L, nbResults = 5L, alpha = 1, startingIndividuals = NULL, startingTemperatures = NULL) {
-    .Call(`_emcAdr_EMC`, n, ATCtree, observations, P_type1, P_type2, P_crossover, nbIndividuals, nbResults, alpha, startingIndividuals, startingTemperatures)
-}
-
-#'The Evolutionary MCMC method that runs the random walk on a single cocktail
-#'
-#'@param epochs : number of step 
-#'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
-#'@param observation : real observation of the ADR based on the medications of each real patients
-#'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
-#'
-#'@param temperature : starting temperature, default = 1
-#'@param nbResults : Number of returned solution (Cocktail of size Smax), 5 by default
+#'@param temperature : starting temperature, default = 1 (denoted T in the article)
+#'@param nbResults : Number of returned solution (Cocktail of size Smax with the best oberved score during the run), 5 by default
 #'@param Smax : Size of the cocktail we approximate the distribution from
 #'@param p_type1: probability to operate type1 mutation. Note :
-#'the probability to operate the type 2 mutation is then 1 - P_type1. P_type1 must be in [0;1]. 
+#'the probability to operate the type 2 mutation is then 1 - P_type1. P_type1 must be in [0;1]. Default is .01
 #'@param beta : filter the minimum number of patients that must have taken the 
-#'cocktail for it to be considered 'significant', default is 4
-#'@param Upper bound of the considered Metric. 
-#'@param num_thread : Number of thread to run in parallel
+#'cocktail for his risk to be taken into account in the DistributionScoreBeta default is 4
+#'@param max_score : maximum number the score can take. Score greater than this 
+#'one would be added to the distribution as the value max_score. Default is 500
+#'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
 #'
-#'@return if no problem return an array of the approximation of the RR distribution : the distribution of RR we've met; Otherwise the list is empty
+#'@return I no problem, return a List containing :
+#' - ScoreDistribution : the distribution of the score as an array with each cells
+#' representing the number of risks =  (index-1)/ 10
+#' - OutstandingScore : An array of the score greater than max_score,
+#' - bestCockatils : the nbResults bests cocktails encountered during the run.
+#' - bestScore : Score corresponding to the bestCocktails.
+#' - FilteredDistribution : Distribution containing score for cocktails taken by at
+#' least beta patients.
+#' - bestCocktailsBeta : the nbResults bests cocktails taken by at least beta patients
+#' encountered during the run.
+#' - bestScoreBeta : Score corresponding to the bestCocktailsBeta.
+#' - cocktailSize : Smax parameter used during the run.
+#'; Otherwise the list is empty
 #'@export
-DistributionApproximation <- function(epochs, ATCtree, observations, temperature = 1L, nbResults = 5L, Smax = 2L, p_type1 = .01, beta = 4L, max_Metric = 100L, num_thread = 1L) {
-    .Call(`_emcAdr_DistributionApproximation`, epochs, ATCtree, observations, temperature, nbResults, Smax, p_type1, beta, max_Metric, num_thread)
+DistributionApproximation <- function(epochs, ATCtree, observations, temperature = 1L, nbResults = 5L, Smax = 2L, p_type1 = .01, beta = 4L, max_score = 500L, num_thread = 1L, verbose = FALSE) {
+    .Call(`_emcAdr_DistributionApproximation`, epochs, ATCtree, observations, temperature, nbResults, Smax, p_type1, beta, max_score, num_thread, verbose)
 }
 
-#'Genetic algorithm, trying to reach the best cocktail (the one which maximize
-#'the fitness function, Related Risk in our case)
+#'Genetic algorithm, trying to reach riskiest cocktails (the ones which maximize
+#'the fitness function, Hypergeometric score in our case)
 #'
-#'@param epochs : number of step 
-#'@param nbIndividuals : size of the popultation
+#'@param epochs : number of step or the algorithm 
+#'@param nbIndividuals : size of the population
 #'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
-#'@param observation : real observation of the ADR based on the medications of each real patients
+#'@param observations : real observation of the AE based on the medications of each patients
 #'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+#'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
 #'@param diversity : enable the diversity mechanism of the algorithm
-#' (favor the diversity of cocktail in the population)
-#'@param p_crossover: probability to operate a crossover on the crossover phase.
-#'@param p_mutation: probability to operate a mutation after the crossover phase.
-#'@param nbElite : number of best individual we keep from generation to generation
-#'@param tournamentSize : size of the tournament (select the best individual be tween tournamentSize individuals) 
+#' (favor the diversity of cocktail in the population),  default is false
+#'@param p_crossover: probability to operate a crossover on the crossover phase. Default is 80%
+#'@param p_mutation: probability to operate a mutation after the crossover phase. Default is 1%
+#'@param nbElite : number of best individual we keep from generation to generation. Default is 0
+#'@param tournamentSize : size of the tournament (select the best individual 
+#'between tournamentSize sampled individuals) 
 #'
-#'@return if no problem return the best cocktail we found (according to the fitness function which is the Relative Risk)
+#'@return If no problem, return a List :
+#' - meanFitnesses : The mean score of the population at each epochs of the algorithm.
+#' - BestFitnesses : The best score of the population at each epochs of the algorithm.
+#' - FinalPopulation : The final population of the algorithm when finished (medications
+#' and corresponding scores)
 #'@export
 GeneticAlgorithm <- function(epochs, nbIndividuals, ATCtree, observations, num_thread = 1L, diversity = FALSE, p_crossover = .80, p_mutation = .01, nbElite = 0L, tournamentSize = 2L, alpha = 1, summary = TRUE) {
     .Call(`_emcAdr_GeneticAlgorithm`, epochs, nbIndividuals, ATCtree, observations, num_thread, diversity, p_crossover, p_mutation, nbElite, tournamentSize, alpha, summary)
 }
 
-#'The true distribution of drugs
+#'@param beta : minimum number of person taking the cocktails in order to consider it
+#'in the beta score distribution 
+#'@param max_score : maximum number the score can take. Score greater than this 
+#'one would be added to the distribution as the value max_score. Default is 1000
+#'@param nbResults : Number of returned solution (Cocktail with the
+#' best oberved score during the run), 100 by default
+#'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
 #'
-#'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
-#'@param obervations : population of patients on which we want to compute the risk distribution
-#'@param beta : minimum number of cocktail takers 
-#'@param max_risk : maximum risk, at which point the risk is considered exceptional (outliers)
-#'
-#'@return the risk distribution among drugs
+#'@return Return a List containing :
+#' - ScoreDistribution : the distribution of the score as an array with each cells
+#' representing the number of risks =  (index-1)/ 10
+#' - Filtered_score_distribution : Distribution containing score for cocktails taken by at
+#' least beta patients.
+#' - Outstanding_score : An array of the score greater than max_score,
+#' - Best_cocktails : the nbResults bests cocktails encountered during the run.
+#' - Best_cocktails_beta : the nbResults bests cocktails taken by at least beta patients
+#' encountered during the run.
+#' - Best_scores : Score corresponding to the Best_cocktails.
+#' - Best_scores_beta : Score corresponding to the Best_cocktails_beta.
 #'@export
-trueDistributionDrugs <- function(ATCtree, observations, beta, max_risk = 100L, num_thread = 1L) {
-    .Call(`_emcAdr_trueDistributionDrugs`, ATCtree, observations, beta, max_risk, num_thread)
+trueDistributionDrugs <- function(ATCtree, observations, beta, max_score = 1000L, nbResults = 100L, num_thread = 1L) {
+    .Call(`_emcAdr_trueDistributionDrugs`, ATCtree, observations, beta, max_score, nbResults, num_thread)
 }
 
 #'The true distribution of size 2 cocktails

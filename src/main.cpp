@@ -19,537 +19,43 @@ using Rcpp::DataFrame;
 // [[Rcpp::depends(RcppArmadillo)]]
 
 
-//'The Evolutionary MCMC method that runs the random walk
+//'The MCMC method that runs the random walk on a single cocktail in order to estimate the distribution of score among cocktails of size Smax.
 //'
-//'@param n : number of step 
-//'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
-//'@param observation : real observation of the ADR based on the medications of each real patients
+//'@param epochs : number of steps for the MCMC algorithm
+//'@param ATCtree : ATC tree with upper bound of the DFS (without the root, also see on the github repo for an example)
+//'@param observations : real observation of the AE based on the medications of each patients
 //'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
 //'
-//'@param nbResults : number of results returned (best RR individuals), 5 by default
-//'@param nbIndividuals : number on individuals in the population, 5 by default
-//'@param startingIndividuals : starting individuals, randomly initialized by default 
-//'(same form as the observations)
-//'@param startingTemperatures : starting temperatures, randomly initialized by default
-//'@param P_type1/P_type2/P_crossover : probability to operate respectively type1 mutation, type2 mutation and crossover. Note :
-//'the probability to operate the swap is then 1 - sum(P_type1,P_type2,P_crossover). The sum must be less or equal to 1. 
-//'@param alpha : a hyperparameter allowing us to manage to probability of adding a drug to the cocktail. The probability
-//' to add a drug to the cocktail is the following : \eqn{\frac12}{\alpha/n} Where n is the original size of the cocktail. 1 is the default value.
-//'
-//'@return if no problem return an R List with : the distribution of RR we've met; bests individuals and the corresponding RRs. Otherwise the list is empty
-//'@export
-//[[Rcpp::export]]
-Rcpp::List EMC(int n,const DataFrame& ATCtree,const DataFrame& observations, double P_type1 =.25,
-               double P_type2 = .25, double P_crossover =.25, int nbIndividuals = 5, int nbResults = 5,
-               double alpha = 1,
-               Rcpp::Nullable<Rcpp::List> startingIndividuals = R_NilValue,
-               Rcpp::Nullable<Rcpp::NumericVector> startingTemperatures = R_NilValue){
-  const int RRDistSize = 42;
-  Rcpp::NumericVector temperatures;
-  Rcpp::List observationsMedication = observations["patientATC"];
-  Rcpp::LogicalVector observationsADR = observations["patientADR"];
-  
-  int chosenIndividual_k,chosenIndividual_l;
-  double RRx_k,RRx_l, RRy_k,RRy_l, pMutation, pAcceptation, pDraw, q_y_given_x, q_x_given_y;
-  double q_ratio;
-
-  std::vector<std::pair<int,int>> vertexX;
-  std::vector<std::pair<int,int>> vertexY;
-  
-  //crossover
-  int selectedNode, upperBound;
-  std::vector<int> ATClength = ATCtree["ATC_length"];
-  std::vector<int> upperBounds = ATCtree["upperBound"];
-  
-  std::vector<Individual> individualsCpp;
-  Individual mutatedIndividual_k{};
-  Individual mutatedIndividual_l{};
-  
-  int chosenVertexidx;
-  int seqLen;
-  
-  
-  std::vector<unsigned int> RRDistribution{};
-  int smallerOneRR = 0;
-  int largerFiveRR = 0;
-  RRDistribution.resize(RRDistSize);
-  std::vector<std::pair<Individual,double>> bestResults{};
-  std::pair<Individual,double> bestResult{};
-  bestResults.reserve(nbResults);
-  double minRR = 0;
-  //best individual in the population each round
-  std::vector<double> populationRR{};
-  std::vector<unsigned int> RRDistributionPopulation{};
-  populationRR.resize(nbIndividuals);
-  RRDistributionPopulation.resize(RRDistSize);
-  
-  //acceptance rate
-  int acceptedMove = 0;
-  int nonZeroRR = 0;
-  int acceptedSize = 0;
-  int accepted_type1 =0;
-  int accepted_type2 =0;
-  int accepted_cross =0;
-  int accepted_swap =0;
-  int type1_move=0, type2_move=0, cross_move=0, swap_move=0;
-  
-  //ADR pairs 
-  std::set<std::pair<int,int>> ADRPairs;
-  std::set<std::pair<int,int>> exploredPairs;
-  std::vector<std::pair<int,int>> interserction; 
-  
-  double type2Bound;
-  double crossoverBound;
-  if((P_type1 + P_type2 + P_crossover) > 1){
-    std::cerr << "The sum of the 3 probabilities is greater than 1, it must be inferior or equal\n";
-    return Rcpp::List::create();
-  }else{
-    type2Bound = P_type1 + P_type2;
-    crossoverBound = type2Bound + P_crossover;
-  }
-  
-  if(nbIndividuals < 2){
-    std::cerr << "There must be at least 2 individuals.\n";
-    return Rcpp::List::create();
-  }
-  
-  //here if the user enter only temperatures the individuals would be initialized randomly 
-  if(startingIndividuals.isNull()){
-    //"completely" random initialization using the mean medications per observations
-    // we compute the mean minus 1 because we always want a medication so we will use the mean - 1 
-    double meanMedicationPerObs = meanMedications(observationsMedication) - 1;
-    if(!startingTemperatures.isNull()){
-      temperatures = startingTemperatures.clone();
-
-      if(temperatures.size() != nbIndividuals){
-        std::cerr << "there must be nbIndividuals temperatures given, here there is : "<< temperatures.size() <<"\n";
-        return Rcpp::List::create();
-      }
-      else
-        individualsCpp = DFtoCPP_WOIndividual(ATCtree.nrow(),nbIndividuals, meanMedicationPerObs, temperatures);
-    }
-    else
-      individualsCpp = DFtoCPP_WOtempAndIndividual(ATCtree.nrow(),nbIndividuals, meanMedicationPerObs);
-  }
-  else{ 
-    Rcpp::List tmpST = startingIndividuals.clone();
-    
-    if(tmpST.size() != nbIndividuals){
-      std::cerr << "give the same number of individuals as the value of the parameter nbIndividuals \n";
-      return Rcpp::List::create();
-    }
-    
-    if(startingTemperatures.isNull()){
-      //initialized with random temperatures
-      individualsCpp = DFtoCPP_WOtemp(tmpST);
-    }
-    else{
-      temperatures = startingTemperatures.clone();
-      if(temperatures.length() == tmpST.length()){
-        individualsCpp = DFtoCPP_Wtemp(tmpST,temperatures);
-        }
-      else{
-        std::cerr << "there must be the same number of starting point and temperatures" << '\n';
-        return Rcpp::List::create();
-      }
-      
-    }
-  }
-  
-
-  ADRPairs = getADRPairs(observationsMedication, observationsADR);
-  
-  //test affichage individus /*
-  std::cout << "starting cocktails : \n";
-  for(const Individual& ind : individualsCpp){
-    ind.printMedications();
-    ind.printTemperature();
-  }
-  
-  //compute each RR before the loop
-  for(int i = 0; i < individualsCpp.size(); ++i){
-    populationRR[i] = individualsCpp[i].computeRR(observationsMedication, observationsADR, ATCtree);
-  }
-  
-  
-  //for each step suggest a modification using one of the 4 mutations 
-  //and compute the probability of acceptation,
-  //1st step : compute the RR of the actual population (depending on the chosen mutation)
-  //2nd step : apply a mutation 
-  //3rd step : compute the RR of the "new population" 
-  for(int i = 0; i < n ; ++i){
-    pMutation = Rcpp::runif(1,0,1)[0];
-    if( pMutation <= P_type1){ // pMutation <= P_type1    
-      //type 1 mutation, we take nbIndividuals included because we trunc, there is almost no chance to
-      //draw nbIndividuals
-      chosenIndividual_k = trunc(Rcpp::runif(1,0,nbIndividuals)[0]);
-      chosenIndividual_k = chosenIndividual_k >= nbIndividuals ? nbIndividuals-1 : chosenIndividual_k;
-
-      //RRx_k = individualsCpp[chosenIndividual_k].computeRR(observationsMedication, observationsADR, ATCtree);
-      RRx_k = populationRR[chosenIndividual_k];
-      
-      seqLen = individualsCpp[chosenIndividual_k].getMedications().size();
-      bool emptySeq = (seqLen == 0);
-      
-      //mutatedIndividual_k = type1Mutation(individualsCpp[chosenIndividual_k], ATCtree.nrow(), alpha, emptySeq); test new mutation
-      mutatedIndividual_k = adjustedType1Mutation(individualsCpp[chosenIndividual_k], ATCtree.nrow(), alpha, emptySeq);
-      
-      RRy_k = mutatedIndividual_k.computeRR(observationsMedication, observationsADR, ATCtree);
-      
-      //for acceptance rate -> debug
-      if(RRy_k > 0)
-        ++nonZeroRR;
-      //to have an overview of the explored space
-      addPairToSet(mutatedIndividual_k, exploredPairs);
-      
-      
-      //acceptation probability
-      /*if(mutatedIndividual_k.getMedications().size() > seqLen){
-        //if the Y cocktail size is larger than the X (so the mutation 1 added a medication)
-        if(seqLen > 0){
-          //if the cocktail was not empty
-          double U_p = std::min(1.0, (alpha/static_cast<double>(seqLen)));
-          q_y_given_x = U_p * ( 1.0 / (ATCtree.nrow() - seqLen) );
-          
-        }else if(seqLen == 0){
-          // if it was empty U_p = 1 and seqLen = 0 
-          q_y_given_x = 1.0 / static_cast<double>(ATCtree.nrow());
-        }
-        double U_p_plus = std::min(1.0, (alpha/static_cast<double>(seqLen + 1)));
-        q_x_given_y = ((1 - U_p_plus) * (1.0 / static_cast<double>(seqLen + 1)));
-      }
-      else{
-        // if the X cocktail size is larger than the Y (so the mutation 1 removed a medication)
-        double U_p = std::min(1.0, (alpha/static_cast<double>(seqLen)));
-        q_y_given_x = ((1-U_p) * (1.0/static_cast<double>(seqLen)));
-        
-        if(seqLen > 1){
-          // X cocktail had more than a single medication
-          double U_p_minus = std::min(1.0, (alpha/static_cast<double>(seqLen - 1)));
-          q_x_given_y = (U_p_minus * (1.0/static_cast<double>(ATCtree.nrow() - seqLen + 1)));
-        }else if(seqLen == 1){
-          q_x_given_y = (1.0 / static_cast<double>(ATCtree.nrow()));
-        }
-      }
-      
-      pAcceptation = exp(((RRy_k - RRx_k)/individualsCpp[chosenIndividual_k].getTemperature())) 
-        * ( q_x_given_y / q_y_given_x); //q_y_given_x / q_x_given_y*/
-      //new acceptation probability (for the adjusted type1 mutation)! 
-      if(mutatedIndividual_k.getMedications().size() > seqLen){
-        //we added a medication
-        if(emptySeq){
-          q_ratio = 1-alpha;
-        }
-        else{
-          q_ratio = ((1-alpha) * (1.0 / static_cast<double>(seqLen))) / static_cast<double>(alpha);
-        }
-      }
-      else if(mutatedIndividual_k.getMedications().size() < seqLen){
-        //if the modification led to a deletion
-        if(seqLen == 1){
-          q_ratio = 1.0 / (1-alpha);
-        }
-        else{
-          q_ratio = alpha / ((1-alpha) * (1.0/static_cast<double>(seqLen)));
-        }
-      }else{
-        //here we just modified the cocktail (no addition no deletion)
-        q_ratio = (1-alpha) / alpha;
-      }
-      pAcceptation = exp(((RRy_k - RRx_k)/individualsCpp[chosenIndividual_k].getTemperature())) 
-        * q_ratio;
-
-      pDraw = Rcpp::runif(1,0,1)[0];
-      
-      bestResult.second = RRx_k > RRy_k ? RRx_k : RRy_k;
-      bestResult.first = RRx_k > RRy_k ? individualsCpp[chosenIndividual_k] : mutatedIndividual_k;
-      
-      if(pAcceptation > pDraw){
-        individualsCpp[chosenIndividual_k] = mutatedIndividual_k;
-        populationRR[chosenIndividual_k] = RRy_k;
-        ++acceptedMove;
-        ++accepted_type1;
-        acceptedSize += individualsCpp[chosenIndividual_k].getMedications().size();
-      };
-      ++type1_move;
-    }
-    else if(pMutation > P_type1 && pMutation <= type2Bound){//pMutation > 0.25 && pMutation <= 0.50 (default parameter)
-      //type 2 mutation
-
-      chosenIndividual_k = trunc(Rcpp::runif(1,0,nbIndividuals)[0]);
-      chosenIndividual_k = chosenIndividual_k >= nbIndividuals ? nbIndividuals-1 : chosenIndividual_k;
-      
-      //if the selected indivudual is empty, the type 2 mutation cannot occur
-      if(individualsCpp[chosenIndividual_k].getMedications().size() != 0){
-        // RRx_k = individualsCpp[chosenIndividual_k].computeRR(observationsMedication, observationsADR, ATCtree);
-        RRx_k = populationRR[chosenIndividual_k];
-        //get every vertex 0/1 for this patient
-        vertexX = individualsCpp[chosenIndividual_k].getVertexList(ATCtree);
-        chosenVertexidx = trunc(Rcpp::runif(1,0,vertexX.size())[0]);
-        
-        chosenVertexidx = chosenVertexidx == vertexX.size() ? vertexX.size()-1 : chosenVertexidx;
-        
-        std::pair<int,int> chosenVertex = vertexX[chosenVertexidx];
-        
-        mutatedIndividual_k = type2Mutation(individualsCpp[chosenIndividual_k],ATCtree.nrow(),chosenVertex);
-        
-        RRy_k = mutatedIndividual_k.computeRR(observationsMedication, observationsADR, ATCtree);
-        vertexY = mutatedIndividual_k.getVertexList(ATCtree);
-        
-        //for acceptance rate -> debug
-        if(RRy_k > 0)
-          ++nonZeroRR;
-        //to have an overview of the explored space
-        addPairToSet(mutatedIndividual_k, exploredPairs);
-        
-        
-        pAcceptation = (exp(((RRy_k - RRx_k) / individualsCpp[chosenIndividual_k].getTemperature()))) * 
-          (static_cast<double>(vertexX.size())/static_cast<double>(vertexY.size()));
-        
-        pDraw = Rcpp::runif(1,0,1)[0];
-        
-        bestResult.second = RRx_k > RRy_k ? RRx_k : RRy_k;
-        bestResult.first = RRx_k > RRy_k ? individualsCpp[chosenIndividual_k] : mutatedIndividual_k;
-        
-        if(pAcceptation > pDraw){
-          individualsCpp[chosenIndividual_k] = mutatedIndividual_k;
-          populationRR[chosenIndividual_k] = RRy_k;
-          ++acceptedMove;
-          ++accepted_type2;
-          acceptedSize += individualsCpp[chosenIndividual_k].getMedications().size();
-        }
-        ++type2_move;
-      }
-  
-    }
-    else if(pMutation > type2Bound && pMutation <= crossoverBound){//pMutation > 0.50 && pMutation <= 0.75
-
-      //crossover mutation
-      chosenIndividual_k = trunc(Rcpp::runif(1,0,nbIndividuals)[0]);
-      chosenIndividual_k = chosenIndividual_k >= nbIndividuals ? nbIndividuals-1 : chosenIndividual_k;
-
-      //we chose the second individual he has to be different as the first one so we 
-      //do .. while equal to the first one 
-      do{
-        chosenIndividual_l = trunc(Rcpp::runif(1,0,nbIndividuals)[0]);
-        chosenIndividual_l = chosenIndividual_l >= nbIndividuals ? nbIndividuals-1 : chosenIndividual_l;
-      } while (chosenIndividual_k == chosenIndividual_l);
-
-      //RRx_k = individualsCpp[chosenIndividual_k].computeRR(observationsMedication,observationsADR,ATCtree);
-      //RRx_l = individualsCpp[chosenIndividual_l].computeRR(observationsMedication,observationsADR,ATCtree);
-      RRx_k = populationRR[chosenIndividual_k];
-      RRx_l = populationRR[chosenIndividual_l];
-      
-      //selection of the node on which we will perform the crossover
-      //while we are on a leaf 
-      do{
-        selectedNode = trunc(Rcpp::runif(1,0,ATCtree.nrow())[0]);
-        selectedNode = selectedNode == ATCtree.nrow() ? ATCtree.nrow()-1 : selectedNode;
-      } while (ATClength[selectedNode] == 7);
-      
-      upperBound = upperBounds[selectedNode];
-
-      mutatedIndividual_k = crossoverMutation(individualsCpp[chosenIndividual_k],
-                                              individualsCpp[chosenIndividual_l], ATCtree,
-                                              selectedNode, upperBound);
-      mutatedIndividual_l = crossoverMutation(individualsCpp[chosenIndividual_l],
-                                              individualsCpp[chosenIndividual_k], ATCtree,
-                                              selectedNode, upperBound);
-
-      RRy_k = mutatedIndividual_k.computeRR(observationsMedication,observationsADR,ATCtree);
-      RRy_l = mutatedIndividual_l.computeRR(observationsMedication,observationsADR,ATCtree);
-      
-      //for acceptance rate -> debug
-      if((RRy_k + RRy_l) > 0)
-        ++nonZeroRR;
-      
-      //to have an overview of the explored space
-      addPairToSet(mutatedIndividual_k, exploredPairs);
-      addPairToSet(mutatedIndividual_l, exploredPairs);
-      
-
-      pAcceptation = exp(((RRy_k - RRx_k)/individualsCpp[chosenIndividual_k].getTemperature()) 
-                           + ((RRy_l - RRx_l)/individualsCpp[chosenIndividual_l].getTemperature()));
-      
-      pDraw = Rcpp::runif(1,0,1)[0];
-      
-      bestResult = largerRR({individualsCpp[chosenIndividual_k],RRx_k},{individualsCpp[chosenIndividual_l],RRx_l},
-      {mutatedIndividual_k,RRy_k},{mutatedIndividual_l,RRy_l});
-      
-      if(pAcceptation > pDraw){
-        individualsCpp[chosenIndividual_k] = mutatedIndividual_k;
-        individualsCpp[chosenIndividual_l] = mutatedIndividual_l;
-        populationRR[chosenIndividual_k] = RRy_k;
-        populationRR[chosenIndividual_l] = RRy_l;
-        ++acceptedMove;
-        ++accepted_cross;
-        acceptedSize += individualsCpp[chosenIndividual_k].getMedications().size();
-      }
-      ++cross_move;
-    }
-    else{
-
-      // Swap mutation
-      chosenIndividual_k = trunc(Rcpp::runif(1,0,nbIndividuals-1)[0]);
-      chosenIndividual_k = chosenIndividual_k == nbIndividuals-1 ? nbIndividuals-2 : chosenIndividual_k;
-      
-      chosenIndividual_l = chosenIndividual_k+1;
-
-      //RRx_k = individualsCpp[chosenIndividual_k].computeRR(observationsMedication,observationsADR,ATCtree);
-      //RRx_l = individualsCpp[chosenIndividual_l].computeRR(observationsMedication,observationsADR,ATCtree);
-      RRx_k = populationRR[chosenIndividual_k];
-      RRx_l = populationRR[chosenIndividual_l];
-      
-      //we just swap medications
-      mutatedIndividual_k = {individualsCpp[chosenIndividual_l].getMedications(),
-                             individualsCpp[chosenIndividual_k].getTemperature()};
-      mutatedIndividual_l = {individualsCpp[chosenIndividual_k].getMedications(),
-                             individualsCpp[chosenIndividual_l].getTemperature()};
-
-      RRy_k = mutatedIndividual_k.computeRR(observationsMedication,observationsADR,ATCtree);
-      RRy_l = mutatedIndividual_l.computeRR(observationsMedication,observationsADR,ATCtree);
-      
-      //for acceptance rate
-      if((RRy_k + RRy_l) > 0)
-        ++nonZeroRR;
-      
-      //to have an overview of the explored space
-      addPairToSet(mutatedIndividual_k, exploredPairs);
-      addPairToSet(mutatedIndividual_l, exploredPairs);
-
-      pAcceptation = exp(((RRy_k - RRx_k)/individualsCpp[chosenIndividual_k].getTemperature()) 
-                           + ((RRy_l - RRx_l)/individualsCpp[chosenIndividual_l].getTemperature()));
-      
-      pDraw = Rcpp::runif(1,0,1)[0];
-      
-     bestResult = largerRR({individualsCpp[chosenIndividual_k],RRx_k},{individualsCpp[chosenIndividual_l],RRx_l},
-              {mutatedIndividual_k,RRy_k},{mutatedIndividual_l,RRy_l});
-      
-      if(pAcceptation > pDraw){
-        individualsCpp[chosenIndividual_k] = mutatedIndividual_k;
-        individualsCpp[chosenIndividual_l] = mutatedIndividual_l;
-        populationRR[chosenIndividual_k] = RRy_k;
-        populationRR[chosenIndividual_l] = RRy_l;
-        ++acceptedMove;
-        ++accepted_swap;
-        acceptedSize += individualsCpp[chosenIndividual_k].getMedications().size();
-      }
-      ++swap_move;
-    }
-    //add the best results to the RR array -> do we consider the 0 RR in the distribution ? 
-    if(bestResult.second >=1 && bestResult.second <= 5){
-      addRRtoDistribution(bestResult.second,RRDistribution);
-    }
-    else{
-      if(bestResult.second < 1&& bestResult.second > 0){
-        ++smallerOneRR;
-      }
-      else if(bestResult.second > 5)
-        ++largerFiveRR;
-    }
-    
-    
-    //adding the result to the best result if we need to 
-    if(isNotInResultList(bestResults,bestResult)){
-      if(bestResults.size() < nbResults){
-        bestResults.emplace_back(bestResult);
-        minRR = minRR < bestResult.second ? minRR : bestResult.second;
-      }
-      else if(minRR < bestResult.second){
-        auto it = std::find_if(bestResults.begin(),bestResults.end(),
-                     [minRR](const std::pair<Individual,double>& p){return p.second == minRR;});
-        if(it != bestResults.end()){
-          bestResults.erase(it);
-        }
-        bestResults.emplace_back(bestResult);
-        auto tmpMin = *std::min_element(bestResults.begin(),bestResults.end(),
-                                 [](const std::pair<Individual,double>& lp,const std::pair<Individual,double>& rp){
-                                   return lp.second < rp.second; 
-                                 });
-        minRR = tmpMin.second;
-      }
-    }
-    
-    /*if(pMutation < P_type1){
-      std::cout << "epochs " << i <<'\n';
-      std::cout << "proba mutation " << pMutation << "\n";
-      std::cout << "proba d'acceptation " << pAcceptation << '\n';
-      std::cout << "sequence mutée "<< chosenIndividual_k << '\n';
-      std::cout << "RRx avant mutation " << RRx_k << " RRy apres mutation " << RRy_k << '\n';
-      //std::cout << "q(y | x) " << q_y_given_x << " q(x|y) " << q_x_given_y << " rapport " << q_x_given_y / q_y_given_x << "\n";
-      std::cout << "q ratio : " << q_ratio << '\n'; 
-      for(const auto& ind : individualsCpp){
-        std::cout << ind.getMedications().size() << '\n';
-      }
-      
-    }*/
-  }
-  
-  //insert le smaller one and the larger five to the RR vector
-  RRDistribution.insert(RRDistribution.begin(),smallerOneRR);
-  RRDistribution[RRDistribution.size()-1] = largerFiveRR;
-  
-  //create the returned vector
-  std::vector<std::vector<int>> returnedMed{};
-  returnedMed.reserve(bestResults.size());
-  std::vector<double>returnedRR{};
-  returnedRR.reserve(bestResults.size());
-
-  for(const auto &pair : bestResults){
-    returnedMed.push_back(pair.first.getMedications());
-    returnedRR.push_back(pair.second);
-  }
-  
-  double acceptanceRate = static_cast<double>(acceptedMove) / static_cast<double>(n);
-  double acceptedNonZeroRR = static_cast<double>(acceptedMove) / static_cast<double>(nonZeroRR);
-  double meanCocktailsSize = static_cast<double>(acceptedSize) / static_cast<double>(acceptedMove);
-  std::cout << "global acceptance rate : " << acceptanceRate << '\n';
-  std::cout << "type 1 mutation acceptance rate : " << static_cast<double>(accepted_type1) / static_cast<double>(type1_move) << "\n";
-  std::cout << "type 2 mutation acceptance rate : " << static_cast<double>(accepted_type2) / static_cast<double>(type2_move) << "\n";
-  std::cout << "crossover acceptance rate : " << static_cast<double>(accepted_cross) / static_cast<double>(cross_move) << "\n";
-  std::cout << "swap mutation acceptance rate : " << static_cast<double>(accepted_swap) / static_cast<double>(swap_move) << "\n";
-  
-  std::cout << "acceptance rate when a move is on a non zero RR direction : " << acceptedNonZeroRR<< "\n";
-  std::cout << "mean size of accepted cocktails : " << meanCocktailsSize << "\n";
-  
-  std::vector<std::pair<int,int>> inter;
-  //check the intersection between the eplored pairs and the pairs of the observations
-  std::set_intersection(ADRPairs.begin(), ADRPairs.end(), exploredPairs.begin(), exploredPairs.end(),
-                        std::back_inserter(inter));
-  std::vector<std::vector<int>> pairs;
-  pairs.reserve(inter.size());
-  for(const auto& p: inter){
-    pairs.push_back({p.first, p.second});
-  }
-  
-  return Rcpp::List::create(Rcpp::Named("bestCockatils") = returnedMed, Rcpp::Named("bestRR") = returnedRR,
-                            Rcpp::Named("RRDistribution") = RRDistribution, Rcpp::Named("ADRPairs") = pairs); //Rcpp::Named("ADRPairs") = ADRPairsSingleton
-}
-
-//'The Evolutionary MCMC method that runs the random walk on a single cocktail
-//'
-//'@param epochs : number of step 
-//'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
-//'@param observation : real observation of the ADR based on the medications of each real patients
-//'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
-//'
-//'@param temperature : starting temperature, default = 1
-//'@param nbResults : Number of returned solution (Cocktail of size Smax), 5 by default
+//'@param temperature : starting temperature, default = 1 (denoted T in the article)
+//'@param nbResults : Number of returned solution (Cocktail of size Smax with the best oberved score during the run), 5 by default
 //'@param Smax : Size of the cocktail we approximate the distribution from
 //'@param p_type1: probability to operate type1 mutation. Note :
-//'the probability to operate the type 2 mutation is then 1 - P_type1. P_type1 must be in [0;1]. 
+//'the probability to operate the type 2 mutation is then 1 - P_type1. P_type1 must be in [0;1]. Default is .01
 //'@param beta : filter the minimum number of patients that must have taken the 
-//'cocktail for it to be considered 'significant', default is 4
-//'@param Upper bound of the considered Metric. 
-//'@param num_thread : Number of thread to run in parallel
+//'cocktail for his risk to be taken into account in the DistributionScoreBeta default is 4
+//'@param max_score : maximum number the score can take. Score greater than this 
+//'one would be added to the distribution as the value max_score. Default is 500
+//'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
 //'
-//'@return if no problem return an array of the approximation of the RR distribution : the distribution of RR we've met; Otherwise the list is empty
+//'@return I no problem, return a List containing :
+//' - ScoreDistribution : the distribution of the score as an array with each cells
+//' representing the number of risks =  (index-1)/ 10
+//' - OutstandingScore : An array of the score greater than max_score,
+//' - bestCockatils : the nbResults bests cocktails encountered during the run.
+//' - bestScore : Score corresponding to the bestCocktails.
+//' - FilteredDistribution : Distribution containing score for cocktails taken by at
+//' least beta patients.
+//' - bestCocktailsBeta : the nbResults bests cocktails taken by at least beta patients
+//' encountered during the run.
+//' - bestScoreBeta : Score corresponding to the bestCocktailsBeta.
+//' - cocktailSize : Smax parameter used during the run.
+//'; Otherwise the list is empty
 //'@export
 //[[Rcpp::export]]
 Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const DataFrame& observations,
                                               int temperature = 1, int nbResults = 5, int Smax = 2,
-                                              double p_type1 = .01, int beta = 4, int max_Metric = 100,
-                                              int num_thread = 1){
+                                              double p_type1 = .01, int beta = 4, int max_score = 500,
+                                              int num_thread = 1, bool verbose = false){
   //arguments verification
   if(p_type1 > 1 || p_type1 < 0 || epochs < 1){
     std::cerr << "problem in the values of the parameter in the call of this function \n";
@@ -576,19 +82,16 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
     observationsMedication.push_back(observationsMedicationTmp[i]);
   }
   
-  double p_type2 = 1 - p_type1;
   Individual cocktail, mutatedIndividual;
   
   //for the moment the distribution is bounded by 0 and RRmax
   //const int distribSize = 300;
-  std::vector<unsigned int> RRDistribution((max_Metric*10) +1); // +1 stand for every RR over the RRmax value
+  std::vector<unsigned int> score_distribution((max_score*10) +1); // +1 stand for every RR over the RRmax value
   unsigned int nbCocktailNotInPopulation = 0;
-  std::vector<double> outstandingRR{};
-  outstandingRR.reserve(10);
-  std::pair<double, std::pair<int, int>> currentRR = std::make_pair(0.0,std::make_pair(0,0));
-  std::pair<double, std::pair<int, int>> computeRROutput; // pair< RR, <N° of people taking the cocktail and having the ADR, N° of people taking the cocktail>>
+  std::vector<double> outstanding_score{};
+  outstanding_score.reserve(10);
   
-  std::vector<unsigned int> RRDistributionGreaterBeta((max_Metric*10) +1);
+  std::vector<unsigned int> score_distribution_beta((max_score*10) +1);
   
   //used in the phyper function
   int ADRCount = 0;
@@ -597,18 +100,11 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
       ++ADRCount;
   }
   int notADRCount = observationsMedication.size() - ADRCount;
-  double ADRProp = static_cast<double>(ADRCount) / static_cast<double>(observationsMedication.size());
     
   std::pair<double, std::pair<int, int>> currentGeom = std::make_pair(0.0,std::make_pair(0,0));
   std::pair<double, std::pair<int, int>> computeGeomOutput; // pair< phypergeometric, <N° of people taking the cocktail and having the ADR, N° of people taking the cocktail>>
   double minGeom = 0;
   double minGeomBeta = 0;
-  /*
-  std::pair<double, std::pair<int, int>> currentBinom = std::make_pair(0.0,std::make_pair(0,0));
-  std::pair<double, std::pair<int, int>> computePBinomOutput; // pair< phypergeometric, <N° of people taking the cocktail and having the ADR, N° of people taking the cocktail>>
-  double minBinom = 0;
-  double minBinomBeta = 0;*/
-  
 
   //acceptance rate
   int acceptedMove = 0;
@@ -618,9 +114,7 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
   int type1_move_inF = 0, type2_move_inF = 0;
   int falseAcceptedCocktailCount = 0, falseSampledCocktailCount= 0;
   
-  double RRx_k, RRy_k, q_y_given_x, q_x_given_y, pMutation, pAcceptation, pDraw;
-  double q_ratio;
-  int seqLen;
+  double RRx_k, RRy_k, pMutation, pAcceptation, pDraw;
   
   std::vector<std::pair<int,int>> vertexX;
   std::vector<std::pair<int,int>> vertexY;
@@ -631,8 +125,6 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
   std::vector<std::pair<Individual,double>> bestResultsBeta;
   bestResultsBeta.reserve(nbResults);
   
-  double minRR = 0;
-  double minRRbeta = 0;
   std::pair<Individual, double> currentResult;
   
   //if p.second is greater than 0, it means that the cocktail correspond to at least one person
@@ -643,22 +135,16 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
   //initialization (every cocktail has to contain Smax medication)
   do{
     cocktail = newIndividualWithCocktailSize(ATCtree.nrow(), Smax, 1, temperature)[0];
-    //computeRROutput = cocktail.computeRR(observationsMedication, observationsADR, upperBounds, RRmax, num_thread);
     computeGeomOutput = cocktail.computePHypergeom(observationsMedication, observationsADR,
                                                    upperBounds, ADRCount, notADRCount,
-                                                   max_Metric, num_thread);
-    /*computePBinomOutput = cocktail.computePBinomial(observationsMedication, observationsADR,
-                                                    upperBounds, ADRProp,
-                                                    max_Metric, num_thread);*/
+                                                   max_score, num_thread);
   } while (!belongToF(computeGeomOutput));
-  //currentRR = computeRROutput;
   currentGeom = computeGeomOutput;
   
 #ifdef _OPENMP
   std::cout<< "openMP available \n";
 #endif
   
-  //minRR = currentRR.first;
   minGeom = currentGeom.first;
   bestResults.emplace_back(cocktail, currentGeom.first);
   if(currentGeom.second.second > beta){
@@ -673,29 +159,23 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
         //type 1 mutation
         RRx_k = currentGeom.first;
         
-        //mutatedIndividual = type1Mutation(cocktail, ATCtree.nrow(), alpha, emptySeq);
-        //mutatedIndividual = adjustedType1Mutation(cocktail, ATCtree.nrow(), alpha, emptySeq);
         //here the current type 1 mutation consist in drawing a new cocktail of the same size
         mutatedIndividual = newIndividualWithCocktailSize(ATCtree.nrow(), Smax, 1, temperature)[0];
-        //computeRROutput = mutatedIndividual.computeRR(observationsMedication, observationsADR, upperBounds, max_Metric, num_thread);
+        
         computeGeomOutput = mutatedIndividual.computePHypergeom(observationsMedication, observationsADR,
                                                                 upperBounds, ADRCount,
                                                                 notADRCount,
-                                                                max_Metric,
+                                                                max_score,
                                                                 num_thread);
-        //std::cout << "size : " << mutatedIndividual.getMedications().size() << '\n';
+        
         RRy_k = computeGeomOutput.first;
-        //std::cout << "prev RR : " << RRx_k << " new RR : " << RRy_k << '\n';
 
         //to have an overview of the explored space (not in this method for the moment)
         //addPairToSet(mutatedIndividual_k, exploredPairs);
         
-
-        
         if(belongToF(computeGeomOutput)){
           // with this mutation, our ration q(X|Y) / q(Y|X) = 1
           pAcceptation = exp(((RRy_k - RRx_k)/static_cast<double>(cocktail.getTemperature()))); 
-          //std::cout << "proba d'acceptation : " << pAcceptation << '\n';
           pDraw = Rcpp::runif(1,0,1)[0];
           ++type1_move_inF;
           if(pAcceptation > pDraw){
@@ -725,11 +205,10 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
         
         mutatedIndividual = type2Mutation(cocktail, ATCtree.nrow(), chosenVertex);
         
-        //computeRROutput = mutatedIndividual.computeRR(observationsMedication, observationsADR, upperBounds, max_Metric, num_thread);
         computeGeomOutput = mutatedIndividual.computePHypergeom(observationsMedication, observationsADR,
                                                                 upperBounds, ADRCount,
                                                                 notADRCount,
-                                                                max_Metric, 
+                                                                max_score, 
                                                                 num_thread);
         RRy_k = computeGeomOutput.first;
         vertexY = mutatedIndividual.getVertexList(ATCtree);
@@ -755,20 +234,20 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
         ++type2_move;
       
     }
-    if(currentGeom.first < max_Metric){
+    if(currentGeom.first < max_score){
       int index = 10 * currentGeom.first;
-      ++RRDistribution[index];
+      ++score_distribution[index];
       // in every cases we add the RR to the "normal returned" distribution, and if
       // more than beta persons take it, we add the RR to the other ditribution named
-      // RRDistributionGreaterBeta
+      // score_distribution_beta
       if(currentGeom.second.second > beta){ // second.first = N° of people taking the cocktail and having the ADR
-        ++RRDistributionGreaterBeta[index];
+        ++score_distribution_beta[index];
       }
     }
     else{ // since we have an RR max, we just increment the last elements of the distribution
       // if we are on a good RR we have a huge probability to stay on it -> maybe add the current RR only if it does not belong to the vector already ?
-      outstandingRR.push_back(currentGeom.first); // could remove this line ?
-      ++RRDistribution[RRDistribution.size()-1];
+      outstanding_score.push_back(currentGeom.first); // could remove this line ?
+      ++score_distribution[score_distribution.size()-1];
     }
     
     if(!cocktail.isTrueCocktail(upperBounds))
@@ -790,59 +269,66 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
   //create the returned vector
   std::vector<std::vector<int>> returnedMed{};
   returnedMed.reserve(bestResults.size());
-  std::vector<double>returnedRR{};
-  returnedRR.reserve(bestResults.size());
+  std::vector<double>returned_score{};
+  returned_score.reserve(bestResults.size());
   
   for(const auto &pair : bestResults){
     returnedMed.push_back(pair.first.getMedications());
-    returnedRR.push_back(pair.second);
+    returned_score.push_back(pair.second);
   }
   
   //create the returned vector with the cocktail taken by more than beta person
   std::vector<std::vector<int>> returnedMedBeta{};
   returnedMedBeta.reserve(bestResultsBeta.size());
-  std::vector<double>returnedRRBeta{};
-  returnedRRBeta.reserve(bestResultsBeta.size());
+  std::vector<double>returned_scoreBeta{};
+  returned_scoreBeta.reserve(bestResultsBeta.size());
   
   for(const auto &pair : bestResultsBeta){
     returnedMedBeta.push_back(pair.first.getMedications());
-    returnedRRBeta.push_back(pair.second);
+    returned_scoreBeta.push_back(pair.second);
   }
   
+  if(verbose){
+    std::cout << "acceptance rate : " << static_cast<double>(acceptedMove) / static_cast<double>(epochs)<< "\n";
+    std::cout << "acceptance rate type1 mutation : " << static_cast<double>(accepted_type1) / static_cast<double>(type1_move)<< "\n";
+    std::cout << "acceptance rate type2 mutation : " << static_cast<double>(accepted_type2) / static_cast<double>(type2_move)<< "\n";
+    std::cout << "acceptance rate type1 mutation when the proposal is in F : " << static_cast<double>(accepted_type1) / static_cast<double>(type1_move_inF)<< "\n";
+    std::cout << "acceptance rate type2 mutation when the proposal is in F : " << static_cast<double>(accepted_type2) / static_cast<double>(type2_move_inF)<< "\n";
+    std::cout << "number of proposed cocktail that was taken by nobody in the population : " << nbCocktailNotInPopulation << '\n';
+    std::cout << "number of false cocktail sampled : " << falseSampledCocktailCount << '\n';
+    std::cout << "number of false cocktail concidered in the distribution during the run : " << falseAcceptedCocktailCount << '\n';
+  }
   
-  std::cout << "acceptance rate : " << static_cast<double>(acceptedMove) / static_cast<double>(epochs)<< "\n";
-  std::cout << "acceptance rate type1 mutation : " << static_cast<double>(accepted_type1) / static_cast<double>(type1_move)<< "\n";
-  std::cout << "acceptance rate type2 mutation : " << static_cast<double>(accepted_type2) / static_cast<double>(type2_move)<< "\n";
-  std::cout << "acceptance rate type1 mutation when the proposal is in F : " << static_cast<double>(accepted_type1) / static_cast<double>(type1_move_inF)<< "\n";
-  std::cout << "acceptance rate type2 mutation when the proposal is in F : " << static_cast<double>(accepted_type2) / static_cast<double>(type2_move_inF)<< "\n";
-  std::cout << "number of proposed cocktail that was taken by nobody in the population : " << nbCocktailNotInPopulation << '\n';
-  std::cout << "number of false cocktail sampled : " << falseSampledCocktailCount << '\n';
-  std::cout << "number of false cocktail concidered in the distribution during the run : " << falseAcceptedCocktailCount << '\n';
-  
-  return Rcpp::List::create(Rcpp::Named("Distribution") = RRDistribution, Rcpp::Named("OutstandingRR") = outstandingRR, 
-                            Rcpp::Named("bestCockatils") = returnedMed, Rcpp::Named("bestRR") = returnedRR,
-                            Rcpp::Named("FilteredDistribution") = RRDistributionGreaterBeta,
+  return Rcpp::List::create(Rcpp::Named("ScoreDistribution") = score_distribution, Rcpp::Named("OutstandingScore") = outstanding_score, 
+                            Rcpp::Named("bestCockatils") = returnedMed, Rcpp::Named("bestScore") = returned_score,
+                            Rcpp::Named("FilteredDistribution") = score_distribution_beta,
                             Rcpp::Named("bestCocktailsBeta") = returnedMedBeta,
-                            Rcpp::Named("bestRRBeta") = returnedRRBeta,
+                            Rcpp::Named("bestScoreBeta") = returned_scoreBeta,
                             Rcpp::Named("cocktailSize") = Smax);
 }
 
-//'Genetic algorithm, trying to reach the best cocktail (the one which maximize
-//'the fitness function, Related Risk in our case)
+//'Genetic algorithm, trying to reach riskiest cocktails (the ones which maximize
+//'the fitness function, Hypergeometric score in our case)
 //'
-//'@param epochs : number of step 
-//'@param nbIndividuals : size of the popultation
+//'@param epochs : number of step or the algorithm 
+//'@param nbIndividuals : size of the population
 //'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
-//'@param observation : real observation of the ADR based on the medications of each real patients
+//'@param observations : real observation of the AE based on the medications of each patients
 //'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+//'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
 //'@param diversity : enable the diversity mechanism of the algorithm
-//' (favor the diversity of cocktail in the population)
-//'@param p_crossover: probability to operate a crossover on the crossover phase.
-//'@param p_mutation: probability to operate a mutation after the crossover phase.
-//'@param nbElite : number of best individual we keep from generation to generation
-//'@param tournamentSize : size of the tournament (select the best individual be tween tournamentSize individuals) 
+//' (favor the diversity of cocktail in the population),  default is false
+//'@param p_crossover: probability to operate a crossover on the crossover phase. Default is 80%
+//'@param p_mutation: probability to operate a mutation after the crossover phase. Default is 1%
+//'@param nbElite : number of best individual we keep from generation to generation. Default is 0
+//'@param tournamentSize : size of the tournament (select the best individual 
+//'between tournamentSize sampled individuals) 
 //'
-//'@return if no problem return the best cocktail we found (according to the fitness function which is the Relative Risk)
+//'@return If no problem, return a List :
+//' - meanFitnesses : The mean score of the population at each epochs of the algorithm.
+//' - BestFitnesses : The best score of the population at each epochs of the algorithm.
+//' - FinalPopulation : The final population of the algorithm when finished (medications
+//' and corresponding scores)
 //'@export
 //[[Rcpp::export]]
 Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCtree, 
@@ -937,7 +423,7 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
       population.penalize(depth,father);
     }
     
-    //2nd : make a ss and apply the crossover on the selected individual
+    //2nd : make a selection and apply the crossover on the selected individual
     //keep the elite first
     population.keepElite(nbElite, matingPool);
 
@@ -988,18 +474,36 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
 }
 
 
-//'The true distribution of drugs
+//'The true distribution of the score among every single nodes of the ATC
 //'
 //'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
-//'@param obervations : population of patients on which we want to compute the risk distribution
-//'@param beta : minimum number of cocktail takers 
-//'@param max_risk : maximum risk, at which point the risk is considered exceptional (outliers)
+//'@param observations : observation of the AE based on the medications of each patients
+ //'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+ //' on which we want to compute the risk distribution
+//'@param beta : minimum number of person taking the cocktails in order to consider it
+//'in the beta score distribution 
+//'@param max_score : maximum number the score can take. Score greater than this 
+//'one would be added to the distribution as the value max_score. Default is 1000
+//'@param nbResults : Number of returned solution (Cocktail with the
+//' best oberved score during the run), 100 by default
+//'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
 //'
-//'@return the risk distribution among drugs
+//'@return Return a List containing :
+//' - ScoreDistribution : the distribution of the score as an array with each cells
+//' representing the number of risks =  (index-1)/ 10
+//' - Filtered_score_distribution : Distribution containing score for cocktails taken by at
+//' least beta patients.
+//' - Outstanding_score : An array of the score greater than max_score,
+//' - Best_cocktails : the nbResults bests cocktails encountered during the run.
+//' - Best_cocktails_beta : the nbResults bests cocktails taken by at least beta patients
+//' encountered during the run.
+//' - Best_scores : Score corresponding to the Best_cocktails.
+//' - Best_scores_beta : Score corresponding to the Best_cocktails_beta.
 //'@export
 //[[Rcpp::export]]
 Rcpp::List trueDistributionDrugs(const DataFrame& ATCtree, const DataFrame& observations,
-                                 int beta, int max_risk = 100, int num_thread = 1){
+                                 int beta, int max_score = 1000, int nbResults = 100,
+                                 int num_thread = 1){
  
 #ifdef _OPENMP
  if(num_thread < 1 || num_thread > omp_get_num_procs()){
@@ -1023,22 +527,18 @@ Rcpp::List trueDistributionDrugs(const DataFrame& ATCtree, const DataFrame& obse
  int notADRCount = observationsMedication.size() - ADRCount;
  
  
- //for the moment the distribution is bounded by 0 and 100
- const int distribSize = max_risk *10;
- std::vector<unsigned int> RRDistribution(distribSize);
- std::vector<unsigned int> RRDistributionGreaterBeta(distribSize);
+ //for the moment the distribution is bounded by 0 and 1000
+ const int distribSize = max_score *10;
+ std::vector<unsigned int> score_distribution(distribSize);
+ std::vector<unsigned int> score_distributionGreaterBeta(distribSize);
  
- unsigned int nbCocktailNotInPopulation = 0;
- std::vector<double> outstandingRR{};
- outstandingRR.reserve(10);
- std::vector<double> outstandingRRBeta{};
- outstandingRRBeta.reserve(10);
+ std::vector<double> outstanding_score{};
+ outstanding_score.reserve(10);
+ std::vector<double> outstanding_scoreBeta{};
+ outstanding_scoreBeta.reserve(10);
  
- std::pair<double, std::pair<int,int>> computeRROutput;
  std::pair<double, std::pair<int,int>> computePhyperOutput;
  
- int nbResults = 100; // we keep the 100 best individuals
- double minRR = 0, minRRbeta = 0;
  double minPhyper = 0, minPhyperBeta = 0;
  std::vector<std::pair<Individual,double>> bestResults;
  bestResults.reserve(nbResults);
@@ -1053,23 +553,22 @@ Rcpp::List trueDistributionDrugs(const DataFrame& ATCtree, const DataFrame& obse
    med = i;
 
    indiv.setMedications({med});
-   //computeRROutput = indiv.computeRR(observationsMedication, observationsADR, upperBounds, 8000, num_thread);
    computePhyperOutput = indiv.computePHypergeom(observationsMedication, observationsADR,
                                                  upperBounds, ADRCount, notADRCount,
                                                  8000, num_thread);
    if(computePhyperOutput.second.second > 0){ // if the cocktail belongs to F
-     if(computePhyperOutput.first < max_risk){
+     if(computePhyperOutput.first < max_score){
        int index = 10 * computePhyperOutput.first;
-       ++RRDistribution[index];
+       ++score_distribution[index];
        if(computePhyperOutput.second.second > beta){
-         ++RRDistributionGreaterBeta[index];
+         ++score_distributionGreaterBeta[index];
        }
      }
      else{
        if(computePhyperOutput.second.second > beta){
-         outstandingRRBeta.push_back(computePhyperOutput.first);
+         outstanding_scoreBeta.push_back(computePhyperOutput.first);
        }
-       outstandingRR.push_back(computePhyperOutput.first);
+       outstanding_score.push_back(computePhyperOutput.first);
      }
      
      //keep the best results
@@ -1089,32 +588,32 @@ Rcpp::List trueDistributionDrugs(const DataFrame& ATCtree, const DataFrame& obse
  //create the vector of the best cocktail
  std::vector<std::vector<int>> returnedMed{};
  returnedMed.reserve(bestResults.size());
- std::vector<double>returnedRR{};
- returnedRR.reserve(bestResults.size());
+ std::vector<double>returned_score{};
+ returned_score.reserve(bestResults.size());
  
  for(const auto &pair : bestResults){
    returnedMed.push_back(pair.first.getMedications());
-   returnedRR.push_back(pair.second);
+   returned_score.push_back(pair.second);
  }
  
  //create the returned vector of the best cocktail taken by more than beta person
  std::vector<std::vector<int>> returnedMedBeta{};
  returnedMedBeta.reserve(bestResultsBeta.size());
- std::vector<double>returnedRRBeta{};
- returnedRRBeta.reserve(bestResultsBeta.size());
+ std::vector<double>returned_scoreBeta{};
+ returned_scoreBeta.reserve(bestResultsBeta.size());
  
  for(const auto &pair : bestResultsBeta){
    returnedMedBeta.push_back(pair.first.getMedications());
-   returnedRRBeta.push_back(pair.second);
+   returned_scoreBeta.push_back(pair.second);
  }
  
- return Rcpp::List::create(Rcpp::Named("Distribution") = RRDistribution,
-                           Rcpp::Named("Filtered_distribution") = RRDistributionGreaterBeta,
-                           Rcpp::Named("Outstanding_risk") = outstandingRR,
+ return Rcpp::List::create(Rcpp::Named("ScoreDistribution") = score_distribution,
+                           Rcpp::Named("Filtered_score_distribution") = score_distributionGreaterBeta,
+                           Rcpp::Named("Outstanding_score") = outstanding_score,
                            Rcpp::Named("Best_cocktails") = returnedMed,
                            Rcpp::Named("Best_cocktails_beta") = returnedMedBeta,
-                           Rcpp::Named("Best_risks") = returnedRR,
-                           Rcpp::Named("Best_risks_beta") = returnedRRBeta);
+                           Rcpp::Named("Best_scores") = returned_score,
+                           Rcpp::Named("Best_scores_beta") = returned_scoreBeta);
 }
 
 //'The true distribution of size 2 cocktails

@@ -95,30 +95,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// EMC
-Rcpp::List EMC(int n, const DataFrame& ATCtree, const DataFrame& observations, double P_type1, double P_type2, double P_crossover, int nbIndividuals, int nbResults, double alpha, Rcpp::Nullable<Rcpp::List> startingIndividuals, Rcpp::Nullable<Rcpp::NumericVector> startingTemperatures);
-RcppExport SEXP _emcAdr_EMC(SEXP nSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP P_type1SEXP, SEXP P_type2SEXP, SEXP P_crossoverSEXP, SEXP nbIndividualsSEXP, SEXP nbResultsSEXP, SEXP alphaSEXP, SEXP startingIndividualsSEXP, SEXP startingTemperaturesSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
-    Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
-    Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
-    Rcpp::traits::input_parameter< double >::type P_type1(P_type1SEXP);
-    Rcpp::traits::input_parameter< double >::type P_type2(P_type2SEXP);
-    Rcpp::traits::input_parameter< double >::type P_crossover(P_crossoverSEXP);
-    Rcpp::traits::input_parameter< int >::type nbIndividuals(nbIndividualsSEXP);
-    Rcpp::traits::input_parameter< int >::type nbResults(nbResultsSEXP);
-    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
-    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::List> >::type startingIndividuals(startingIndividualsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type startingTemperatures(startingTemperaturesSEXP);
-    rcpp_result_gen = Rcpp::wrap(EMC(n, ATCtree, observations, P_type1, P_type2, P_crossover, nbIndividuals, nbResults, alpha, startingIndividuals, startingTemperatures));
-    return rcpp_result_gen;
-END_RCPP
-}
 // DistributionApproximation
-Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const DataFrame& observations, int temperature, int nbResults, int Smax, double p_type1, int beta, int max_Metric, int num_thread);
-RcppExport SEXP _emcAdr_DistributionApproximation(SEXP epochsSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP temperatureSEXP, SEXP nbResultsSEXP, SEXP SmaxSEXP, SEXP p_type1SEXP, SEXP betaSEXP, SEXP max_MetricSEXP, SEXP num_threadSEXP) {
+Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const DataFrame& observations, int temperature, int nbResults, int Smax, double p_type1, int beta, int max_score, int num_thread, bool verbose);
+RcppExport SEXP _emcAdr_DistributionApproximation(SEXP epochsSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP temperatureSEXP, SEXP nbResultsSEXP, SEXP SmaxSEXP, SEXP p_type1SEXP, SEXP betaSEXP, SEXP max_scoreSEXP, SEXP num_threadSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -130,9 +109,10 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type Smax(SmaxSEXP);
     Rcpp::traits::input_parameter< double >::type p_type1(p_type1SEXP);
     Rcpp::traits::input_parameter< int >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< int >::type max_Metric(max_MetricSEXP);
+    Rcpp::traits::input_parameter< int >::type max_score(max_scoreSEXP);
     Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
-    rcpp_result_gen = Rcpp::wrap(DistributionApproximation(epochs, ATCtree, observations, temperature, nbResults, Smax, p_type1, beta, max_Metric, num_thread));
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    rcpp_result_gen = Rcpp::wrap(DistributionApproximation(epochs, ATCtree, observations, temperature, nbResults, Smax, p_type1, beta, max_score, num_thread, verbose));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -159,17 +139,18 @@ BEGIN_RCPP
 END_RCPP
 }
 // trueDistributionDrugs
-Rcpp::List trueDistributionDrugs(const DataFrame& ATCtree, const DataFrame& observations, int beta, int max_risk, int num_thread);
-RcppExport SEXP _emcAdr_trueDistributionDrugs(SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP betaSEXP, SEXP max_riskSEXP, SEXP num_threadSEXP) {
+Rcpp::List trueDistributionDrugs(const DataFrame& ATCtree, const DataFrame& observations, int beta, int max_score, int nbResults, int num_thread);
+RcppExport SEXP _emcAdr_trueDistributionDrugs(SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP betaSEXP, SEXP max_scoreSEXP, SEXP nbResultsSEXP, SEXP num_threadSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
     Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
     Rcpp::traits::input_parameter< int >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< int >::type max_risk(max_riskSEXP);
+    Rcpp::traits::input_parameter< int >::type max_score(max_scoreSEXP);
+    Rcpp::traits::input_parameter< int >::type nbResults(nbResultsSEXP);
     Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
-    rcpp_result_gen = Rcpp::wrap(trueDistributionDrugs(ATCtree, observations, beta, max_risk, num_thread));
+    rcpp_result_gen = Rcpp::wrap(trueDistributionDrugs(ATCtree, observations, beta, max_score, nbResults, num_thread));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -453,10 +434,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_csv_to_population", (DL_FUNC) &_emcAdr_csv_to_population, 3},
     {"_emcAdr_string_list_to_int_cocktails", (DL_FUNC) &_emcAdr_string_list_to_int_cocktails, 2},
     {"_emcAdr_int_cocktail_to_string_cocktail", (DL_FUNC) &_emcAdr_int_cocktail_to_string_cocktail, 2},
-    {"_emcAdr_EMC", (DL_FUNC) &_emcAdr_EMC, 11},
-    {"_emcAdr_DistributionApproximation", (DL_FUNC) &_emcAdr_DistributionApproximation, 10},
+    {"_emcAdr_DistributionApproximation", (DL_FUNC) &_emcAdr_DistributionApproximation, 11},
     {"_emcAdr_GeneticAlgorithm", (DL_FUNC) &_emcAdr_GeneticAlgorithm, 12},
-    {"_emcAdr_trueDistributionDrugs", (DL_FUNC) &_emcAdr_trueDistributionDrugs, 5},
+    {"_emcAdr_trueDistributionDrugs", (DL_FUNC) &_emcAdr_trueDistributionDrugs, 6},
     {"_emcAdr_trueDistributionSizeTwoCocktail", (DL_FUNC) &_emcAdr_trueDistributionSizeTwoCocktail, 5},
     {"_emcAdr_trueDistributionSizeThreeCocktail", (DL_FUNC) &_emcAdr_trueDistributionSizeThreeCocktail, 4},
     {"_emcAdr_MetricCalc", (DL_FUNC) &_emcAdr_MetricCalc, 7},

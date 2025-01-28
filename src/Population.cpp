@@ -266,6 +266,7 @@ double Population::dist_norm(int i, int j, const IntMatrix& M, const std::vector
     for(const auto& idx1 : indexC1){
       for(const auto& idx2 : indexC2){
         if(M[idx1][depth] == M[idx2][depth]){
+          //if exactly the same node
           if(M[idx1] == M[idx2]){
             cost+=0;
           }else{
