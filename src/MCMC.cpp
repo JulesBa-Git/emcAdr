@@ -2,14 +2,6 @@
 
 // [[Rcpp::depends(RcppArmadillo)]]
 
-double meanMedications(const Rcpp::List& observations){
-  double sum = 0;
-  for(const std::vector<int> ind : observations){
-    sum += ind.size();
-  }
-  
-  return observations.size() >0 ? (sum / static_cast<double>(observations.size())) : 0 ;
-}
 
 double meanMedications(const std::vector<std::vector<int>>& observations){
   double final_sum = std::accumulate(
@@ -23,36 +15,37 @@ double meanMedications(const std::vector<std::vector<int>>& observations){
     0;
 }
 
-std::pair<Individual,double> largerRR(const std::pair<Individual,double>& firstRR, const std::pair<Individual,double>& secRR,
-                                      const std::pair<Individual,double>& thirdRR, const std::pair<Individual,double>& fourthRR){
-  if(firstRR.second >= secRR.second && firstRR.second >= thirdRR.second && firstRR.second >= fourthRR.second)
-    return firstRR;
-  else if(secRR.second >= firstRR.second && secRR.second >= thirdRR.second && secRR.second >= fourthRR.second)
-    return secRR;
-  else if(thirdRR.second >= firstRR.second && thirdRR.second >= secRR.second &&thirdRR.second >= fourthRR.second)
-    return thirdRR;
+
+std::pair<Individual,double> largerScore(const std::pair<Individual,double>& firstScore, const std::pair<Individual,double>& secScore,
+                                      const std::pair<Individual,double>& thirdScore, const std::pair<Individual,double>& fourthScore){
+  if(firstScore.second >= secScore.second && firstScore.second >= thirdScore.second && firstScore.second >= fourthScore.second)
+    return firstScore;
+  else if(secScore.second >= firstScore.second && secScore.second >= thirdScore.second && secScore.second >= fourthScore.second)
+    return secScore;
+  else if(thirdScore.second >= firstScore.second && thirdScore.second >= secScore.second &&thirdScore.second >= fourthScore.second)
+    return thirdScore;
   else
-    return fourthRR;
+    return fourthScore;
 }
 
-void addRRtoDistribution(const double RR,std::vector<unsigned int>& vec){
-  double dIndex = (RR-1) * 10;
+void addScoretoDistribution(const double score,std::vector<unsigned int>& vec){
+  double dIndex = (score) * 10;
   int index = static_cast<int>(dIndex);
   vec[index]++;
 }
 
 double addToBestCocktails(std::vector<std::pair<Individual,double>>& bestResults,
                         const std::pair<Individual,double>& currentResult,
-                        int nbResults, double minRR,const std::vector<int>& upperBound){
-  double newMinRR = minRR;
+                        int nbResults, double minScore,const std::vector<int>& upperBound){
+  double newMinScore = minScore;
   if(isNotInResultList(bestResults,currentResult) && currentResult.first.isTrueCocktail(upperBound)){
     if(bestResults.size() < nbResults){
       bestResults.emplace_back(currentResult);
-      newMinRR = minRR < currentResult.second ? minRR : currentResult.second;
+      newMinScore = minScore < currentResult.second ? minScore : currentResult.second;
     }
-    else if(minRR < currentResult.second){
+    else if(minScore < currentResult.second){
       auto it = std::find_if(bestResults.begin(),bestResults.end(),
-                             [minRR](const std::pair<Individual,double>& p){return p.second == minRR;});
+                             [minScore](const std::pair<Individual,double>& p){return p.second == minScore;});
       if(it != bestResults.end()){
         bestResults.erase(it);
       }
@@ -61,10 +54,10 @@ double addToBestCocktails(std::vector<std::pair<Individual,double>>& bestResults
                                       [](const std::pair<Individual,double>& lp,const std::pair<Individual,double>& rp){
                                         return lp.second < rp.second; 
                                       });
-      newMinRR = tmpMin.second;
+      newMinScore = tmpMin.second;
     }
   }
-  return newMinRR;
+  return newMinScore;
 }
 
 void addPairToSet(const Individual& i, std::set<std::pair<int,int>>& p){

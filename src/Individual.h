@@ -32,16 +32,12 @@ public:
   }
   
   bool matches(const std::vector<int>& observation, const std::vector<int>& upperBound) const;
-  double computeRR(const Rcpp::List& medications,const Rcpp::LogicalVector& ADR
-                     , const Rcpp::DataFrame& ATCtree) const;
-  
-  std::pair<double, bool> computeRR(const Rcpp::List& medications,const Rcpp::LogicalVector& ADR,
-                                    const Rcpp::DataFrame& ATCtree, bool deltaEmpty);
   
   std::pair<double, std::pair<int,int>> computeRR(const std::vector<std::vector<int>>& medications, 
                                                   const Rcpp::LogicalVector& ADR,
                                                   const std::vector<int>& upperBound,
-                                                  int RRmax, int num_thread) const;
+                                                  int RRmax, int num_thread=1) const;
+  
   // compute the -log(phyper) given the number of people having ADR and taking 
   // this cocktail
   std::pair<double, std::pair<int,int>> computePHypergeom(const std::vector<std::vector<int>>& medications,
@@ -51,15 +47,7 @@ public:
                                                           int geomMax,
                                                           int num_thread) const;
   
-  // compute the -log(pbinom) given the number of people having ADR and taking 
-  // this cocktail
-  std::pair<double, std::pair<int,int>> computePBinomial(const std::vector<std::vector<int>>& medications,
-                                                                     const Rcpp::LogicalVector& ADR,
-                                                                     const std::vector<int>& upperBound,
-                                                                     double ADRproportion,
-                                                                     int binomMax,
-                                                                     int num_thread) const;
-  
+
   std::vector<std::pair<int,int>> getVertexList(const Rcpp::DataFrame& ATCtree) const;
   // we use this function to determine whether a cocktail is true or not
   // a true cocktail is a cocktail that does not contain a vertice and its son

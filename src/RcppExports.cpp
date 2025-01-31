@@ -33,15 +33,15 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// incorporateOustandingRRToDistribution
-Rcpp::NumericVector incorporateOustandingRRToDistribution(const std::vector<double>& outstandingRR, int RRmax);
-RcppExport SEXP _emcAdr_incorporateOustandingRRToDistribution(SEXP outstandingRRSEXP, SEXP RRmaxSEXP) {
+// OustandingScoreToDistribution
+Rcpp::NumericVector OustandingScoreToDistribution(const std::vector<double>& outstanding_score, int max_score);
+RcppExport SEXP _emcAdr_OustandingScoreToDistribution(SEXP outstanding_scoreSEXP, SEXP max_scoreSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::vector<double>& >::type outstandingRR(outstandingRRSEXP);
-    Rcpp::traits::input_parameter< int >::type RRmax(RRmaxSEXP);
-    rcpp_result_gen = Rcpp::wrap(incorporateOustandingRRToDistribution(outstandingRR, RRmax));
+    Rcpp::traits::input_parameter< const std::vector<double>& >::type outstanding_score(outstanding_scoreSEXP);
+    Rcpp::traits::input_parameter< int >::type max_score(max_scoreSEXP);
+    rcpp_result_gen = Rcpp::wrap(OustandingScoreToDistribution(outstanding_score, max_score));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -155,48 +155,18 @@ BEGIN_RCPP
 END_RCPP
 }
 // trueDistributionSizeTwoCocktail
-Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataFrame& observations, int beta, int max_risk, int num_thread);
-RcppExport SEXP _emcAdr_trueDistributionSizeTwoCocktail(SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP betaSEXP, SEXP max_riskSEXP, SEXP num_threadSEXP) {
+Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataFrame& observations, int beta, int max_score, int nbResults, int num_thread);
+RcppExport SEXP _emcAdr_trueDistributionSizeTwoCocktail(SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP betaSEXP, SEXP max_scoreSEXP, SEXP nbResultsSEXP, SEXP num_threadSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
     Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
     Rcpp::traits::input_parameter< int >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< int >::type max_risk(max_riskSEXP);
+    Rcpp::traits::input_parameter< int >::type max_score(max_scoreSEXP);
+    Rcpp::traits::input_parameter< int >::type nbResults(nbResultsSEXP);
     Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
-    rcpp_result_gen = Rcpp::wrap(trueDistributionSizeTwoCocktail(ATCtree, observations, beta, max_risk, num_thread));
-    return rcpp_result_gen;
-END_RCPP
-}
-// trueDistributionSizeThreeCocktail
-Rcpp::List trueDistributionSizeThreeCocktail(const DataFrame& ATCtree, const DataFrame& observations, int beta, int num_thread);
-RcppExport SEXP _emcAdr_trueDistributionSizeThreeCocktail(SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP betaSEXP, SEXP num_threadSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
-    Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
-    Rcpp::traits::input_parameter< int >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
-    rcpp_result_gen = Rcpp::wrap(trueDistributionSizeThreeCocktail(ATCtree, observations, beta, num_thread));
-    return rcpp_result_gen;
-END_RCPP
-}
-// MetricCalc
-std::vector<double> MetricCalc(const std::vector<int>& cocktail, const std::vector<int>& ATClength, const std::vector<int>& upperBounds, const std::vector<std::vector<int>>& observationsMedication, const Rcpp::LogicalVector& observationsADR, int ADRCount, int num_thread);
-RcppExport SEXP _emcAdr_MetricCalc(SEXP cocktailSEXP, SEXP ATClengthSEXP, SEXP upperBoundsSEXP, SEXP observationsMedicationSEXP, SEXP observationsADRSEXP, SEXP ADRCountSEXP, SEXP num_threadSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::vector<int>& >::type cocktail(cocktailSEXP);
-    Rcpp::traits::input_parameter< const std::vector<int>& >::type ATClength(ATClengthSEXP);
-    Rcpp::traits::input_parameter< const std::vector<int>& >::type upperBounds(upperBoundsSEXP);
-    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type observationsMedication(observationsMedicationSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::LogicalVector& >::type observationsADR(observationsADRSEXP);
-    Rcpp::traits::input_parameter< int >::type ADRCount(ADRCountSEXP);
-    Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
-    rcpp_result_gen = Rcpp::wrap(MetricCalc(cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount, num_thread));
+    rcpp_result_gen = Rcpp::wrap(trueDistributionSizeTwoCocktail(ATCtree, observations, beta, max_score, nbResults, num_thread));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -429,7 +399,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_ATCtoNumeric", (DL_FUNC) &_emcAdr_ATCtoNumeric, 2},
     {"_emcAdr_histogramToDitribution", (DL_FUNC) &_emcAdr_histogramToDitribution, 1},
-    {"_emcAdr_incorporateOustandingRRToDistribution", (DL_FUNC) &_emcAdr_incorporateOustandingRRToDistribution, 2},
+    {"_emcAdr_OustandingScoreToDistribution", (DL_FUNC) &_emcAdr_OustandingScoreToDistribution, 2},
     {"_emcAdr_p_value_csv_file", (DL_FUNC) &_emcAdr_p_value_csv_file, 4},
     {"_emcAdr_csv_to_population", (DL_FUNC) &_emcAdr_csv_to_population, 3},
     {"_emcAdr_string_list_to_int_cocktails", (DL_FUNC) &_emcAdr_string_list_to_int_cocktails, 2},
@@ -437,9 +407,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_DistributionApproximation", (DL_FUNC) &_emcAdr_DistributionApproximation, 11},
     {"_emcAdr_GeneticAlgorithm", (DL_FUNC) &_emcAdr_GeneticAlgorithm, 12},
     {"_emcAdr_trueDistributionDrugs", (DL_FUNC) &_emcAdr_trueDistributionDrugs, 6},
-    {"_emcAdr_trueDistributionSizeTwoCocktail", (DL_FUNC) &_emcAdr_trueDistributionSizeTwoCocktail, 5},
-    {"_emcAdr_trueDistributionSizeThreeCocktail", (DL_FUNC) &_emcAdr_trueDistributionSizeThreeCocktail, 4},
-    {"_emcAdr_MetricCalc", (DL_FUNC) &_emcAdr_MetricCalc, 7},
+    {"_emcAdr_trueDistributionSizeTwoCocktail", (DL_FUNC) &_emcAdr_trueDistributionSizeTwoCocktail, 6},
     {"_emcAdr_MetricCalc_size3", (DL_FUNC) &_emcAdr_MetricCalc_size3, 7},
     {"_emcAdr_MetricCalc_2", (DL_FUNC) &_emcAdr_MetricCalc_2, 7},
     {"_emcAdr_computeMetrics", (DL_FUNC) &_emcAdr_computeMetrics, 4},

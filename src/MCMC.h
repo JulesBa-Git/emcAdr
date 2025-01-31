@@ -11,35 +11,30 @@
 
 //' Get the average number of medications taken by a patient (made for the observations set)
 //'
-//'@param observations : a list of medications for each patient 
-double meanMedications(const Rcpp::List& observations);
-
-//' Get the average number of medications taken by a patient (made for the observations set)
-//'
 //'@param observations : a C++ vector of medications for each patient 
 double meanMedications(const std::vector<std::vector<int>>& observations);
 
-//' return the larger RR and the corresponding individual
+//' return the larger score and the corresponding individual
 //' 
-//' @param a list of 4 RR to compare
-std::pair<Individual,double> largerRR(const std::pair<Individual,double>& firstRR,const std::pair<Individual,double>& secRR,
-                                      const std::pair<Individual,double>& thirdRR,const std::pair<Individual,double>& fourthRR);
+//' @param a list of 4 score to compare
+std::pair<Individual,double> largerScore(const std::pair<Individual,double>& firstScore,const std::pair<Individual,double>& secScore,
+                                      const std::pair<Individual,double>& thirdScore,const std::pair<Individual,double>& fourthScore);
  
- //' add the RR in the right box of the RR distributions array
- //' 
- //' @param an RR
- //' @param the list of RR distribution
-void addRRtoDistribution(const double,std::vector<unsigned int>&);
+//' add the score in the right box of the score distributions array
+//' 
+//' @param score : a score
+//' @param the list of score distribution
+void addScoretoDistribution(const double,std::vector<unsigned int>&);
 
-//' add a pair cocktail/RR in the bestResult set if it is needed
+//' add a pair cocktail/score in the bestResult set if it is needed
 //' 
 //' @param bestResults : The best current results of the random walk
-//' @param currentResult : The current state (cocktail) and the associated RR
+//' @param currentResult : The current state (cocktail) and the associated score
 //' @param nbResults : the number of results the user want to have at the end of the random walk
-//' @param minRR : the minimum RR contained in the bestResults vector
+//' @param minScore : the minimum score contained in the bestResults vector
 double addToBestCocktails(std::vector<std::pair<Individual,double>>& bestResults,
                         const std::pair<Individual,double>& currentResult,
-                        int nbResults, double minRR, const std::vector<int>& upperBound);
+                        int nbResults, double minScore, const std::vector<int>& upperBound);
 
 //' Add the pair to the set of explored pair if needed
 //' 

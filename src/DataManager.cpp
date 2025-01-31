@@ -13,7 +13,8 @@ using Rcpp::DataFrame;
 //'Convert ATC Code for each patients to the corresponding DFS number of the ATC tree 
 //'
 //'@param tree : ATC tree (we assume that there is a column 'ATCCode' )
-//'@param patients : patients observations, for each patient we got a string containing every medication he takes/took
+//'@param patients : patients observations, for each patient we got a string 
+//'containing taken medications
 //'@export
 // [[Rcpp::export]]
 void ATCtoNumeric(DataFrame& patients,const DataFrame& tree) {
@@ -63,10 +64,12 @@ void ATCtoNumeric(DataFrame& patients,const DataFrame& tree) {
 }
 
 
-//'Convert the histogram returned by the DistributionApproximation function, to a real number ditribution
+//'Convert the histogram returned by the DistributionApproximation function, to a real number distribution
 //'(that can be used in a test for example) 
 //'
 //'@param vec : distribution returned by the DistributionAproximationFunction
+//'
+//'@return A vector containing sampled risk during the MCMC algorithm 
 //'@export
 // [[Rcpp::export]]
 Rcpp::NumericVector histogramToDitribution(const std::vector<int>& vec){
@@ -82,15 +85,24 @@ Rcpp::NumericVector histogramToDitribution(const std::vector<int>& vec){
   return Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(returnedVec));
 }
 
+//' Output the outstanding score (Outstanding_score) outputed by the MCMC algorithm
+//' in a special format
+//' 
+//' @param oustanding_score : Outstanding_score outputed by MCMC algorithm to be converted
+//' to the ScoreDistribution format
+//' @param max_score : max_score parameter used during the MCMC algorithm
+//' 
+//' @return outstanding_score in a format compatible with MCMC algorithm output
+//' @export
 // [[Rcpp::export]]
-Rcpp::NumericVector incorporateOustandingRRToDistribution(const std::vector<double>& outstandingRR, int RRmax){
+Rcpp::NumericVector OustandingScoreToDistribution(const std::vector<double>& outstanding_score, int max_score){
   std::vector<double> returnedVec;
-  returnedVec.resize((RRmax*10)+1);
+  returnedVec.resize((max_score*10)+1);
   
-  for(const auto& rr: outstandingRR){
+  for(const auto& score: outstanding_score){
     int index;
-    if(rr < RRmax){
-      index= rr*10;
+    if(score < max_score){
+      index= score*10;
     }
     else{
       index = returnedVec.size()-1;
@@ -171,6 +183,7 @@ std::vector<std::vector<std::string>> check_extension_and_read_csv(
 //' @param filtered_distribution Does the p-values have to be computed using filtered distribution
 //' or normal distribution (filtered distribution by default)
 //' @param sep The separator used in the csv file (';' by default)
+//' @export
 //[[Rcpp::export]]
 void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const std::string& filename,
                                             bool filtred_distribution = true,
@@ -227,6 +240,7 @@ void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const
 //' @param filename Name of the file where the results are located
 //' @param sep the separator to use when opening the csv file (';' by default)
 //' @return An R List that can be used by other algorithms (e.g. clustering algorithm)
+//' @export
 // [[Rcpp::export]]
 Rcpp::List csv_to_population(const std::vector<std::string>& ATC_name,
                                   const std::string& filename,
@@ -265,6 +279,7 @@ Rcpp::List csv_to_population(const std::vector<std::string>& ATC_name,
 //' @param ATC_name the ATC_name column of the ATC tree
 //' @param lines A string vector of drugs cocktail in the form "drug1:drug2:...:drug_n"
 //' @return An R List that can be used by other algorithms (e.g. clustering algorithm)
+//' @export
 // [[Rcpp::export]]
 Rcpp::List string_list_to_int_cocktails(const std::vector<std::string>& ATC_name,
                                         const std::vector<std::string>& lines){
@@ -293,10 +308,11 @@ Rcpp::List string_list_to_int_cocktails(const std::vector<std::string>& ATC_name
 //' Function used to convert integer cocktails (like the one outputed by the distributionApproximation function)
 //' to string cocktail in order to make them more readable
 //' 
-//' @param cocktails cocktails vector to be converted
+//' @param cocktails cocktails vector to be converted (index in the ATC tree)
 //' @param ATC_name The ATC_name column of the ATC tree
 //' 
-//' @return The equivalent of cocktails with integer changed to string
+//' @return The name of integer cocktails in cocktails
+//' @export
 // [[Rcpp::export]]
 std::vector<std::vector<std::string>> int_cocktail_to_string_cocktail(
     const std::vector<std::vector<int>>& cocktails, const std::vector<std::string>& ATC_name){
@@ -315,12 +331,5 @@ std::vector<std::vector<std::string>> int_cocktail_to_string_cocktail(
   return string_cocktails;
 }
 
-/*** R
-library(emcAdr)
-#to test (there is hard coded path)
-treeATC <- read.csv("your/path/to/ATCtree")
-patientsATC <- read.csv("your/path/to/testPatientATCList")
-ATCtoNumeric(patientsATC,treeATC)
-*/
 
 

@@ -4,23 +4,35 @@
 #'Convert ATC Code for each patients to the corresponding DFS number of the ATC tree 
 #'
 #'@param tree : ATC tree (we assume that there is a column 'ATCCode' )
-#'@param patients : patients observations, for each patient we got a string containing every medication he takes/took
+#'@param patients : patients observations, for each patient we got a string 
+#'containing taken medications
 #'@export
 ATCtoNumeric <- function(patients, tree) {
     invisible(.Call(`_emcAdr_ATCtoNumeric`, patients, tree))
 }
 
-#'Convert the histogram returned by the DistributionApproximation function, to a real number ditribution
+#'Convert the histogram returned by the DistributionApproximation function, to a real number distribution
 #'(that can be used in a test for example) 
 #'
 #'@param vec : distribution returned by the DistributionAproximationFunction
+#'
+#'@return A vector containing sampled risk during the MCMC algorithm 
 #'@export
 histogramToDitribution <- function(vec) {
     .Call(`_emcAdr_histogramToDitribution`, vec)
 }
 
-incorporateOustandingRRToDistribution <- function(outstandingRR, RRmax) {
-    .Call(`_emcAdr_incorporateOustandingRRToDistribution`, outstandingRR, RRmax)
+#' Output the outstanding score (Outstanding_score) outputed by the MCMC algorithm
+#' in a special format
+#' 
+#' @param oustanding_score : Outstanding_score outputed by MCMC algorithm to be converted
+#' to the ScoreDistribution format
+#' @param max_score : max_score parameter used during the MCMC algorithm
+#' 
+#' @return outstanding_score in a format compatible with MCMC algorithm output
+#' @export
+OustandingScoreToDistribution <- function(outstanding_score, max_score) {
+    .Call(`_emcAdr_OustandingScoreToDistribution`, outstanding_score, max_score)
 }
 
 #' Used to add the p_value to each cocktail of a csv_file that is an
@@ -31,6 +43,7 @@ incorporateOustandingRRToDistribution <- function(outstandingRR, RRmax) {
 #' @param filtered_distribution Does the p-values have to be computed using filtered distribution
 #' or normal distribution (filtered distribution by default)
 #' @param sep The separator used in the csv file (';' by default)
+#' @export
 p_value_csv_file <- function(distribution_outputs, filename, filtred_distribution = TRUE, sep = ";") {
     invisible(.Call(`_emcAdr_p_value_csv_file`, distribution_outputs, filename, filtred_distribution, sep))
 }
@@ -41,6 +54,7 @@ p_value_csv_file <- function(distribution_outputs, filename, filtred_distributio
 #' @param filename Name of the file where the results are located
 #' @param sep the separator to use when opening the csv file (';' by default)
 #' @return An R List that can be used by other algorithms (e.g. clustering algorithm)
+#' @export
 csv_to_population <- function(ATC_name, filename, sep = ";") {
     .Call(`_emcAdr_csv_to_population`, ATC_name, filename, sep)
 }
@@ -50,6 +64,7 @@ csv_to_population <- function(ATC_name, filename, sep = ";") {
 #' @param ATC_name the ATC_name column of the ATC tree
 #' @param lines A string vector of drugs cocktail in the form "drug1:drug2:...:drug_n"
 #' @return An R List that can be used by other algorithms (e.g. clustering algorithm)
+#' @export
 string_list_to_int_cocktails <- function(ATC_name, lines) {
     .Call(`_emcAdr_string_list_to_int_cocktails`, ATC_name, lines)
 }
@@ -57,10 +72,11 @@ string_list_to_int_cocktails <- function(ATC_name, lines) {
 #' Function used to convert integer cocktails (like the one outputed by the distributionApproximation function)
 #' to string cocktail in order to make them more readable
 #' 
-#' @param cocktails cocktails vector to be converted
+#' @param cocktails cocktails vector to be converted (index in the ATC tree)
 #' @param ATC_name The ATC_name column of the ATC tree
 #' 
-#' @return The equivalent of cocktails with integer changed to string
+#' @return The name of integer cocktails in cocktails
+#' @export
 int_cocktail_to_string_cocktail <- function(cocktails, ATC_name) {
     .Call(`_emcAdr_int_cocktail_to_string_cocktail`, cocktails, ATC_name)
 }
@@ -69,12 +85,6 @@ int_cocktail_to_string_cocktail <- function(cocktails, ATC_name) {
 #'
 #'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
 #'@param observations : observation of the AE based on the medications of each patients
-NULL
-
-#'The true RR distribution of cocktail of size 3
-NULL
-
-#'Function used to compare diverse metrics used in Disproportionality analysis
 NULL
 
 #'Function used to compare diverse metrics used in Disproportionality analysis
@@ -167,25 +177,34 @@ trueDistributionDrugs <- function(ATCtree, observations, beta, max_score = 1000L
     .Call(`_emcAdr_trueDistributionDrugs`, ATCtree, observations, beta, max_score, nbResults, num_thread)
 }
 
-#'The true distribution of size 2 cocktails
+#'The true distribution of the score among every size-two cocktails
 #'
 #'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
-#'@param obervations : population of patients on which we want to compute the risk distribution
-#'@param beta : minimum number of cocktail takers 
-#'@param max_risk : maximum risk, at which point the risk is considered exceptional (outliers)
+#'@param observations : observation of the AE based on the medications of each patients
+#'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+#' on which we want to compute the risk distribution
+#'@param beta : minimum number of person taking the cocktails in order to consider it
+#'in the beta score distribution 
+#'@param max_score : maximum number the score can take. Score greater than this 
+#'one would be added to the distribution as the value max_score. Default is 1000
+#'@param nbResults : Number of returned solution (Cocktail with the
+#' best oberved score during the run), 100 by default
+#'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
 #'
-#'@return the risk distribution among size 2 cocktails
+#'@return Return a List containing :
+#' - ScoreDistribution : the distribution of the score as an array with each cells
+#' representing the number of risks =  (index-1)/ 10
+#' - Filtered_score_distribution : Distribution containing score for cocktails taken by at
+#' least beta patients.
+#' - Outstanding_score : An array of the score greater than max_score,
+#' - Best_cocktails : the nbResults bests cocktails encountered during the run.
+#' - Best_cocktails_beta : the nbResults bests cocktails taken by at least beta patients
+#' encountered during the run.
+#' - Best_scores : Score corresponding to the Best_cocktails.
+#' - Best_scores_beta : Score corresponding to the Best_cocktails_beta.
 #'@export
-trueDistributionSizeTwoCocktail <- function(ATCtree, observations, beta, max_risk = 100L, num_thread = 1L) {
-    .Call(`_emcAdr_trueDistributionSizeTwoCocktail`, ATCtree, observations, beta, max_risk, num_thread)
-}
-
-trueDistributionSizeThreeCocktail <- function(ATCtree, observations, beta, num_thread = 1L) {
-    .Call(`_emcAdr_trueDistributionSizeThreeCocktail`, ATCtree, observations, beta, num_thread)
-}
-
-MetricCalc <- function(cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount, num_thread = 1L) {
-    .Call(`_emcAdr_MetricCalc`, cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount, num_thread)
+trueDistributionSizeTwoCocktail <- function(ATCtree, observations, beta, max_score = 100L, nbResults = 100L, num_thread = 1L) {
+    .Call(`_emcAdr_trueDistributionSizeTwoCocktail`, ATCtree, observations, beta, max_score, nbResults, num_thread)
 }
 
 #'Function used to compare diverse metrics used in Disproportionality analysis
