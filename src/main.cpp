@@ -762,49 +762,78 @@ Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataF
                             Rcpp::Named("Best_scores_beta") = returned_scoreBeta);
 }
 
-
-//'Function used to compare diverse metrics used in Disproportionality analysis
+//'Function used to compute the Relative Risk on a list of cocktails
 //'
-//'@return RR and hypergeometric score among size 3 cocktail in "cocktail"
+//'@param cocktails : A list containing cocktails in the form of vector of integers (ATC index)
+//'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
+//'@param observations : observation of the AE based on the medications of each patients
+//'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+//' on which we want to compute the risk distribution
+//'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
+//' 
+//'@return RR score among "cocktails" parameters
 //'@export
 //[[Rcpp::export]]
-std::vector<double> MetricCalc_size3(const std::vector<int> &cocktail, 
-                                const std::vector<int>& ATClength,
-                                const std::vector<int>& upperBounds,
-                                const std::vector<std::vector<int>>& observationsMedication,
-                                const Rcpp::LogicalVector& observationsADR,
-                                int ADRCount, int num_thread = 1){
- 
- std::vector<double> solution;
- solution.reserve(2);
- 
- Individual ind{cocktail};
- 
-
- double RR_cocktail = 0.0;
-
- RR_cocktail = ind.computeRR(observationsMedication, observationsADR, upperBounds,
-                              1000000, num_thread).first;
- 
- 
- //phyper
- double phyper = ind.computePHypergeom(observationsMedication, observationsADR,
-                                       upperBounds, ADRCount, 
-                                       observationsMedication.size() - ADRCount,
-                                       10000, num_thread).first;
-
- solution.push_back(phyper);
- solution.push_back(RR_cocktail);
- 
- return solution;
+std::vector<double> compute_RR_on_list(const std::vector<std::vector<int>> &cocktails, 
+                                       const DataFrame& ATCtree, 
+                                       const DataFrame& observations,
+                                       int num_thread = 1)
+{
+  std::vector<double> RR;
+  RR.reserve(cocktails.size());
+  Rcpp::LogicalVector observationsADR = observations["patientADR"];
+  std::vector<std::vector<int>> observationMed = observations["patientATC"];
+  
+  std::vector<int> upperBounds = ATCtree["upperBound"];
+  
+  for(const auto& cocktail : cocktails){
+    RR.push_back(Individual(cocktail).computeRR(observationMed,
+                                               observationsADR,
+                                               upperBounds, 100000,
+                                               num_thread).first);
+  }
+  return RR;
 }
 
-//'Function used to compare diverse metrics used in Disproportionality analysis
- //'
- //'@return multiple risk among size 2 cocktail
- //'@export
- //[[Rcpp::export]]
- std::vector<double> MetricCalc_2(const std::vector<int> &cocktail, 
+
+//'Function used to compute the Hypergeometric score on a list of cocktails
+//'
+//'@param cocktails : A list containing cocktails in the form of vector of integers (ATC index)
+//'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
+//'@param observations : observation of the AE based on the medications of each patients
+//'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+//' on which we want to compute the risk distribution
+//'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
+//' 
+//'@return Hypergeometric score among "cocktails" parameters
+//'@export
+//[[Rcpp::export]]
+std::vector<double> compute_hypergeom_on_list(const std::vector<std::vector<int>> &cocktails, 
+                                              const DataFrame& ATCtree, 
+                                              const DataFrame& observations,
+                                              int num_thread = 1)
+{
+  std::vector<double> Phyper;
+  Phyper.reserve(cocktails.size());
+  Rcpp::LogicalVector observationsADR = observations["patientADR"];
+  std::vector<std::vector<int>> observationsMedication = observations["patientATC"];
+  
+  std::vector<int> upperBounds = ATCtree["upperBound"];
+  int ADRCount = std::count(observationsADR.begin(), observationsADR.end(), true);
+  int patient_number = observationsMedication.size();
+  
+  for(const auto& cocktail : cocktails){
+    Phyper.push_back(Individual(cocktail).
+                       computePHypergeom(observationsMedication, observationsADR,
+                                         upperBounds, ADRCount, 
+                                         patient_number - ADRCount,
+                                         10000, num_thread).first);
+  }
+  
+  return Phyper;
+} 
+
+std::vector<double> MetricCalc_2(const std::vector<int> &cocktail, 
                                   const std::vector<int>& ATClength,
                                   const std::vector<int>& upperBounds,
                                   const std::vector<std::vector<int>>& observationsMedication,
@@ -963,9 +992,22 @@ std::vector<double> MetricCalc_size3(const std::vector<int> &cocktail,
    return solution;
  }
 
+//'Function used in the reference article to compare diverse Disproportionality Analysis metrics 
+//'
+//'@param CocktailList : A list of cocktails on which the Disproportionality analysis metrics should be computed
+//'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
+//'@param observations : observation of the AE based on the medications of each patients
+//'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+//' on which we want to compute the risk distribution
+//'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
+//'
+//'@return Multiple DA metrics computed on CocktailList cocktails
+//'@export
 //[[Rcpp::export]]
-Rcpp::DataFrame computeMetrics(const Rcpp::DataFrame& df, const DataFrame& ATCtree,
-                    const DataFrame& observations, int num_thread = 1 ){
+Rcpp::DataFrame computeMetrics_size2(const std::vector<std::vector<int>>& CocktailList,
+                                     const DataFrame& ATCtree,
+                                     const DataFrame& observations,
+                                     int num_thread = 1 ){
   
   std::vector<int> ATClength = ATCtree["ATC_length"];
   std::vector<int> upperBounds = ATCtree["upperBound"];
@@ -994,7 +1036,6 @@ Rcpp::DataFrame computeMetrics(const Rcpp::DataFrame& df, const DataFrame& ATCtr
   std::vector<double> metricsResults;
   metricsResults.reserve(metrics.size());
   
-  Rcpp::List CocktailList =  df["Cocktail"];
   for(auto& cocktail : CocktailList){
     metricsResults = MetricCalc_2(cocktail, ATClength, upperBounds, 
                                 observationsMedication, observationsADR, ADRCount,
@@ -1005,9 +1046,8 @@ Rcpp::DataFrame computeMetrics(const Rcpp::DataFrame& df, const DataFrame& ATCtr
       pair.second.push_back(metricsResults[i++]);
     }
   }
-  auto label = df["Label"];
-  return Rcpp::DataFrame::create(Rcpp::Named("Label") = label,
-                                 Rcpp::Named("RR") = metrics["RR"],
+  
+  return Rcpp::DataFrame::create(Rcpp::Named("RR") = metrics["RR"],
                                  Rcpp::Named("phyper") = metrics["phyper"],
                                  Rcpp::Named("PRR") = metrics["PRR"],
                                  Rcpp::Named("CSS") = metrics["CSS"],
@@ -1015,50 +1055,6 @@ Rcpp::DataFrame computeMetrics(const Rcpp::DataFrame& df, const DataFrame& ATCtr
                                  Rcpp::Named("n110") = metrics["n110"],
                                  Rcpp::Named("n111") = metrics["n111"]);            
 }  
-
-
-//[[Rcpp::export]]
-Rcpp::DataFrame computeMetrics_size3(const Rcpp::DataFrame& df, const DataFrame& ATCtree,
-                               const DataFrame& observations, int num_thread = 1 ){
-  
-  std::vector<int> ATClength = ATCtree["ATC_length"];
-  std::vector<int> upperBounds = ATCtree["upperBound"];
-  
-  Rcpp::LogicalVector observationsADR = observations["patientADR"];
-  int ADRCount = std::count(observationsADR.begin(), observationsADR.end(), true);
-  
-  Rcpp::List observationsMedicationTmp = observations["patientATC"];
-  
-  
-  std::vector<std::vector<int>> observationsMedication;
-  observationsMedication.reserve(observationsMedicationTmp.size());
-  for(int i =0; i < observationsMedicationTmp.size(); ++i){
-    observationsMedication.push_back(observationsMedicationTmp[i]);
-  }
-  
-  std::unordered_map<std::string, std::vector<double>> metrics{{"RR" , {}}, 
-                                                               {"phyper" , {}}};
-  std::vector<double> metricsResults;
-  metricsResults.reserve(metrics.size());
-  
-  
-  Rcpp::List CocktailList =  df["Cocktail"];
-  for(auto& cocktail : CocktailList){
-    metricsResults = MetricCalc_size3(cocktail, ATClength, upperBounds, 
-                                  observationsMedication, observationsADR, ADRCount,
-                                  num_thread);
-    int i = 0;
-    for(auto& pair : metrics){
-      pair.second.push_back(metricsResults[i++]);
-    }
-    
-  } 
-  auto label = df["Label"];
-  return Rcpp::DataFrame::create(Rcpp::Named("Label") = label,
-                                 Rcpp::Named("RR") = metrics["RR"],
-                                 Rcpp::Named("phyper") = metrics["phyper"]);            
-}  
-
 
 
 void print_list_in_file(const Rcpp::List& resultsGeneticAlgorithm,
@@ -1091,8 +1087,27 @@ void print_list_in_file(const Rcpp::List& resultsGeneticAlgorithm,
   ost.close();
 }
 
-///////////////////// 
 
+//' This function can be used in order to try different set of parameters for the genetic
+//' algorithm in a convenient way. This will run each combination of mutation_rate,
+//' nb_elite and alphas possible nb_test_desired times. For each sets of parameters,
+//' results will be saved in a file named according to the set of parameter. One
+//' can regroup the results of each run in a csv file by using the print_csv function
+//' specifying the names of each file that needs to be treated and the number of 
+//' performed runs on each parameter set
+//' 
+//' @param epochs : the number of epochs for the genetic algorithm
+//' @param nb_individuals : the size of the population in the genetic algorithm
+//' @param ATCtree : ATC tree with upper bound of the DFS (without the root)
+//' @param observations : observation of the AE based on the medications of each patients
+//' (a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+//' on which we want to compute the risk distribution
+//' @param nb_test_desired : number of genetic algorithm runs on each sets of parameters
+//' @param mutation_rate : a vector with each mutation_rate to be tested
+//' @param nb_elite : a vector with each nb_elite to be tested
+//' @param alphas : a vector with each alphas to be tested
+//' @param path : the path where the resulting files should be written
+//' @param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
 //[[Rcpp::export]]
 void hyperparam_test_genetic_algorithm(int epochs, int nb_individuals, 
                                        const DataFrame& ATCtree, 
@@ -1150,295 +1165,8 @@ std::pair<double, std::vector<int>> recup_solution(const std::string& line){
   return {number, vec};
 }
 
-void analyze(const std::deque<std::vector<int>>& cocktail_trouves,
-             const std::vector<std::vector<int>>& vraies_reponses,
-             const std::string& input_filename, const std::vector<int>& depth,
-             const std::vector<int> father,
-             const std::string& output_filename = "analytics.txt"){
-  
-  std::ofstream out(output_filename, std::ios::app);
-  std::deque<std::vector<int>> population_cocktails = cocktail_trouves;
-  for(const auto& solution : vraies_reponses){
-    population_cocktails.push_front(solution);
-    Population pop_tmp({population_cocktails.begin(),population_cocktails.end()});
-    
-    
-    IntMatrix M;
-    std::vector<int> indexM;
-    
-    std::tie(M, indexM) = pop_tmp.pretraitement(depth,father);
-    RealMatrix S = pop_tmp.similarity(M, indexM);
-    
-    //now we have to find the cocktail that is the most similar to the 
-    // good solution
-    int i_max = 1;
-    double max_sim = S[0][1]; // we start at (0,1) because (0,0) is 
-    // a comparaison between the real solution and himself
-    for(int i = 2 ; i < population_cocktails.size(); ++i){
-      if(max_sim < S[0][i]){
-        i_max = i;
-        max_sim = S[0][i];
-      }
-    }
-    out << input_filename << " | ";
-    for(const auto& med : solution)
-      out << med << " ";
-    out << "| ";
-    for(const auto& med : population_cocktails[i_max])
-      out << med << " ";
-    out << "| " << max_sim << '\n';
-    population_cocktails.pop_front();
-  }
-}
 
-//[[Rcpp::export]]
-void analyse_resultats(const std::vector<std::vector<int>>& reponses,
-                       const std::string& input_filename,
-                       int repetition, const DataFrame& ATCtree){
-  
-  std::ifstream input(input_filename);
-  if(!input.is_open()){
-    std::cerr << "erreur ouverture du fichier " << input_filename << "\n";
-    return;
-  }
-  int epochs = std::stoi(input_filename.substr(input_filename.find('/')+1,
-                                               input_filename.find('e')).data());
-  int nb_individuals = std::stoi(input_filename.substr(input_filename.find('_')+1,
-                                                       input_filename.find('i')).data());
-  
-  std::vector<std::deque<std::vector<int>>> cocktail_par_essai;
-  std::string line;
-  cocktail_par_essai.reserve(repetition);
-  
-  for(int i = 0; i < repetition; ++i){
-    std::deque<std::vector<int>> tmp;
-    for(int j = 0; j < nb_individuals;++j){
-      std::getline(input, line);
-      tmp.push_back(recup_cocktail(line));
-    }
-    cocktail_par_essai.push_back(tmp);
-    for(int j = 0; j < epochs; ++j){
-      std::getline(input, line);
-    }
-  }
-  input.close();
-  
-  std::vector<int> ATClength = ATCtree["ATC_length"];
-  
-  std::vector<int> depth, father;
-  std::tie(depth, father) = treeDepthFather(ATClength);
-  
-  for(int i = 0; i < repetition ; ++i){
-    analyze(cocktail_par_essai[i], reponses, input_filename, depth, father);
-  }
-}
-
-//[[Rcpp::export]]
-Rcpp::DataFrame true_results_dissimilarity_and_class(std::deque<std::vector<int>> cocktails,
-                                                     const std::deque<std::vector<int>>& solutions,
-                                                     const DataFrame& ATCtree){
-  std::vector<short> classes;
-  std::vector<double> similarity;
-  
-  classes.reserve(cocktails.size());
-  similarity.reserve(similarity.size());
-  
-  std::vector<int> ATClength = ATCtree["ATC_length"];
-  std::vector<int> depth, father;
-  std::tie(depth, father) = treeDepthFather(ATClength);
-  
-  for(const auto& sol : solutions){
-      cocktails.push_front(sol);
-  }
-  
-  Population population({cocktails.begin(),cocktails.end()});
-  
-  IntMatrix M;
-  std::vector<int> indexM;
-  
-  std::tie(M, indexM) = population.pretraitement(depth,father);
-  RealMatrix S = population.similarity(M, indexM);
-  
-  for(int i = solutions.size(); i < cocktails.size(); ++i){
-    int jmax = 0;
-    double max_sim = S[i][jmax];
-    for(int j = 1 ; j < solutions.size(); ++j){
-      if(S[i][j] > S[i][jmax]){
-        max_sim = S[i][j];
-        jmax = j;
-      }
-    }
-    classes.push_back(jmax);
-    similarity.push_back(max_sim);
-  }
-  return Rcpp::DataFrame::create(Rcpp::Named("class") = classes,
-                         Rcpp::Named("similarity") = similarity);
-}
-
-//[[Rcpp::export]]
-std::vector<std::vector<double>> test_func(const std::vector<int>& ATClength){
-  
-  std::vector<int> depth, father;
-  std::tie(depth, father) = treeDepthFather(ATClength);
-  
-  std::vector<std::vector<int>> cocktails = {{1903},{521, 904, 1696, 1903, 4731}};
-  Population population({cocktails.begin(),cocktails.end()});
-  
-  IntMatrix M;
-  std::vector<int> indexM;
-  
-  std::tie(M, indexM) = population.pretraitement(depth,father);
-  
-  std::cout << "M\n";
-  for(const auto& row : M){
-    for(const auto& i : row){
-      std::cout<<i << " ";
-    }
-    std::cout<<"\n";
-  }
-  
-  std::cout << std::count(M[0].begin(),M[0].end(), M[0][0]) << std::endl;
-  std::cout << std::count(M[1].begin(),M[1].end(), M[1][0]) << std::endl;
-  RealMatrix D = population.dissimilarity(M, indexM, false);
-  
-  return D;
-}
-
-void print_most_similar(const std::deque<std::pair<double, std::vector<int>>>& sol,
-                        const std::vector<std::vector<int>>& reponses,
-                        const std::vector<int>& depth, const std::vector<int> father,
-                        const std::string& input_filename,
-                        const std::string& output_filename = "solution_rank.txt"){
-  std::ofstream out(output_filename, std::ios::app);
-  out << input_filename << " : \n";
-  
-  auto find_sol = sol;
-  
-  for(int i = 0; i < reponses.size(); ++i){
-    find_sol.push_front({0.0, reponses[i]});
-  }
-  
-  std::vector<std::vector<int>> vec_sol_tmp;
-  vec_sol_tmp.reserve(find_sol.size());
-  for(const auto& pair : find_sol){
-    vec_sol_tmp.push_back(pair.second);
-  }
-  
-  Population population_cocktail({vec_sol_tmp.begin(),vec_sol_tmp.end()});
-  
-  IntMatrix M;
-  std::vector<int> indexM;
-  
-  std::tie(M, indexM) = population_cocktail.pretraitement(depth,father);
-  RealMatrix S = population_cocktail.similarity(M, indexM);
-  
-  //we go from reponses.size() to find_sol.size() because we added the real
-  // solution in the deque
-  for(int i = reponses.size(); i < find_sol.size(); ++i){
-    int jmax = 0;
-    double max_sim = S[i][jmax];
-    
-    for(int j = 1; j < reponses.size(); ++j){
-      if(max_sim < S[i][j]){
-        max_sim = S[i][j];
-        jmax = j;
-      }
-    }
-    
-    out << "Rank " << i - reponses.size() + 1 << " | ";
-    for(int a : find_sol[i].second){
-      out << a << ' ';
-    }
-    out << "| ";
-    for(int a : find_sol[jmax].second){
-      out << a << ' ';
-    }
-    out << "| similarity : " << max_sim << " | score : " << find_sol[i].first << '\n';
-  }
-  
-}
-
-void print_without_solutions(const std::deque<std::pair<double, std::vector<int>>>& sol,
-                             const std::vector<std::string>& actives_principles,
-                             const std::string& input_filename,
-                             const std::string& output_filename = "solution_rank.txt"){
-  std::ofstream out(output_filename, std::ios::app);
-  out << input_filename << " : \n";
-  
-  auto find_sol = sol;
-  
-  //we go from reponses.size() to find_sol.size() because we added the real
-  // solution in the deque
-  for(int i = 0; i < sol.size(); ++i){
-    
-    out << "Rank " << i+1 << " | ";
-    for(int a : sol[i].second){
-      out << actives_principles[a] << " ; ";
-    }
-    out << " | score : " << sol[i].first << '\n';
-  }
-}
-
-
-//[[Rcpp::export]]
-void analyse_resultats_2(const std::vector<std::vector<int>>& reponses,
-                       const std::string& input_filename,
-                       int repetition, const DataFrame& ATCtree,
-                       bool have_solution){
-  std::ifstream input(input_filename);
-  if(!input.is_open()){
-    std::cerr << "erreur ouverture du fichier " << input_filename << "\n";
-    return;
-  }
-  int epochs = std::stoi(input_filename.substr(input_filename.find('/')+1,
-                                               input_filename.find('e')).data());
-  int nb_individuals = std::stoi(input_filename.substr(input_filename.find('_')+1,
-                                                       input_filename.find('i')).data());
-  
-  std::vector<std::pair<double, std::vector<int>>> solutions;
-  
-  std::string line;
-  solutions.reserve(repetition*nb_individuals);
-  
-  for(int i = 0; i < repetition; ++i){
-    for(int j = 0; j < nb_individuals;++j){
-      std::getline(input, line);
-      solutions.push_back(recup_solution(line));
-    } 
-    
-    for(int j = 0; j < epochs; ++j){
-      std::getline(input, line);
-    } 
-  }
-  input.close();
-  
-  //remove all duplicates by constructing a set
-  std::set<
-    std::pair<double, std::vector<int>>,
-    std::greater<std::pair<double, std::vector<int>>>
-  > set_sol(solutions.begin(), solutions.end());
-  
-  solutions.clear();
-  solutions.reserve(set_sol.size());
-  std::move(set_sol.begin(), set_sol.end(), std::back_inserter(solutions));
-  
-  
-  std::vector<int> ATClength = ATCtree["ATC_length"];
-  std::vector<int> depth, father;
-  std::tie(depth, father) = treeDepthFather(ATClength);
-
-  if(have_solution){
-    print_most_similar({solutions.begin(),solutions.end()}, reponses, depth, father,
-                       input_filename);
-  }
-  else{
-    print_without_solutions({solutions.begin(),solutions.end()}, ATCtree["Name"],
-                            input_filename);
-  }
-}
-
-
-//'Print every cocktail found during the genetic algorithm 
+//'Print every cocktails found during the genetic algorithm 
 //'
 //'@param input_filenames : A List containing filename of hyperparam_test_genetic_algorithm output file
 //'@param ATCtree : The ATC tree

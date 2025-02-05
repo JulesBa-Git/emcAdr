@@ -170,65 +170,45 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// MetricCalc_size3
-std::vector<double> MetricCalc_size3(const std::vector<int>& cocktail, const std::vector<int>& ATClength, const std::vector<int>& upperBounds, const std::vector<std::vector<int>>& observationsMedication, const Rcpp::LogicalVector& observationsADR, int ADRCount, int num_thread);
-RcppExport SEXP _emcAdr_MetricCalc_size3(SEXP cocktailSEXP, SEXP ATClengthSEXP, SEXP upperBoundsSEXP, SEXP observationsMedicationSEXP, SEXP observationsADRSEXP, SEXP ADRCountSEXP, SEXP num_threadSEXP) {
+// compute_RR_on_list
+std::vector<double> compute_RR_on_list(const std::vector<std::vector<int>>& cocktails, const DataFrame& ATCtree, const DataFrame& observations, int num_thread);
+RcppExport SEXP _emcAdr_compute_RR_on_list(SEXP cocktailsSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP num_threadSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::vector<int>& >::type cocktail(cocktailSEXP);
-    Rcpp::traits::input_parameter< const std::vector<int>& >::type ATClength(ATClengthSEXP);
-    Rcpp::traits::input_parameter< const std::vector<int>& >::type upperBounds(upperBoundsSEXP);
-    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type observationsMedication(observationsMedicationSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::LogicalVector& >::type observationsADR(observationsADRSEXP);
-    Rcpp::traits::input_parameter< int >::type ADRCount(ADRCountSEXP);
-    Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
-    rcpp_result_gen = Rcpp::wrap(MetricCalc_size3(cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount, num_thread));
-    return rcpp_result_gen;
-END_RCPP
-}
-// MetricCalc_2
-std::vector<double> MetricCalc_2(const std::vector<int>& cocktail, const std::vector<int>& ATClength, const std::vector<int>& upperBounds, const std::vector<std::vector<int>>& observationsMedication, const Rcpp::LogicalVector& observationsADR, int ADRCount, int num_thread);
-RcppExport SEXP _emcAdr_MetricCalc_2(SEXP cocktailSEXP, SEXP ATClengthSEXP, SEXP upperBoundsSEXP, SEXP observationsMedicationSEXP, SEXP observationsADRSEXP, SEXP ADRCountSEXP, SEXP num_threadSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::vector<int>& >::type cocktail(cocktailSEXP);
-    Rcpp::traits::input_parameter< const std::vector<int>& >::type ATClength(ATClengthSEXP);
-    Rcpp::traits::input_parameter< const std::vector<int>& >::type upperBounds(upperBoundsSEXP);
-    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type observationsMedication(observationsMedicationSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::LogicalVector& >::type observationsADR(observationsADRSEXP);
-    Rcpp::traits::input_parameter< int >::type ADRCount(ADRCountSEXP);
-    Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
-    rcpp_result_gen = Rcpp::wrap(MetricCalc_2(cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount, num_thread));
-    return rcpp_result_gen;
-END_RCPP
-}
-// computeMetrics
-Rcpp::DataFrame computeMetrics(const Rcpp::DataFrame& df, const DataFrame& ATCtree, const DataFrame& observations, int num_thread);
-RcppExport SEXP _emcAdr_computeMetrics(SEXP dfSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP num_threadSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Rcpp::DataFrame& >::type df(dfSEXP);
+    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type cocktails(cocktailsSEXP);
     Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
     Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
     Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
-    rcpp_result_gen = Rcpp::wrap(computeMetrics(df, ATCtree, observations, num_thread));
+    rcpp_result_gen = Rcpp::wrap(compute_RR_on_list(cocktails, ATCtree, observations, num_thread));
     return rcpp_result_gen;
 END_RCPP
 }
-// computeMetrics_size3
-Rcpp::DataFrame computeMetrics_size3(const Rcpp::DataFrame& df, const DataFrame& ATCtree, const DataFrame& observations, int num_thread);
-RcppExport SEXP _emcAdr_computeMetrics_size3(SEXP dfSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP num_threadSEXP) {
+// compute_hypergeom_on_list
+std::vector<double> compute_hypergeom_on_list(const std::vector<std::vector<int>>& cocktails, const DataFrame& ATCtree, const DataFrame& observations, int num_thread);
+RcppExport SEXP _emcAdr_compute_hypergeom_on_list(SEXP cocktailsSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP num_threadSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Rcpp::DataFrame& >::type df(dfSEXP);
+    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type cocktails(cocktailsSEXP);
     Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
     Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
     Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
-    rcpp_result_gen = Rcpp::wrap(computeMetrics_size3(df, ATCtree, observations, num_thread));
+    rcpp_result_gen = Rcpp::wrap(compute_hypergeom_on_list(cocktails, ATCtree, observations, num_thread));
+    return rcpp_result_gen;
+END_RCPP
+}
+// computeMetrics_size2
+Rcpp::DataFrame computeMetrics_size2(const std::vector<std::vector<int>>& CocktailList, const DataFrame& ATCtree, const DataFrame& observations, int num_thread);
+RcppExport SEXP _emcAdr_computeMetrics_size2(SEXP CocktailListSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP num_threadSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type CocktailList(CocktailListSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
+    Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
+    rcpp_result_gen = Rcpp::wrap(computeMetrics_size2(CocktailList, ATCtree, observations, num_thread));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -248,57 +228,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::string& >::type path(pathSEXP);
     Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
     hyperparam_test_genetic_algorithm(epochs, nb_individuals, ATCtree, observations, nb_test_desired, mutation_rate, nb_elite, alphas, path, num_thread);
-    return R_NilValue;
-END_RCPP
-}
-// analyse_resultats
-void analyse_resultats(const std::vector<std::vector<int>>& reponses, const std::string& input_filename, int repetition, const DataFrame& ATCtree);
-RcppExport SEXP _emcAdr_analyse_resultats(SEXP reponsesSEXP, SEXP input_filenameSEXP, SEXP repetitionSEXP, SEXP ATCtreeSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type reponses(reponsesSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type input_filename(input_filenameSEXP);
-    Rcpp::traits::input_parameter< int >::type repetition(repetitionSEXP);
-    Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
-    analyse_resultats(reponses, input_filename, repetition, ATCtree);
-    return R_NilValue;
-END_RCPP
-}
-// true_results_dissimilarity_and_class
-Rcpp::DataFrame true_results_dissimilarity_and_class(std::deque<std::vector<int>> cocktails, const std::deque<std::vector<int>>& solutions, const DataFrame& ATCtree);
-RcppExport SEXP _emcAdr_true_results_dissimilarity_and_class(SEXP cocktailsSEXP, SEXP solutionsSEXP, SEXP ATCtreeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::deque<std::vector<int>> >::type cocktails(cocktailsSEXP);
-    Rcpp::traits::input_parameter< const std::deque<std::vector<int>>& >::type solutions(solutionsSEXP);
-    Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
-    rcpp_result_gen = Rcpp::wrap(true_results_dissimilarity_and_class(cocktails, solutions, ATCtree));
-    return rcpp_result_gen;
-END_RCPP
-}
-// test_func
-std::vector<std::vector<double>> test_func(const std::vector<int>& ATClength);
-RcppExport SEXP _emcAdr_test_func(SEXP ATClengthSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::vector<int>& >::type ATClength(ATClengthSEXP);
-    rcpp_result_gen = Rcpp::wrap(test_func(ATClength));
-    return rcpp_result_gen;
-END_RCPP
-}
-// analyse_resultats_2
-void analyse_resultats_2(const std::vector<std::vector<int>>& reponses, const std::string& input_filename, int repetition, const DataFrame& ATCtree, bool have_solution);
-RcppExport SEXP _emcAdr_analyse_resultats_2(SEXP reponsesSEXP, SEXP input_filenameSEXP, SEXP repetitionSEXP, SEXP ATCtreeSEXP, SEXP have_solutionSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type reponses(reponsesSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type input_filename(input_filenameSEXP);
-    Rcpp::traits::input_parameter< int >::type repetition(repetitionSEXP);
-    Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
-    Rcpp::traits::input_parameter< bool >::type have_solution(have_solutionSEXP);
-    analyse_resultats_2(reponses, input_filename, repetition, ATCtree, have_solution);
     return R_NilValue;
 END_RCPP
 }
@@ -379,15 +308,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_GeneticAlgorithm", (DL_FUNC) &_emcAdr_GeneticAlgorithm, 12},
     {"_emcAdr_trueDistributionDrugs", (DL_FUNC) &_emcAdr_trueDistributionDrugs, 6},
     {"_emcAdr_trueDistributionSizeTwoCocktail", (DL_FUNC) &_emcAdr_trueDistributionSizeTwoCocktail, 6},
-    {"_emcAdr_MetricCalc_size3", (DL_FUNC) &_emcAdr_MetricCalc_size3, 7},
-    {"_emcAdr_MetricCalc_2", (DL_FUNC) &_emcAdr_MetricCalc_2, 7},
-    {"_emcAdr_computeMetrics", (DL_FUNC) &_emcAdr_computeMetrics, 4},
-    {"_emcAdr_computeMetrics_size3", (DL_FUNC) &_emcAdr_computeMetrics_size3, 4},
+    {"_emcAdr_compute_RR_on_list", (DL_FUNC) &_emcAdr_compute_RR_on_list, 4},
+    {"_emcAdr_compute_hypergeom_on_list", (DL_FUNC) &_emcAdr_compute_hypergeom_on_list, 4},
+    {"_emcAdr_computeMetrics_size2", (DL_FUNC) &_emcAdr_computeMetrics_size2, 4},
     {"_emcAdr_hyperparam_test_genetic_algorithm", (DL_FUNC) &_emcAdr_hyperparam_test_genetic_algorithm, 10},
-    {"_emcAdr_analyse_resultats", (DL_FUNC) &_emcAdr_analyse_resultats, 4},
-    {"_emcAdr_true_results_dissimilarity_and_class", (DL_FUNC) &_emcAdr_true_results_dissimilarity_and_class, 3},
-    {"_emcAdr_test_func", (DL_FUNC) &_emcAdr_test_func, 1},
-    {"_emcAdr_analyse_resultats_2", (DL_FUNC) &_emcAdr_analyse_resultats_2, 5},
     {"_emcAdr_print_csv", (DL_FUNC) &_emcAdr_print_csv, 5},
     {"_emcAdr_get_dissimilarity_from_list", (DL_FUNC) &_emcAdr_get_dissimilarity_from_list, 2},
     {"_emcAdr_get_dissimilarity", (DL_FUNC) &_emcAdr_get_dissimilarity, 3},

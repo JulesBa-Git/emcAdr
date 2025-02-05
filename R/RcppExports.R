@@ -87,9 +87,6 @@ int_cocktail_to_string_cocktail <- function(cocktails, ATC_name) {
 #'@param observations : observation of the AE based on the medications of each patients
 NULL
 
-#'Function used to compare diverse metrics used in Disproportionality analysis
-NULL
-
 #'The MCMC method that runs the random walk on a single cocktail in order to estimate the distribution of score among cocktails of size Smax.
 #'
 #'@param epochs : number of steps for the MCMC algorithm
@@ -207,47 +204,76 @@ trueDistributionSizeTwoCocktail <- function(ATCtree, observations, beta, max_sco
     .Call(`_emcAdr_trueDistributionSizeTwoCocktail`, ATCtree, observations, beta, max_score, nbResults, num_thread)
 }
 
-#'Function used to compare diverse metrics used in Disproportionality analysis
+#'Function used to compute the Relative Risk on a list of cocktails
 #'
-#'@return RR and hypergeometric score among size 3 cocktail in "cocktail"
+#'@param cocktails : A list containing cocktails in the form of vector of integers (ATC index)
+#'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
+#'@param observations : observation of the AE based on the medications of each patients
+#'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+#' on which we want to compute the risk distribution
+#'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
+#' 
+#'@return RR score among "cocktails" parameters
 #'@export
-MetricCalc_size3 <- function(cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount, num_thread = 1L) {
-    .Call(`_emcAdr_MetricCalc_size3`, cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount, num_thread)
+compute_RR_on_list <- function(cocktails, ATCtree, observations, num_thread = 1L) {
+    .Call(`_emcAdr_compute_RR_on_list`, cocktails, ATCtree, observations, num_thread)
 }
 
-MetricCalc_2 <- function(cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount, num_thread = 1L) {
-    .Call(`_emcAdr_MetricCalc_2`, cocktail, ATClength, upperBounds, observationsMedication, observationsADR, ADRCount, num_thread)
+#'Function used to compute the Hypergeometric score on a list of cocktails
+#'
+#'@param cocktails : A list containing cocktails in the form of vector of integers (ATC index)
+#'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
+#'@param observations : observation of the AE based on the medications of each patients
+#'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+#' on which we want to compute the risk distribution
+#'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
+#' 
+#'@return Hypergeometric score among "cocktails" parameters
+#'@export
+compute_hypergeom_on_list <- function(cocktails, ATCtree, observations, num_thread = 1L) {
+    .Call(`_emcAdr_compute_hypergeom_on_list`, cocktails, ATCtree, observations, num_thread)
 }
 
-computeMetrics <- function(df, ATCtree, observations, num_thread = 1L) {
-    .Call(`_emcAdr_computeMetrics`, df, ATCtree, observations, num_thread)
+#'Function used in the reference article to compare diverse Disproportionality Analysis metrics 
+#'
+#'@param CocktailList : A list of cocktails on which the Disproportionality analysis metrics should be computed
+#'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
+#'@param observations : observation of the AE based on the medications of each patients
+#'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+#' on which we want to compute the risk distribution
+#'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
+#'
+#'@return Multiple DA metrics computed on CocktailList cocktails
+#'@export
+computeMetrics_size2 <- function(CocktailList, ATCtree, observations, num_thread = 1L) {
+    .Call(`_emcAdr_computeMetrics_size2`, CocktailList, ATCtree, observations, num_thread)
 }
 
-computeMetrics_size3 <- function(df, ATCtree, observations, num_thread = 1L) {
-    .Call(`_emcAdr_computeMetrics_size3`, df, ATCtree, observations, num_thread)
-}
-
+#' This function can be used in order to try different set of parameters for the genetic
+#' algorithm in a convenient way. This will run each combination of mutation_rate,
+#' nb_elite and alphas possible nb_test_desired times. For each sets of parameters,
+#' results will be saved in a file named according to the set of parameter. One
+#' can regroup the results of each run in a csv file by using the print_csv function
+#' specifying the names of each file that needs to be treated and the number of 
+#' performed runs on each parameter set
+#' 
+#' @param epochs : the number of epochs for the genetic algorithm
+#' @param nb_individuals : the size of the population in the genetic algorithm
+#' @param ATCtree : ATC tree with upper bound of the DFS (without the root)
+#' @param observations : observation of the AE based on the medications of each patients
+#' (a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+#' on which we want to compute the risk distribution
+#' @param nb_test_desired : number of genetic algorithm runs on each sets of parameters
+#' @param mutation_rate : a vector with each mutation_rate to be tested
+#' @param nb_elite : a vector with each nb_elite to be tested
+#' @param alphas : a vector with each alphas to be tested
+#' @param path : the path where the resulting files should be written
+#' @param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
 hyperparam_test_genetic_algorithm <- function(epochs, nb_individuals, ATCtree, observations, nb_test_desired, mutation_rate, nb_elite, alphas, path = "./", num_thread = 1L) {
     invisible(.Call(`_emcAdr_hyperparam_test_genetic_algorithm`, epochs, nb_individuals, ATCtree, observations, nb_test_desired, mutation_rate, nb_elite, alphas, path, num_thread))
 }
 
-analyse_resultats <- function(reponses, input_filename, repetition, ATCtree) {
-    invisible(.Call(`_emcAdr_analyse_resultats`, reponses, input_filename, repetition, ATCtree))
-}
-
-true_results_dissimilarity_and_class <- function(cocktails, solutions, ATCtree) {
-    .Call(`_emcAdr_true_results_dissimilarity_and_class`, cocktails, solutions, ATCtree)
-}
-
-test_func <- function(ATClength) {
-    .Call(`_emcAdr_test_func`, ATClength)
-}
-
-analyse_resultats_2 <- function(reponses, input_filename, repetition, ATCtree, have_solution) {
-    invisible(.Call(`_emcAdr_analyse_resultats_2`, reponses, input_filename, repetition, ATCtree, have_solution))
-}
-
-#'Print every cocktail found during the genetic algorithm 
+#'Print every cocktails found during the genetic algorithm 
 #'
 #'@param input_filenames : A List containing filename of hyperparam_test_genetic_algorithm output file
 #'@param ATCtree : The ATC tree
