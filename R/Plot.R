@@ -11,7 +11,7 @@
 #' @importFrom grid units
 #' @export
 #'
-plot_evolution <- function(list, mean_color = "#F2A900", best_color = "#008080", xlab = "Epochs", ylab = "RR") {
+plot_evolution <- function(list, mean_color = "#F2A900", best_color = "#008080", xlab = "Epochs", ylab = "Score") {
   library(dplyr)
   library(ggplot2)
   
@@ -34,6 +34,7 @@ plot_evolution <- function(list, mean_color = "#F2A900", best_color = "#008080",
           legend.text = element_text(face = "bold", size = unit(12, "pt")),
           legend.position = "top")
 }
+
 #' Make a Quantile-Quantile diagram from the output of the MCMC algorithm (DistributionAproximation)
 #' and the algorithm that exhaustively calculates the distribution
 #' 
@@ -83,7 +84,7 @@ qq_plot_output <- function(estimated, true, filtered = F, color = "steelblue"){
 #' @importFrom dplyr data_frame
 #' @export
 plot_frequency <- function(freq_array, sqrt = F, binwidth = .1, hist_color = "#69b3a2", density_color = "#FF5733",
-                           xlab = "RR") {
+                           xlab = "Score") {
   library(dplyr)
   library(ggplot2)
   

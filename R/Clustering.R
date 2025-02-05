@@ -1,4 +1,4 @@
-#' Clustering of the solutions of the genetic algorithm
+#' Clustering of the solutions of the genetic algorithm using the hclust algorithm
 #' 
 #' @param genetic_results The return value of the genetic algorithm
 #' @param ATCtree ATC tree with upper bound of the DFS
@@ -22,30 +22,36 @@ hclust_genetic_solution <- function(genetic_results,ATCtree, dist.normalize = T,
   return (hc)
 }
 
+#' Clustering of the solutions of the genetic algorithm using the hclust algorithm
+#' 
+#' @param genetic_results A list of cocktails in the form of integer vector
+#' @param ATCtree ATC tree with upper bound of the DFS
+#' @param dist.normalize Do we normalize the distance (so it belongs to [0;1])
+#' @param umap_config The configuration to use in order to project the cocktails in a smaller space (umap::umap.defaults by default)
+#' @return A dataframe containing UMAP 1/2 the two coordinates of each cocktails in the plane as well as the cluster number of each cocktails
+#' 
 #' @export
-tsne_genetic <- function(genetic_results,ATCtree, true_solutions,dim=2, dist.normalize = T){
-  library(tsne)
+clustering_genetic_algorithm <- function(genetic_results,ATCtree,dist.normalize = T,
+                                         umap_config=NULL){
+  library(umap)
+  
   if(dist.normalize){
     divergence <- get_dissimilarity(genetic_results, ATCtree)
   }else{
     divergence <- get_dissimilarity(genetic_results, ATCtree, F)
   }
   divergence <- do.call(rbind,divergence)
-  #divergence <- as.dist(divergence)
+  divergence <- as.matrix(divergence)
   
-  tsn <- tsne(divergence, k=dim)
-  tsne_df <- data.frame(tsn)
+  if(is.null(umap_config)){
+    umap_config = umap::umap.defaults
+  }
   
-  info_df <- get_answer_class(genetic_results,
-                              true_solutions)
-  colnames(tsne_df) <- c("x","y")
-  merged_df <- cbind(tsne_df, info_df)
-  
-  return (merged_df)
-}
-
-clustering_from_df <- function(df_genetic_results, ATCtree, 
-                               dim=2, dist.normalize = T){
-  library(tsne)
-  
+  umap_results <- umap(divergence, config = umap_config)
+  layout <- umap_results$layout
+  dbscan_results <- dbscan(umap)
+  return (data.frame(cocktails = genetic_results,
+                     UMAP1 = umap_results$layout[,1],
+                     UMAP2 = umap_results$layout[,2],
+                     cluster = dbscan_results$cluster))
 }

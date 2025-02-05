@@ -366,35 +366,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// dmvnrm_arma
-arma::vec dmvnrm_arma(const arma::mat& X, const arma::rowvec& mean, const arma::mat& sigma_k, const arma::vec& w);
-RcppExport SEXP _emcAdr_dmvnrm_arma(SEXP XSEXP, SEXP meanSEXP, SEXP sigma_kSEXP, SEXP wSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::rowvec& >::type mean(meanSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type sigma_k(sigma_kSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type w(wSEXP);
-    rcpp_result_gen = Rcpp::wrap(dmvnrm_arma(X, mean, sigma_k, w));
-    return rcpp_result_gen;
-END_RCPP
-}
-// FWD_EM
-Rcpp::List FWD_EM(const arma::mat& X, int K, double eps, const arma::vec& w_i, int max_steps);
-RcppExport SEXP _emcAdr_FWD_EM(SEXP XSEXP, SEXP KSEXP, SEXP epsSEXP, SEXP w_iSEXP, SEXP max_stepsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< int >::type K(KSEXP);
-    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type w_i(w_iSEXP);
-    Rcpp::traits::input_parameter< int >::type max_steps(max_stepsSEXP);
-    rcpp_result_gen = Rcpp::wrap(FWD_EM(X, K, eps, w_i, max_steps));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_ATCtoNumeric", (DL_FUNC) &_emcAdr_ATCtoNumeric, 2},
@@ -422,8 +393,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_get_dissimilarity", (DL_FUNC) &_emcAdr_get_dissimilarity, 3},
     {"_emcAdr_get_dissimilarity_from_cocktail", (DL_FUNC) &_emcAdr_get_dissimilarity_from_cocktail, 3},
     {"_emcAdr_get_answer_class", (DL_FUNC) &_emcAdr_get_answer_class, 2},
-    {"_emcAdr_dmvnrm_arma", (DL_FUNC) &_emcAdr_dmvnrm_arma, 4},
-    {"_emcAdr_FWD_EM", (DL_FUNC) &_emcAdr_FWD_EM, 5},
     {NULL, NULL, 0}
 };
 

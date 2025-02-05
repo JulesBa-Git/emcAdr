@@ -274,11 +274,3 @@ get_answer_class <- function(filename, answer) {
     .Call(`_emcAdr_get_answer_class`, filename, answer)
 }
 
-dmvnrm_arma <- function(X, mean, sigma_k, w) {
-    .Call(`_emcAdr_dmvnrm_arma`, X, mean, sigma_k, w)
-}
-
-FWD_EM <- function(X, K, eps, w_i, max_steps) {
-    .Call(`_emcAdr_FWD_EM`, X, K, eps, w_i, max_steps)
-}
-

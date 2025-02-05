@@ -1,4 +1,4 @@
-#' Calculate p-value of sampled value being greater than empirical distribution
+#' Calculate p-value of sampled value
 #'
 #' @param empirical_distribution A numeric vector of values representing the empirical distribution (return value of DistributionAproximation function)
 #' @param sampled_values A scalar or a vector of real valued number representing the sampled value (score to be tested)
@@ -7,7 +7,7 @@
 #' @return A numeric value representing the empirical p-value
 #'
 #' @export
-p_value_greater_than_empirical <- function(empirical_distribution, sampled_values, isFiltered = F, includeZeroValue = F) {
+p_value_on_sampled <- function(empirical_distribution, sampled_values, isFiltered = F, includeZeroValue = F) {
   # Sort empirical distribution in ascending order (if the distribution comes. from 
   # the histogramToDitribution function it should already be sorted)
   if(isFiltered){
