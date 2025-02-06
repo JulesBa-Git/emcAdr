@@ -9,7 +9,7 @@ plot_evolution(
   mean_color = "#F2A900",
   best_color = "#008080",
   xlab = "Epochs",
-  ylab = "RR"
+  ylab = "Score"
 )
 }
 \arguments{

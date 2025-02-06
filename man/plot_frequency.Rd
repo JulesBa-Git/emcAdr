@@ -10,7 +10,7 @@ plot_frequency(
   binwidth = 0.1,
   hist_color = "#69b3a2",
   density_color = "#FF5733",
-  xlab = "RR"
+  xlab = "Score"
 )
 }
 \arguments{

@@ -12,8 +12,8 @@
 #' @export
 #'
 plot_evolution <- function(list, mean_color = "#F2A900", best_color = "#008080", xlab = "Epochs", ylab = "Score") {
-  library(dplyr)
-  library(ggplot2)
+  requireNamespace(dplyr)
+  requireNamespace(ggplot2)
   
   epochs <- seq_along(list$meanFitnesses)
   
@@ -48,7 +48,7 @@ plot_evolution <- function(list, mean_color = "#F2A900", best_color = "#008080",
 #' @import ggplot2
 #' @export
 qq_plot_output <- function(estimated, true, filtered = F, color = "steelblue"){
-  library(ggplot2)
+  requireNamespace(ggplot2)
   if(filtered){
     estimated_distribution <- histogramToDitribution(estimated$FilteredDistribution[2:length(estimated$FilteredDistribution)])
     true_distribution <- histogramToDitribution(true$FilteredDistribution[2:length(true$FilteredDistribution)])
@@ -85,8 +85,8 @@ qq_plot_output <- function(estimated, true, filtered = F, color = "steelblue"){
 #' @export
 plot_frequency <- function(freq_array, sqrt = F, binwidth = .1, hist_color = "#69b3a2", density_color = "#FF5733",
                            xlab = "Score") {
-  library(dplyr)
-  library(ggplot2)
+  requireNamespace(dplyr)
+  requireNamespace(ggplot2)
   
   # Create a data frame from the returned value array
   if(sqrt){

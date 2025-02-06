@@ -33,7 +33,7 @@ hclust_genetic_solution <- function(genetic_results,ATCtree, dist.normalize = T,
 #' @export
 clustering_genetic_algorithm <- function(genetic_results,ATCtree,dist.normalize = T,
                                          umap_config=NULL){
-  library(umap)
+  requireNamespace(umap)
   
   if(dist.normalize){
     divergence <- get_dissimilarity(genetic_results, ATCtree)

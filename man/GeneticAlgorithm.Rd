@@ -2,42 +2,56 @@
 % Please edit documentation in R/RcppExports.R
 \name{GeneticAlgorithm}
 \alias{GeneticAlgorithm}
-\title{Genetic algorithm, trying to reach the best cocktail (the one which maximize
-the fitness function, Related Risk in our case)}
+\title{Genetic algorithm, trying to reach riskiest cocktails (the ones which maximize
+the fitness function, Hypergeometric score in our case)}
 \usage{
 GeneticAlgorithm(
   epochs,
   nbIndividuals,
   ATCtree,
   observations,
+  num_thread = 1L,
+  diversity = FALSE,
   p_crossover = 0.8,
   p_mutation = 0.01,
   nbElite = 0L,
-  tournamentSize = 2L
+  tournamentSize = 2L,
+  alpha = 1,
+  summary = TRUE
 )
 }
 \arguments{
-\item{epochs}{: number of step}
+\item{epochs}{: number of step or the algorithm}
 
-\item{nbIndividuals}{: size of the popultation}
+\item{nbIndividuals}{: size of the population}
 
 \item{ATCtree}{: ATC tree with upper bound of the DFS (without the root)}
 
-\item{nbElite}{: number of best individual we keep from generation to generation}
-
-\item{tournamentSize}{: size of the tournament (select the best individual be tween tournamentSize individuals)}
-
-\item{observation}{: real observation of the ADR based on the medications of each real patients
+\item{observations}{: real observation of the AE based on the medications of each patients
 (a DataFrame containing the medication on the first column and the ADR (boolean) on the second)}
 
-\item{p_crossover:}{probability to operate a crossover on the crossover phase.}
+\item{num_thread}{: Number of thread to run in parallel if openMP is available, 1 by default}
 
-\item{p_mutation:}{probability to operate a mutation after the crossover phase.}
+\item{diversity}{: enable the diversity mechanism of the algorithm
+(favor the diversity of cocktail in the population),  default is false}
+
+\item{nbElite}{: number of best individual we keep from generation to generation. Default is 0}
+
+\item{tournamentSize}{: size of the tournament (select the best individual 
+between tournamentSize sampled individuals)}
+
+\item{p_crossover:}{probability to operate a crossover on the crossover phase. Default is 80\%}
+
+\item{p_mutation:}{probability to operate a mutation after the crossover phase. Default is 1\%}
 }
 \value{
-if no problem return the best cocktail we found (according to the fitness function which is the Relative Risk)
+If no problem, return a List :
+- meanFitnesses : The mean score of the population at each epochs of the algorithm.
+- BestFitnesses : The best score of the population at each epochs of the algorithm.
+- FinalPopulation : The final population of the algorithm when finished (medications
+and corresponding scores)
 }
 \description{
-Genetic algorithm, trying to reach the best cocktail (the one which maximize
-the fitness function, Related Risk in our case)
+Genetic algorithm, trying to reach riskiest cocktails (the ones which maximize
+the fitness function, Hypergeometric score in our case)
 }

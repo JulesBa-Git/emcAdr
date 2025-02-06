@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{DistributionApproximation}
 \alias{DistributionApproximation}
-\title{The Evolutionary MCMC method that runs the random walk on a single cocktail}
+\title{The MCMC method that runs the random walk on a single cocktail in order to estimate the distribution of score among cocktails of size Smax.}
 \usage{
 DistributionApproximation(
   epochs,
@@ -10,31 +10,54 @@ DistributionApproximation(
   observations,
   temperature = 1L,
   nbResults = 5L,
-  Smax = 4L,
+  Smax = 2L,
   p_type1 = 0.01,
   beta = 4L,
-  RRmax = 100L
+  max_score = 500L,
+  num_thread = 1L,
+  verbose = FALSE
 )
 }
 \arguments{
-\item{epochs}{: number of step}
+\item{epochs}{: number of steps for the MCMC algorithm}
 
-\item{ATCtree}{: ATC tree with upper bound of the DFS (without the root)}
+\item{ATCtree}{: ATC tree with upper bound of the DFS (without the root, also see on the github repo for an example)}
 
-\item{temperature}{: starting temperature, default = 1}
-
-\item{observation}{: real observation of the ADR based on the medications of each real patients
+\item{observations}{: real observation of the AE based on the medications of each patients
 (a DataFrame containing the medication on the first column and the ADR (boolean) on the second)}
 
-\item{p_type1:}{probability to operate type1 mutation. Note :
-the probability to operate the type 2 mutation is then 1 - P_type1. P_type1 must be in [0;1].}
+\item{temperature}{: starting temperature, default = 1 (denoted T in the article)}
 
-\item{alpha}{: a hyperparameter allowing us to manage to probability of adding a drug to the cocktail. The probability
-to add a drug to the cocktail is the following : \eqn{\frac12}{\alpha/n} Where n is the original size of the cocktail. 1 is the default value.}
+\item{nbResults}{: Number of returned solution (Cocktail of size Smax with the best oberved score during the run), 5 by default}
+
+\item{Smax}{: Size of the cocktail we approximate the distribution from}
+
+\item{beta}{: filter the minimum number of patients that must have taken the 
+cocktail for his risk to be taken into account in the DistributionScoreBeta default is 4}
+
+\item{max_score}{: maximum number the score can take. Score greater than this 
+one would be added to the distribution as the value max_score. Default is 500}
+
+\item{num_thread}{: Number of thread to run in parallel if openMP is available, 1 by default}
+
+\item{p_type1:}{probability to operate type1 mutation. Note :
+the probability to operate the type 2 mutation is then 1 - P_type1. P_type1 must be in [0;1]. Default is .01}
 }
 \value{
-if no problem return an array of the approximation of the RR distribution : the distribution of RR we've met; Otherwise the list is empty
+I no problem, return a List containing :
+- ScoreDistribution : the distribution of the score as an array with each cells
+representing the number of risks =  (index-1)/ 10
+- OutstandingScore : An array of the score greater than max_score,
+- bestCockatils : the nbResults bests cocktails encountered during the run.
+- bestScore : Score corresponding to the bestCocktails.
+- FilteredDistribution : Distribution containing score for cocktails taken by at
+least beta patients.
+- bestCocktailsBeta : the nbResults bests cocktails taken by at least beta patients
+encountered during the run.
+- bestScoreBeta : Score corresponding to the bestCocktailsBeta.
+- cocktailSize : Smax parameter used during the run.
+; Otherwise the list is empty
 }
 \description{
-The Evolutionary MCMC method that runs the random walk on a single cocktail
+The MCMC method that runs the random walk on a single cocktail in order to estimate the distribution of score among cocktails of size Smax.
 }

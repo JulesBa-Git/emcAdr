@@ -81,12 +81,6 @@ int_cocktail_to_string_cocktail <- function(cocktails, ATC_name) {
     .Call(`_emcAdr_int_cocktail_to_string_cocktail`, cocktails, ATC_name)
 }
 
-#'The true distribution of the score among every single nodes of the ATC
-#'
-#'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
-#'@param observations : observation of the AE based on the medications of each patients
-NULL
-
 #'The MCMC method that runs the random walk on a single cocktail in order to estimate the distribution of score among cocktails of size Smax.
 #'
 #'@param epochs : number of steps for the MCMC algorithm
@@ -134,8 +128,8 @@ DistributionApproximation <- function(epochs, ATCtree, observations, temperature
 #'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
 #'@param diversity : enable the diversity mechanism of the algorithm
 #' (favor the diversity of cocktail in the population),  default is false
-#'@param p_crossover: probability to operate a crossover on the crossover phase. Default is 80%
-#'@param p_mutation: probability to operate a mutation after the crossover phase. Default is 1%
+#'@param p_crossover: probability to operate a crossover on the crossover phase. Default is 80\%
+#'@param p_mutation: probability to operate a mutation after the crossover phase. Default is 1\%
 #'@param nbElite : number of best individual we keep from generation to generation. Default is 0
 #'@param tournamentSize : size of the tournament (select the best individual 
 #'between tournamentSize sampled individuals) 
@@ -150,6 +144,12 @@ GeneticAlgorithm <- function(epochs, nbIndividuals, ATCtree, observations, num_t
     .Call(`_emcAdr_GeneticAlgorithm`, epochs, nbIndividuals, ATCtree, observations, num_thread, diversity, p_crossover, p_mutation, nbElite, tournamentSize, alpha, summary)
 }
 
+#'The true distribution of the score among every single nodes of the ATC
+#'
+#'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
+#'@param observations : observation of the AE based on the medications of each patients
+#'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+#' on which we want to compute the risk distribution
 #'@param beta : minimum number of person taking the cocktails in order to consider it
 #'in the beta score distribution 
 #'@param max_score : maximum number the score can take. Score greater than this 

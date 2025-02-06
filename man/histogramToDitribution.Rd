@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{histogramToDitribution}
 \alias{histogramToDitribution}
-\title{Convert the histogram returned by the DistributionApproximation function, to a real number ditribution
+\title{Convert the histogram returned by the DistributionApproximation function, to a real number distribution
 (that can be used in a test for example)}
 \usage{
 histogramToDitribution(vec)
@@ -10,7 +10,10 @@ histogramToDitribution(vec)
 \arguments{
 \item{vec}{: distribution returned by the DistributionAproximationFunction}
 }
+\value{
+A vector containing sampled risk during the MCMC algorithm
+}
 \description{
-Convert the histogram returned by the DistributionApproximation function, to a real number ditribution
+Convert the histogram returned by the DistributionApproximation function, to a real number distribution
 (that can be used in a test for example)
 }

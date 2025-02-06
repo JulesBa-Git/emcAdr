@@ -7,7 +7,8 @@
 ATCtoNumeric(patients, tree)
 }
 \arguments{
-\item{patients}{: patients observations, for each patient we got a string containing every medication he takes/took}
+\item{patients}{: patients observations, for each patient we got a string 
+containing taken medications}
 
 \item{tree}{: ATC tree (we assume that there is a column 'ATCCode' )}
 }
