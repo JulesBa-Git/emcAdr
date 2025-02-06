@@ -1166,11 +1166,18 @@ std::pair<double, std::vector<int>> recup_solution(const std::string& line){
 }
 
 
-//'Print every cocktails found during the genetic algorithm 
+//'Print every cocktails found during the genetic algorithm when used with the 
+//'hyperparam_test_genetic_algorithm function. This enables to condense the solutions 
+//'found in each files by collapsing similar cocktail in a single row by cocktail.
 //'
-//'@param input_filenames : A List containing filename of hyperparam_test_genetic_algorithm output file
-//'@param ATCtree : The ATC tree
-//'@param csv_filename : Name of the output file
+//'
+//' @param input_filenames : A List containing filename of hyperparam_test_genetic_algorithm output file
+//' @param observations : observation of the AE based on the medications of each patients
+//' (a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+//' on which we want to compute the risk distribution
+//' @param repetition : The parameter nb_test_desired used in the hyperparam test function
+//' @param ATCtree : ATC tree with upper bound of the DFS (without the root)
+//' @param csv_filename : Name of the output file, "solutions.csv" by default
 //'
 //'@export
 //[[Rcpp::export]]
@@ -1266,9 +1273,18 @@ std::vector<std::vector<double>> dissim(const Population& pop,
   return D;
 }
 
+//' Recover the square matrix of distance between cocktails where the index (i,j)
+//' of the matrix is the distance between cocktails i and j in the genetic_results
+//' list. 
+//' @param genetic_results the List returned by the genetic algorithm.
+//' @param ATCtree : ATC tree with upper bound of the DFS (without the root)
+//' @param normalization : Do we keep the distance between cocktail in the range [0;1] ? 
+//' 
+//' @return The square matrix of distances between cocktails
 //[[Rcpp::export]]
-std::vector<std::vector<double>> get_dissimilarity_from_list(const Rcpp::List& genetic_results,
-                                                   const DataFrame& ATCtree){
+std::vector<std::vector<double>> get_dissimilarity_from_genetic_results(const Rcpp::List& genetic_results,
+                                                   const DataFrame& ATCtree,
+                                                   bool normalization){
   Rcpp::List population_list = genetic_results["FinalPopulation"];
   std::vector<std::vector<int>> cocktails = population_list["cocktails"];
   std::vector<int> ATClength = ATCtree["ATC_length"];
@@ -1277,11 +1293,20 @@ std::vector<std::vector<double>> get_dissimilarity_from_list(const Rcpp::List& g
   
   Population population(cocktails);
 
-  return dissim(population, depth, father, true);
+  return dissim(population, depth, father, normalization);
 }
 
+//' Recover the square matrix of distance between cocktails where the index (i,j)
+//' of the matrix is the distance between cocktails i and j in the csv file containing
+//' results of genetic algorithm
+//' 
+//' @param filename : the name of the file returned by the print_csv function.
+//' @param ATCtree : ATC tree with upper bound of the DFS (without the root)
+//' @param normalization : Do we keep the distance between cocktail in the range [0;1] ? 
+//' 
+//' @return The square matrix of distances between cocktails
 //[[Rcpp::export]]
-std::vector<std::vector<double>> get_dissimilarity(
+ std::vector<std::vector<double>> get_dissimilarity_from_csv_file(
                                                    const std::string& filename,
                                                    const DataFrame& ATCtree,
                                                    bool normalization = true){
@@ -1326,8 +1351,17 @@ std::vector<std::vector<double>> get_dissimilarity(
 }
 
 
+//' Recover the square matrix of distance between cocktails where the index (i,j)
+//' of the matrix is the distance between cocktails i and j in an arbitrary
+//' cocktail list
+//' 
+//' @param cocktails : A list of cocktails in the form of a vector of integer
+//' @param ATCtree : ATC tree with upper bound of the DFS (without the root)
+//' @param normalization : Do we keep the distance between cocktail in the range [0;1] ? 
+//' 
+//' @return The square matrix of distances between cocktails
 //[[Rcpp::export]]
-std::vector<std::vector<double>> get_dissimilarity_from_cocktail(const std::vector<std::vector<int>>& cocktails,
+std::vector<std::vector<double>> get_dissimilarity_from_cocktail_list(const std::vector<std::vector<int>>& cocktails,
                                                                 const Rcpp::DataFrame& ATCtree,
                                                                 bool normalization = true){
   std::vector<int> ATClength = ATCtree["ATC_length"];
@@ -1337,59 +1371,5 @@ std::vector<std::vector<double>> get_dissimilarity_from_cocktail(const std::vect
   Population population(cocktails);
   
   return dissim(population, depth, father, normalization);
-}
-
-//[[Rcpp::export]]
-Rcpp::DataFrame get_answer_class(const std::string& filename,
-                                  const std::vector<std::string>& answer){
-  std::vector<std::string> cocktails;
-  std::string current_cocktail;
-  std::vector<int> classe;
-  classe.reserve(100);
-  std::vector<double> similarity;
-  similarity.reserve(100);
-  
-  std::vector<double> scores;
-  scores.reserve(100);
-  
-  std::string line;
-  std::ifstream input(filename);
-  if(!input.is_open()){
-    std::cerr << "erreur ouverture du fichier " << filename << "\n";
-    return {};
-  }
-  
-  std::getline(input,line); // we don't want the first line as it is a title
-  
-  while(std::getline(input, line)){
-    //find cocktail
-    int beg_cocktail = line.find('|')+1;
-    int end_cocktail = line.find('|', beg_cocktail);
-    cocktails.push_back(line.substr(beg_cocktail , end_cocktail-beg_cocktail));
-    
-    //find solution
-    int beg_solution = end_cocktail+2;
-    int end_solution = line.find('|', beg_solution) -1;
-    std::string current_solution = line.substr(beg_solution, end_solution-beg_solution);
-    
-    int i =0;
-    while(i < answer.size() && current_solution.compare(answer[i]) != 0){
-      ++i;
-    }
-    classe.push_back(i);
-    
-    //find similarity
-    int beg_similarity = line.find(':') +1;
-    int end_similarity = line.find('|', beg_similarity) -1;
-    similarity.push_back(std::stod(line.substr(beg_similarity, end_similarity-beg_similarity)));
-    
-    int beg_score = line.find(':',end_similarity +2)+1;
-    scores.push_back(std::stod(line.substr(beg_score, line.size() - beg_score)));
-  }
-  
-  return Rcpp::DataFrame::create(Rcpp::Named("cocktail") = cocktails,
-                                 Rcpp::Named("class") = classe,
-                                 Rcpp::Named("similarity") = similarity,
-                                 Rcpp::Named("score") = scores);
 }
 

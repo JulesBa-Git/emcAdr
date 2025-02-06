@@ -273,30 +273,59 @@ hyperparam_test_genetic_algorithm <- function(epochs, nb_individuals, ATCtree, o
     invisible(.Call(`_emcAdr_hyperparam_test_genetic_algorithm`, epochs, nb_individuals, ATCtree, observations, nb_test_desired, mutation_rate, nb_elite, alphas, path, num_thread))
 }
 
-#'Print every cocktails found during the genetic algorithm 
+#'Print every cocktails found during the genetic algorithm when used with the 
+#'hyperparam_test_genetic_algorithm function. This enables to condense the solutions 
+#'found in each files by collapsing similar cocktail in a single row by cocktail.
 #'
-#'@param input_filenames : A List containing filename of hyperparam_test_genetic_algorithm output file
-#'@param ATCtree : The ATC tree
-#'@param csv_filename : Name of the output file
+#'
+#' @param input_filenames : A List containing filename of hyperparam_test_genetic_algorithm output file
+#' @param observations : observation of the AE based on the medications of each patients
+#' (a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+#' on which we want to compute the risk distribution
+#' @param repetition : The parameter nb_test_desired used in the hyperparam test function
+#' @param ATCtree : ATC tree with upper bound of the DFS (without the root)
+#' @param csv_filename : Name of the output file, "solutions.csv" by default
 #'
 #'@export
 print_csv <- function(input_filenames, observations, repetition, ATCtree, csv_filename = "solutions.csv") {
     invisible(.Call(`_emcAdr_print_csv`, input_filenames, observations, repetition, ATCtree, csv_filename))
 }
 
-get_dissimilarity_from_list <- function(genetic_results, ATCtree) {
-    .Call(`_emcAdr_get_dissimilarity_from_list`, genetic_results, ATCtree)
+#' Recover the square matrix of distance between cocktails where the index (i,j)
+#' of the matrix is the distance between cocktails i and j in the genetic_results
+#' list. 
+#' @param genetic_results the List returned by the genetic algorithm.
+#' @param ATCtree : ATC tree with upper bound of the DFS (without the root)
+#' @param normalization : Do we keep the distance between cocktail in the range [0;1] ? 
+#' 
+#' @return The square matrix of distances between cocktails
+get_dissimilarity_from_genetic_results <- function(genetic_results, ATCtree, normalization) {
+    .Call(`_emcAdr_get_dissimilarity_from_genetic_results`, genetic_results, ATCtree, normalization)
 }
 
-get_dissimilarity <- function(filename, ATCtree, normalization = TRUE) {
-    .Call(`_emcAdr_get_dissimilarity`, filename, ATCtree, normalization)
+#' Recover the square matrix of distance between cocktails where the index (i,j)
+#' of the matrix is the distance between cocktails i and j in the csv file containing
+#' results of genetic algorithm
+#' 
+#' @param filename : the name of the file returned by the print_csv function.
+#' @param ATCtree : ATC tree with upper bound of the DFS (without the root)
+#' @param normalization : Do we keep the distance between cocktail in the range [0;1] ? 
+#' 
+#' @return The square matrix of distances between cocktails
+get_dissimilarity_from_csv_file <- function(filename, ATCtree, normalization = TRUE) {
+    .Call(`_emcAdr_get_dissimilarity_from_csv_file`, filename, ATCtree, normalization)
 }
 
-get_dissimilarity_from_cocktail <- function(cocktails, ATCtree, normalization = TRUE) {
-    .Call(`_emcAdr_get_dissimilarity_from_cocktail`, cocktails, ATCtree, normalization)
-}
-
-get_answer_class <- function(filename, answer) {
-    .Call(`_emcAdr_get_answer_class`, filename, answer)
+#' Recover the square matrix of distance between cocktails where the index (i,j)
+#' of the matrix is the distance between cocktails i and j in an arbitrary
+#' cocktail list
+#' 
+#' @param cocktails : A list of cocktails in the form of a vector of integer
+#' @param ATCtree : ATC tree with upper bound of the DFS (without the root)
+#' @param normalization : Do we keep the distance between cocktail in the range [0;1] ? 
+#' 
+#' @return The square matrix of distances between cocktails
+get_dissimilarity_from_cocktail_list <- function(cocktails, ATCtree, normalization = TRUE) {
+    .Call(`_emcAdr_get_dissimilarity_from_cocktail_list`, cocktails, ATCtree, normalization)
 }
 
