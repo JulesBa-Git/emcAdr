@@ -19,11 +19,11 @@ plot_evolution <- function(list, mean_color = "#F2A900", best_color = "#008080",
   
   data <- data.frame(epochs = epochs, mean = list$meanFitnesses, best = list$BestFitnesses)  
   
-  ggplot(data, aes(x = epochs)) +
+  ggplot2::ggplot(data, aes(x = epochs)) +
     geom_point(aes(y = best, color = "Best"), size = 2, shape = 16, fill = "white") +
     geom_point(aes(y = mean, color = "Mean"), size = 2, shape = 16, fill = "white") +
-    geom_segment(aes(x = epochs, xend = lead(epochs, default = last(epochs)), y = mean, yend = lead(mean, default = last(mean))), color = mean_color, size = 0.5, linetype = "dashed") +
-    geom_segment(aes(x = epochs, xend = lead(epochs, default = last(epochs)), y = best, yend = lead(best, default = last(best))), color = best_color, size = 0.5, linetype = "dashed") +
+    geom_segment(aes(x = epochs, xend = dplyr::lead(epochs, default = last(epochs)), y = mean, yend = lead(mean, default = last(mean))), color = mean_color, size = 0.5, linetype = "dashed") +
+    geom_segment(aes(x = epochs, xend = dplyr::lead(epochs, default = last(epochs)), y = best, yend = lead(best, default = last(best))), color = best_color, size = 0.5, linetype = "dashed") +
     scale_color_manual(values = c(best_color, mean_color)) +
     labs(title = "Evolution of the population", x = xlab, y = ylab) +
     theme_bw() +
@@ -79,6 +79,7 @@ qq_plot_output <- function(estimated, true, filtered = F, color = "steelblue"){
 #' @param hist_color The fill color for the histogram bars
 #' @param density_color The color for the density curve
 #' @param sqrt A Boolean to specify whether we normalize the freq_array or not, it is recommended on large random walk.
+#' @param xlab Label of X axis
 #'
 #' @import ggplot2
 #' @importFrom dplyr data_frame

@@ -5,9 +5,10 @@ Version: 1.2
 Date: 2025-01-31
 Author: Bangard Jules 
 Maintainer: Bangard Jules <jules.bangard@etu.unistra.com>
-Description: Evolutionary version of the Metropolis-Hastings algorithm. This package has been done to run long Markov Chain trajectories, it is designed to be used with individuals case safety reports data. (file containing patients drug intake and experienced adverse event) 
+Description: Evolutionary version of the Metropolis-Hastings algorithm. This package has been done to run long Markov Chain trajectories, it is designed to be used with individuals case safety reports data (file containing patients drug intake and experienced adverse event).
 License: GPL-3
-Imports: Rcpp (>= 1.0.7), ggplot2, dplyr, umap
+Imports: Rcpp (>= 1.0.7), ggplot2, dplyr, umap, dbscan
 LinkingTo: Rcpp, RcppArmadillo
 RoxygenNote: 7.2.3
+LazyData: true
 Suggests: 

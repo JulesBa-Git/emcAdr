@@ -29,13 +29,14 @@ using Rcpp::DataFrame;
 //'@param temperature : starting temperature, default = 1 (denoted T in the article)
 //'@param nbResults : Number of returned solution (Cocktail of size Smax with the best oberved score during the run), 5 by default
 //'@param Smax : Size of the cocktail we approximate the distribution from
-//'@param p_type1: probability to operate type1 mutation. Note :
+//'@param p_type1 : probability to operate type1 mutation. Note :
 //'the probability to operate the type 2 mutation is then 1 - P_type1. P_type1 must be in [0;1]. Default is .01
 //'@param beta : filter the minimum number of patients that must have taken the 
 //'cocktail for his risk to be taken into account in the DistributionScoreBeta default is 4
 //'@param max_score : maximum number the score can take. Score greater than this 
 //'one would be added to the distribution as the value max_score. Default is 500
 //'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
+//'@param verbose : Output summary (default is false)
 //'
 //'@return I no problem, return a List containing :
 //' - ScoreDistribution : the distribution of the score as an array with each cells
@@ -58,14 +59,14 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
                                               int num_thread = 1, bool verbose = false){
   //arguments verification
   if(p_type1 > 1 || p_type1 < 0 || epochs < 1){
-    std::cerr << "problem in the values of the parameter in the call of this function \n";
+    Rcpp::Rcerr << "problem in the values of the parameter in the call of this function \n";
     return Rcpp::List();
   }
   
   // OMP SET NUM THREAD = k, s.t. 1 <= k <= omp_get_num_procs()
 #ifdef _OPENMP
   if(num_thread < 1 || num_thread > omp_get_num_procs()){
-    std::cerr << "Wrong thread number, it should be between 1 and " 
+    Rcpp::Rcerr << "Wrong thread number, it should be between 1 and " 
               << omp_get_num_procs() << " \n";
     return Rcpp::List();
   }
@@ -142,7 +143,7 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
   currentGeom = computeGeomOutput;
   
 #ifdef _OPENMP
-  std::cout<< "openMP available \n";
+  Rcpp::Rcout<< "openMP available \n";
 #endif
   
   minGeom = currentGeom.first;
@@ -289,14 +290,14 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
   }
   
   if(verbose){
-    std::cout << "acceptance rate : " << static_cast<double>(acceptedMove) / static_cast<double>(epochs)<< "\n";
-    std::cout << "acceptance rate type1 mutation : " << static_cast<double>(accepted_type1) / static_cast<double>(type1_move)<< "\n";
-    std::cout << "acceptance rate type2 mutation : " << static_cast<double>(accepted_type2) / static_cast<double>(type2_move)<< "\n";
-    std::cout << "acceptance rate type1 mutation when the proposal is in F : " << static_cast<double>(accepted_type1) / static_cast<double>(type1_move_inF)<< "\n";
-    std::cout << "acceptance rate type2 mutation when the proposal is in F : " << static_cast<double>(accepted_type2) / static_cast<double>(type2_move_inF)<< "\n";
-    std::cout << "number of proposed cocktail that was taken by nobody in the population : " << nbCocktailNotInPopulation << '\n';
-    std::cout << "number of false cocktail sampled : " << falseSampledCocktailCount << '\n';
-    std::cout << "number of false cocktail concidered in the distribution during the run : " << falseAcceptedCocktailCount << '\n';
+    Rcpp::Rcout << "acceptance rate : " << static_cast<double>(acceptedMove) / static_cast<double>(epochs)<< "\n";
+    Rcpp::Rcout << "acceptance rate type1 mutation : " << static_cast<double>(accepted_type1) / static_cast<double>(type1_move)<< "\n";
+    Rcpp::Rcout << "acceptance rate type2 mutation : " << static_cast<double>(accepted_type2) / static_cast<double>(type2_move)<< "\n";
+    Rcpp::Rcout << "acceptance rate type1 mutation when the proposal is in F : " << static_cast<double>(accepted_type1) / static_cast<double>(type1_move_inF)<< "\n";
+    Rcpp::Rcout << "acceptance rate type2 mutation when the proposal is in F : " << static_cast<double>(accepted_type2) / static_cast<double>(type2_move_inF)<< "\n";
+    Rcpp::Rcout << "number of proposed cocktail that was taken by nobody in the population : " << nbCocktailNotInPopulation << '\n';
+    Rcpp::Rcout << "number of false cocktail sampled : " << falseSampledCocktailCount << '\n';
+    Rcpp::Rcout << "number of false cocktail concidered in the distribution during the run : " << falseAcceptedCocktailCount << '\n';
   }
   
   return Rcpp::List::create(Rcpp::Named("ScoreDistribution") = score_distribution, Rcpp::Named("OutstandingScore") = outstanding_score, 
@@ -318,11 +319,13 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
 //'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
 //'@param diversity : enable the diversity mechanism of the algorithm
 //' (favor the diversity of cocktail in the population),  default is false
-//'@param p_crossover: probability to operate a crossover on the crossover phase. Default is 80\%
-//'@param p_mutation: probability to operate a mutation after the crossover phase. Default is 1\%
+//'@param p_crossover : probability to operate a crossover on the crossover phase. Default is 80\%
+//'@param p_mutation : probability to operate a mutation after the crossover phase. Default is 1\%
 //'@param nbElite : number of best individual we keep from generation to generation. Default is 0
 //'@param tournamentSize : size of the tournament (select the best individual 
 //'between tournamentSize sampled individuals) 
+//'@param alpha : when making a type 1 mutation you have (alpha / size of cocktail) chance to add a drug. 
+//'@param summary : print the summary of population at each steps ? 
 //'
 //'@return If no problem, return a List :
 //' - meanFitnesses : The mean score of the population at each epochs of the algorithm.
@@ -339,17 +342,17 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
                             bool summary = true){ 
   //arguments verification
   if(p_crossover > 1 || p_crossover < 0 || nbIndividuals < 1 || p_mutation > 1 || p_mutation < 0 || epochs < 1){
-    std::cerr << "problem in the values of the parameter in the call of this function \n";
+    Rcpp::Rcerr << "problem in the values of the parameter in the call of this function \n";
     return Rcpp::List();
   }
   if(tournamentSize > nbIndividuals || nbElite > nbIndividuals){
-    std::cerr << "the tournament size and the nbElite parameters must be less equal than the number of individuals \n";
+    Rcpp::Rcerr << "the tournament size and the nbElite parameters must be less equal than the number of individuals \n";
     return Rcpp::List();
   }
   // OMP SET NUM THREAD = k, s.t. 1 <= k <= omp_get_num_procs()
 #ifdef _OPENMP
   if(num_thread < 1 || num_thread > omp_get_num_procs()){
-    std::cerr << "Wrong thread number, it should be between 1 and " 
+    Rcpp::Rcerr << "Wrong thread number, it should be between 1 and " 
               << omp_get_num_procs() << " \n";
     return Rcpp::List();
   }
@@ -507,7 +510,7 @@ Rcpp::List trueDistributionDrugs(const DataFrame& ATCtree, const DataFrame& obse
  
 #ifdef _OPENMP
  if(num_thread < 1 || num_thread > omp_get_num_procs()){
-   std::cerr << "Wrong thread number, it should be between 1 and " 
+   Rcpp::Rcerr << "Wrong thread number, it should be between 1 and " 
              << omp_get_num_procs() << " \n";
    return Rcpp::List();
  }
@@ -649,7 +652,7 @@ Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataF
   
 #ifdef _OPENMP
   if(num_thread < 1 || num_thread > omp_get_num_procs()){
-    std::cerr << "Wrong thread number, it should be between 1 and " 
+    Rcpp::Rcerr << "Wrong thread number, it should be between 1 and " 
               << omp_get_num_procs() << " \n";
     return Rcpp::List();
   }
@@ -1061,7 +1064,7 @@ void print_list_in_file(const Rcpp::List& resultsGeneticAlgorithm,
                         const std::string& filename){
   std::ofstream ost(filename, std::ios::app);
   if(!ost.is_open()){
-    std::cerr << "erreur ouverture fichier \n";
+    Rcpp::Rcerr << "erreur ouverture fichier \n";
   }
   
   Rcpp::List final_population = resultsGeneticAlgorithm["FinalPopulation"];
@@ -1200,7 +1203,7 @@ void print_csv(const std::vector<std::string>& input_filenames,
   for(const auto& filename : input_filenames){
     std::ifstream input(filename);
     if(!input.is_open()){
-      std::cerr << "erreur ouverture du fichier " << filename << "\n";
+      Rcpp::Rcerr << "erreur ouverture du fichier " << filename << "\n";
       return;
     }
     
@@ -1235,7 +1238,7 @@ void print_csv(const std::vector<std::string>& input_filenames,
   
   std::ofstream output(csv_filename);
   if(!output.is_open()){
-    std::cerr << "erreur ouverture du fichier " << csv_filename << "\n";
+    Rcpp::Rcerr << "erreur ouverture du fichier " << csv_filename << "\n";
     return;
   }
   std::vector<std::string> ATCName = ATCtree["Name"];
@@ -1320,7 +1323,7 @@ std::vector<std::vector<double>> get_dissimilarity_from_genetic_results(const Rc
   std::string line;
   std::ifstream input(filename);
   if(!input.is_open()){
-    std::cerr << "erreur ouverture du fichier " << filename << "\n";
+    Rcpp::Rcerr << "erreur ouverture du fichier " << filename << "\n";
     return {};
   }
   

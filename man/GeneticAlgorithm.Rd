@@ -35,14 +35,18 @@ GeneticAlgorithm(
 \item{diversity}{: enable the diversity mechanism of the algorithm
 (favor the diversity of cocktail in the population),  default is false}
 
+\item{p_crossover}{: probability to operate a crossover on the crossover phase. Default is 80\%}
+
+\item{p_mutation}{: probability to operate a mutation after the crossover phase. Default is 1\%}
+
 \item{nbElite}{: number of best individual we keep from generation to generation. Default is 0}
 
 \item{tournamentSize}{: size of the tournament (select the best individual 
 between tournamentSize sampled individuals)}
 
-\item{p_crossover:}{probability to operate a crossover on the crossover phase. Default is 80\%}
+\item{alpha}{: when making a type 1 mutation you have (alpha / size of cocktail) chance to add a drug.}
 
-\item{p_mutation:}{probability to operate a mutation after the crossover phase. Default is 1\%}
+\item{summary}{: print the summary of population at each steps ?}
 }
 \value{
 If no problem, return a List :

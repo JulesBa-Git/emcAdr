@@ -23,6 +23,8 @@ plot_frequency(
 \item{hist_color}{The fill color for the histogram bars}
 
 \item{density_color}{The color for the density curve}
+
+\item{xlab}{Label of X axis}
 }
 \description{
 Plot the histogram of the approximation of the RR distribution

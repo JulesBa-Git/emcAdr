@@ -8,10 +8,10 @@ in a special format}
 OustandingScoreToDistribution(outstanding_score, max_score)
 }
 \arguments{
-\item{max_score}{: max_score parameter used during the MCMC algorithm}
-
-\item{oustanding_score}{: Outstanding_score outputed by MCMC algorithm to be converted
+\item{outstanding_score}{: Outstanding_score outputed by MCMC algorithm to be converted
 to the ScoreDistribution format}
+
+\item{max_score}{: max_score parameter used during the MCMC algorithm}
 }
 \value{
 outstanding_score in a format compatible with MCMC algorithm output

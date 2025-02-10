@@ -49,7 +49,7 @@ void ATCtoNumeric(DataFrame& patients,const DataFrame& tree) {
       }
       
       if(posTree == cppTree.size()){
-        std::cerr<<"error : a patient take a medication that is not in the tree" << '\n';
+        Rcpp::Rcerr<<"error : a patient take a medication that is not in the tree" << '\n';
         return;
       }
       //+1 because of the cpp indexes (starting at 0)
@@ -88,7 +88,7 @@ Rcpp::NumericVector histogramToDitribution(const std::vector<int>& vec){
 //' Output the outstanding score (Outstanding_score) outputed by the MCMC algorithm
 //' in a special format
 //' 
-//' @param oustanding_score : Outstanding_score outputed by MCMC algorithm to be converted
+//' @param outstanding_score : Outstanding_score outputed by MCMC algorithm to be converted
 //' to the ScoreDistribution format
 //' @param max_score : max_score parameter used during the MCMC algorithm
 //' 
@@ -155,14 +155,14 @@ std::vector<std::vector<std::string>> check_extension_and_read_csv(
   
   std::vector<std::vector<std::string>> file;
   if(!hasExtension(filename,".csv")){
-    std::cerr << "file extension not supported for now \n";
+    Rcpp::Rcerr << "file extension not supported for now \n";
     file.resize(0);
     return file;
   }
   
   std::ifstream ifstr(filename);
   if(!ifstr.is_open()){
-    std::cerr << "the file " << filename << " has failed to open\n";
+    Rcpp::Rcerr << "the file " << filename << " has failed to open\n";
     file.resize(0);
     return file;
   }
@@ -180,7 +180,7 @@ std::vector<std::vector<std::string>> check_extension_and_read_csv(
 //' @param distribution_outputs A list of distribution of cocktails of different sizes
 //' in order to compute the p_value for multiple cocktail sizes
 //' @param filename The file name of the .csv file containing the output
-//' @param filtered_distribution Does the p-values have to be computed using filtered distribution
+//' @param filtred_distribution Does the p-values have to be computed using filtered distribution
 //' or normal distribution (filtered distribution by default)
 //' @param sep The separator used in the csv file (';' by default)
 //' @export
@@ -191,7 +191,7 @@ void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const
   
   std::vector<std::vector<std::string>> file = check_extension_and_read_csv(filename, sep[0]);
   if(file.size() == 0 ){
-    std::cerr << "No cocktail to recover\n";
+    Rcpp::Rcerr << "No cocktail to recover\n";
     return;
   }
   
@@ -219,7 +219,7 @@ void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const
 
   std::ofstream ofstr(filename);
   if(!ofstr.is_open()){
-    std::cerr << "the file " << filename << " has failed to open (to output results)\n";
+    Rcpp::Rcerr << "the file " << filename << " has failed to open (to output results)\n";
     return;
   }
 
@@ -248,7 +248,7 @@ Rcpp::List csv_to_population(const std::vector<std::string>& ATC_name,
   
   std::vector<std::vector<std::string>> file = check_extension_and_read_csv(filename, sep[0]);
   if(file.size() == 0 ){
-    std::cerr << "No cocktail to recover\n";
+    Rcpp::Rcerr << "No cocktail to recover\n";
     return Rcpp::List();
   }
   std::vector<std::vector<int>> cocktails;

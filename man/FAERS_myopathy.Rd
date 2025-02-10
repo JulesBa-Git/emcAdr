@@ -3,22 +3,22 @@
 \docType{data}
 \name{FAERS_myopathy}
 \alias{FAERS_myopathy}
-\title{FAERS myopathy}
+\title{FAERS Myopathy Dataset}
 \format{
 A data frame with 2 columns:
 \describe{
-  \item{patientATC}{Drug intake for each patient in the form of vector of index of the ATC tree}
-  \item{patientADR}{Does the patient experience the considered Adverse Event ? (here : myopathy)}
+  \item{patientATC}{Drug intake for each patient as a vector of ATC tree indices}
+  \item{patientADR}{Indicates if the patient experienced myopathy as an adverse event}
 }
 }
 \source{
-Food & Drug Administration Event Reporting System data
+Food & Drug Administration Event Reporting System (FAERS)
 }
 \usage{
 FAERS_myopathy
 }
 \description{
-The dataframe corresponding to patients drug intake from the FAERS dataset. It
-shows expected input for the genetic algorithm as well as the MCMC algorithm.
+Example dataset representing drug intake and adverse event reports from FAERS.
+This dataset is provided to demonstrate the functionality of genetic and MCMC algorithms in the package.
 }
 \keyword{datasets}

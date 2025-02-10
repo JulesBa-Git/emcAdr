@@ -18,10 +18,10 @@ in order to compute the p_value for multiple cocktail sizes}
 
 \item{filename}{The file name of the .csv file containing the output}
 
-\item{sep}{The separator used in the csv file (';' by default)}
-
-\item{filtered_distribution}{Does the p-values have to be computed using filtered distribution
+\item{filtred_distribution}{Does the p-values have to be computed using filtered distribution
 or normal distribution (filtered distribution by default)}
+
+\item{sep}{The separator used in the csv file (';' by default)}
 }
 \description{
 Used to add the p_value to each cocktail of a csv_file that is an

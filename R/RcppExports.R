@@ -25,7 +25,7 @@ histogramToDitribution <- function(vec) {
 #' Output the outstanding score (Outstanding_score) outputed by the MCMC algorithm
 #' in a special format
 #' 
-#' @param oustanding_score : Outstanding_score outputed by MCMC algorithm to be converted
+#' @param outstanding_score : Outstanding_score outputed by MCMC algorithm to be converted
 #' to the ScoreDistribution format
 #' @param max_score : max_score parameter used during the MCMC algorithm
 #' 
@@ -40,7 +40,7 @@ OustandingScoreToDistribution <- function(outstanding_score, max_score) {
 #' @param distribution_outputs A list of distribution of cocktails of different sizes
 #' in order to compute the p_value for multiple cocktail sizes
 #' @param filename The file name of the .csv file containing the output
-#' @param filtered_distribution Does the p-values have to be computed using filtered distribution
+#' @param filtred_distribution Does the p-values have to be computed using filtered distribution
 #' or normal distribution (filtered distribution by default)
 #' @param sep The separator used in the csv file (';' by default)
 #' @export
@@ -91,13 +91,14 @@ int_cocktail_to_string_cocktail <- function(cocktails, ATC_name) {
 #'@param temperature : starting temperature, default = 1 (denoted T in the article)
 #'@param nbResults : Number of returned solution (Cocktail of size Smax with the best oberved score during the run), 5 by default
 #'@param Smax : Size of the cocktail we approximate the distribution from
-#'@param p_type1: probability to operate type1 mutation. Note :
+#'@param p_type1 : probability to operate type1 mutation. Note :
 #'the probability to operate the type 2 mutation is then 1 - P_type1. P_type1 must be in [0;1]. Default is .01
 #'@param beta : filter the minimum number of patients that must have taken the 
 #'cocktail for his risk to be taken into account in the DistributionScoreBeta default is 4
 #'@param max_score : maximum number the score can take. Score greater than this 
 #'one would be added to the distribution as the value max_score. Default is 500
 #'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
+#'@param verbose : Output summary (default is false)
 #'
 #'@return I no problem, return a List containing :
 #' - ScoreDistribution : the distribution of the score as an array with each cells
@@ -128,11 +129,13 @@ DistributionApproximation <- function(epochs, ATCtree, observations, temperature
 #'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
 #'@param diversity : enable the diversity mechanism of the algorithm
 #' (favor the diversity of cocktail in the population),  default is false
-#'@param p_crossover: probability to operate a crossover on the crossover phase. Default is 80\%
-#'@param p_mutation: probability to operate a mutation after the crossover phase. Default is 1\%
+#'@param p_crossover : probability to operate a crossover on the crossover phase. Default is 80\%
+#'@param p_mutation : probability to operate a mutation after the crossover phase. Default is 1\%
 #'@param nbElite : number of best individual we keep from generation to generation. Default is 0
 #'@param tournamentSize : size of the tournament (select the best individual 
 #'between tournamentSize sampled individuals) 
+#'@param alpha : when making a type 1 mutation you have (alpha / size of cocktail) chance to add a drug. 
+#'@param summary : print the summary of population at each steps ? 
 #'
 #'@return If no problem, return a List :
 #' - meanFitnesses : The mean score of the population at each epochs of the algorithm.

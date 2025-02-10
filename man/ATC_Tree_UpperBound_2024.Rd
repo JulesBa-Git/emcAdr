@@ -3,14 +3,14 @@
 \docType{data}
 \name{ATC_Tree_UpperBound_2024}
 \alias{ATC_Tree_UpperBound_2024}
-\title{ATC Tree Upper Bound 2014}
+\title{ATC Tree Upper Bound 2024}
 \format{
-A data frame 4 variables:
+A data frame with 4 variables:
 \describe{
   \item{ATCCode}{The code of ATC nodes}
   \item{Name}{The name of ATC nodes}
-  \item{ATC_length}{The number of character in the ATCCode}
-  \item{upperBound}{The index of the last son of the current node in the tree}
+  \item{ATC_length}{The number of characters in the ATCCode}
+  \item{upperBound}{The index of the last child node in the tree}
 }
 }
 \source{
@@ -20,7 +20,7 @@ World Health Organization, ATC classification register
 ATC_Tree_UpperBound_2024
 }
 \description{
-The expected form of the ATC tree, this version of the ATC tree is from the WHO
-website (2024-02-23).
+Example dataset representing the ATC tree structure, sourced from the WHO website (2024-02-23).
+This dataset is provided for demonstration and testing purposes with the package.
 }
 \keyword{datasets}

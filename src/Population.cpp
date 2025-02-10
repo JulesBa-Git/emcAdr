@@ -462,8 +462,8 @@ void Population::printPopulation(std::ostream& ost) const{
 }
 
 void Population::printSummary(int epoch, double populationMean, int populationBestIndex) const{
-  std::cout << "epoch : " << epoch << " | mean : " << populationMean << " | best score : ";
-  std::cout << individuals_[populationBestIndex].first << " | best cocktail : ";
+  Rcpp::Rcout << "epoch : " << epoch << " | mean : " << populationMean << " | best score : ";
+  Rcpp::Rcout << individuals_[populationBestIndex].first << " | best cocktail : ";
   individuals_[populationBestIndex].second.printMedications();
 }
 

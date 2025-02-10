@@ -7,12 +7,12 @@ Individual::Individual(const std::vector<int>& medic, double temperature) :
 
 void Individual::printMedications() const{
   for(const int& med : medications_){
-    std::cout << med<< ' ';
+    Rcpp::Rcout << med<< ' ';
   }
-  std::cout << '\n';
+  Rcpp::Rcout << '\n';
 }
 void Individual::printTemperature() const{
-  std::cout << temperature_ << '\n';
+  Rcpp::Rcout << temperature_ << '\n';
 } 
 
 bool Individual::matches(const std::vector<int>& observation, const std::vector<int>& upperBound) const{

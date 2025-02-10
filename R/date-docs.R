@@ -1,27 +1,27 @@
-#' ATC Tree Upper Bound 2014
+#' ATC Tree Upper Bound 2024
 #'
-#' The expected form of the ATC tree, this version of the ATC tree is from the WHO
-#' website (2024-02-23).
+#' Example dataset representing the ATC tree structure, sourced from the WHO website (2024-02-23).
+#' This dataset is provided for demonstration and testing purposes with the package.
 #'
-#' @format A data frame 4 variables:
+#' @format A data frame with 4 variables:
 #' \describe{
 #'   \item{ATCCode}{The code of ATC nodes}
 #'   \item{Name}{The name of ATC nodes}
-#'   \item{ATC_length}{The number of character in the ATCCode}
-#'   \item{upperBound}{The index of the last son of the current node in the tree}
+#'   \item{ATC_length}{The number of characters in the ATCCode}
+#'   \item{upperBound}{The index of the last child node in the tree}
 #' }
 #' @source World Health Organization, ATC classification register
 "ATC_Tree_UpperBound_2024"
 
-#' FAERS myopathy
+#' FAERS Myopathy Dataset
 #'
-#' The dataframe corresponding to patients drug intake from the FAERS dataset. It
-#' shows expected input for the genetic algorithm as well as the MCMC algorithm.
+#' Example dataset representing drug intake and adverse event reports from FAERS.
+#' This dataset is provided to demonstrate the functionality of genetic and MCMC algorithms in the package.
 #'
 #' @format A data frame with 2 columns:
 #' \describe{
-#'   \item{patientATC}{Drug intake for each patient in the form of vector of index of the ATC tree}
-#'   \item{patientADR}{Does the patient experience the considered Adverse Event ? (here : myopathy)}
+#'   \item{patientATC}{Drug intake for each patient as a vector of ATC tree indices}
+#'   \item{patientADR}{Indicates if the patient experienced myopathy as an adverse event}
 #' }
-#' @source Food & Drug Administration Event Reporting System data
+#' @source Food & Drug Administration Event Reporting System (FAERS)
 "FAERS_myopathy"

@@ -32,6 +32,9 @@ DistributionApproximation(
 
 \item{Smax}{: Size of the cocktail we approximate the distribution from}
 
+\item{p_type1}{: probability to operate type1 mutation. Note :
+the probability to operate the type 2 mutation is then 1 - P_type1. P_type1 must be in [0;1]. Default is .01}
+
 \item{beta}{: filter the minimum number of patients that must have taken the 
 cocktail for his risk to be taken into account in the DistributionScoreBeta default is 4}
 
@@ -40,8 +43,7 @@ one would be added to the distribution as the value max_score. Default is 500}
 
 \item{num_thread}{: Number of thread to run in parallel if openMP is available, 1 by default}
 
-\item{p_type1:}{probability to operate type1 mutation. Note :
-the probability to operate the type 2 mutation is then 1 - P_type1. P_type1 must be in [0;1]. Default is .01}
+\item{verbose}{: Output summary (default is false)}
 }
 \value{
 I no problem, return a List containing :

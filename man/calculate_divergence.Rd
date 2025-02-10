@@ -17,6 +17,8 @@ calculate_divergence(
 \item{true_distribution}{A numeric vector of values representing the true distribution computed by the trueDistributionSizeTwoCocktail function}
 
 \item{method}{A string, either "TV" or "KL" to respectively use the total variation distance or the Kullback-Leibler divergence. (default = "TV")}
+
+\item{Filtered}{Should we use the filtered distribution or the normal one}
 }
 \value{
 A numeric value representing the divergence of the 2 distributions

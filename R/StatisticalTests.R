@@ -49,6 +49,7 @@ p_value_on_sampled <- function(empirical_distribution, sampled_values, isFiltere
 #' @param empirical_distribution A numeric vector of values representing the empirical distribution (return value of DistributionAproximation function)
 #' @param true_distribution A numeric vector of values representing the true distribution computed by the trueDistributionSizeTwoCocktail function
 #' @param method A string, either "TV" or "KL" to respectively use the total variation distance or the Kullback-Leibler divergence. (default = "TV")
+#' @param Filtered Should we use the filtered distribution or the normal one
 #' @return A numeric value representing the divergence of the 2 distributions
 #' 
 #' @export
