@@ -47,3 +47,12 @@ encountered during the run.
 \description{
 The true distribution of the score among every single nodes of the ATC
 }
+\examples{
+\dontrun{
+data("ATC_Tree_UpperBound_2024")
+data("FAERS_myopathy")
+
+size_1_score_distribution = trueDistributionDrugs(ATCtree = ATC_Tree_UpperBound_2024,
+            observations = FAERS_myopathy, beta = 4, ...)
+}
+}

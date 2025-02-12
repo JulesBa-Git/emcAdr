@@ -59,3 +59,12 @@ and corresponding scores)
 Genetic algorithm, trying to reach riskiest cocktails (the ones which maximize
 the fitness function, Hypergeometric score in our case)
 }
+\examples{
+\dontrun{
+data("ATC_Tree_UpperBound_2024")
+data("FAERS_myopathy")
+
+results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, ATCtree = ATC_Tree_UpperBound_2024,
+            observations = FAERS_myopathy, ...)
+}
+}

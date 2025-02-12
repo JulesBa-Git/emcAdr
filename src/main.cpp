@@ -51,6 +51,15 @@ using Rcpp::DataFrame;
 //' - bestScoreBeta : Score corresponding to the bestCocktailsBeta.
 //' - cocktailSize : Smax parameter used during the run.
 //'; Otherwise the list is empty
+//'
+//'@examples
+//'\dontrun{
+//' data("ATC_Tree_UpperBound_2024")
+//' data("FAERS_myopathy")
+//' 
+//' estimation = DistributionApproximation(epochs = 10, ATCtree = ATC_Tree_UpperBound_2024,
+//'             observations = FAERS_myopathy, ...)
+//'}
 //'@export
 //[[Rcpp::export]]
 Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const DataFrame& observations,
@@ -332,6 +341,14 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
 //' - BestFitnesses : The best score of the population at each epochs of the algorithm.
 //' - FinalPopulation : The final population of the algorithm when finished (medications
 //' and corresponding scores)
+//'@examples
+//'\dontrun{
+//' data("ATC_Tree_UpperBound_2024")
+//' data("FAERS_myopathy")
+//' 
+//' results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, ATCtree = ATC_Tree_UpperBound_2024,
+//'             observations = FAERS_myopathy, ...)
+//'}
 //'@export
 //[[Rcpp::export]]
 Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCtree, 
@@ -502,6 +519,14 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
 //' encountered during the run.
 //' - Best_scores : Score corresponding to the Best_cocktails.
 //' - Best_scores_beta : Score corresponding to the Best_cocktails_beta.
+//'@examples
+//'\dontrun{
+//' data("ATC_Tree_UpperBound_2024")
+//' data("FAERS_myopathy")
+//' 
+//' size_1_score_distribution = trueDistributionDrugs(ATCtree = ATC_Tree_UpperBound_2024,
+//'             observations = FAERS_myopathy, beta = 4, ...)
+//'}
 //'@export
 //[[Rcpp::export]]
 Rcpp::List trueDistributionDrugs(const DataFrame& ATCtree, const DataFrame& observations,
@@ -644,6 +669,14 @@ Rcpp::List trueDistributionDrugs(const DataFrame& ATCtree, const DataFrame& obse
 //' encountered during the run.
 //' - Best_scores : Score corresponding to the Best_cocktails.
 //' - Best_scores_beta : Score corresponding to the Best_cocktails_beta.
+//'@examples
+//'\dontrun{
+//' data("ATC_Tree_UpperBound_2024")
+//' data("FAERS_myopathy")
+//' 
+//' size_2_score_distribution = trueDistributionSizeTwoCocktail(ATCtree = ATC_Tree_UpperBound_2024,
+//'             observations = FAERS_myopathy, beta = 4, ...)
+//'}
 //'@export
 //[[Rcpp::export]]
 Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataFrame& observations,
@@ -775,6 +808,18 @@ Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataF
 //'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
 //' 
 //'@return RR score among "cocktails" parameters
+//'@examples
+//'\dontrun{
+//' data("ATC_Tree_UpperBound_2024")
+//' data("FAERS_myopathy")
+//' 
+//' cocktails = list(c(561, 904),
+//'                c(1902, 4585))
+//' 
+//' RR_of_cocktails = compute_RR_on_list(cocktails = cocktails,
+//'                               ATCtree = ATC_Tree_UpperBound_2024, 
+//'                               observations = FAERS_myopathy, ...)
+//'}
 //'@export
 //[[Rcpp::export]]
 std::vector<double> compute_RR_on_list(const std::vector<std::vector<int>> &cocktails, 
@@ -809,6 +854,18 @@ std::vector<double> compute_RR_on_list(const std::vector<std::vector<int>> &cock
 //'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
 //' 
 //'@return Hypergeometric score among "cocktails" parameters
+//'@examples
+//'\dontrun{
+//' data("ATC_Tree_UpperBound_2024")
+//' data("FAERS_myopathy")
+//' 
+//' cocktails = list(c(561, 904),
+//'                c(1902, 4585))
+//' 
+//' Hypergeom_of_cocktails = compute_hypergeom_on_list(cocktails = cocktails,
+//'                               ATCtree = ATC_Tree_UpperBound_2024, 
+//'                               observations = FAERS_myopathy, ...)
+//'}
 //'@export
 //[[Rcpp::export]]
 std::vector<double> compute_hypergeom_on_list(const std::vector<std::vector<int>> &cocktails, 
@@ -1005,6 +1062,18 @@ std::vector<double> MetricCalc_2(const std::vector<int> &cocktail,
 //'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
 //'
 //'@return Multiple DA metrics computed on CocktailList cocktails
+//'@examples
+//'\dontrun{
+//' data("ATC_Tree_UpperBound_2024")
+//' data("FAERS_myopathy")
+//' 
+//' cocktails = list(c(561, 904),
+//'                c(1902, 4585)) # only size 2 cocktails allowed for this function
+//' 
+//' scores_of_cocktails = computeMetrics_size2(cocktails = cocktails,
+//'                               ATCtree = ATC_Tree_UpperBound_2024, 
+//'                               observations = FAERS_myopathy, ...)
+//'}
 //'@export
 //[[Rcpp::export]]
 Rcpp::DataFrame computeMetrics_size2(const std::vector<std::vector<int>>& CocktailList,
@@ -1111,6 +1180,22 @@ void print_list_in_file(const Rcpp::List& resultsGeneticAlgorithm,
 //' @param alphas : a vector with each alphas to be tested
 //' @param path : the path where the resulting files should be written
 //' @param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
+//'@examples
+//'\dontrun{
+//' data("ATC_Tree_UpperBound_2024")
+//' data("FAERS_myopathy")
+//' 
+//' # different parameter to test for
+//' mutation_rate = c(.1,.2,.3)
+//' nb_elite = c(0,1,2)
+//' alphas = c(0.5,1,2)
+//' hyperparam_test_genetic_algorithm(epochs = 1000, nb_individuals = 100,
+//'                               ATCtree = ATC_Tree_UpperBound_2024, 
+//'                               observations = FAERS_myopathy,
+//'                               nb_test_desired = 5, mutation_rate = mutation_rate,
+//'                               nb_elite = nb_elite, alphas = alphas,
+//'                                ...)
+//'}
 //[[Rcpp::export]]
 void hyperparam_test_genetic_algorithm(int epochs, int nb_individuals, 
                                        const DataFrame& ATCtree, 
@@ -1181,8 +1266,16 @@ std::pair<double, std::vector<int>> recup_solution(const std::string& line){
 //' @param repetition : The parameter nb_test_desired used in the hyperparam test function
 //' @param ATCtree : ATC tree with upper bound of the DFS (without the root)
 //' @param csv_filename : Name of the output file, "solutions.csv" by default
-//'
-//'@export
+//' @examples
+//' \dontrun{
+//'  data("ATC_Tree_UpperBound_2024")
+//'  data("FAERS_myopathy")
+//'  files = c('250e_700ind_0.2mr_0ne_2alpha.txt',..) # results of hyperparam_test_genetic_algorithm
+//' 
+//'  print_csv(input_filenames = files, observations = FAERS_myopathy,
+//'           repetition = 5, ATCtree = ATC_Tree_UpperBound_2024, ...)
+//' }
+//' @export
 //[[Rcpp::export]]
 void print_csv(const std::vector<std::string>& input_filenames,
                const DataFrame& observations,
@@ -1284,6 +1377,17 @@ std::vector<std::vector<double>> dissim(const Population& pop,
 //' @param normalization : Do we keep the distance between cocktail in the range [0;1] ? 
 //' 
 //' @return The square matrix of distances between cocktails
+//' @examples
+//' \dontrun{
+//'  data("ATC_Tree_UpperBound_2024")
+//'  data("FAERS_myopathy")
+//'  
+//'  genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, ATCtree = ATC_Tree_UpperBound_2024,
+//'             observations = FAERS_myopathy, ...)
+//'  distance_matrix = get_dissimilarity_from_genetic_results(genetic_results = genetic_results,
+//'                         ATCtree = ATC_Tree_UpperBound_2024, normalization = T)
+//' }
+//' @export
 //[[Rcpp::export]]
 std::vector<std::vector<double>> get_dissimilarity_from_genetic_results(const Rcpp::List& genetic_results,
                                                    const DataFrame& ATCtree,
@@ -1308,8 +1412,16 @@ std::vector<std::vector<double>> get_dissimilarity_from_genetic_results(const Rc
 //' @param normalization : Do we keep the distance between cocktail in the range [0;1] ? 
 //' 
 //' @return The square matrix of distances between cocktails
+//' @examples
+//' \dontrun{
+//'  data("ATC_Tree_UpperBound_2024")
+//'  
+//'  distance_matrix = get_dissimilarity_from_txt_file(filename = '250e_700ind_0.2mr_0ne_2alpha.txt',
+//'                         ATCtree = ATC_Tree_UpperBound_2024, normalization = T)
+//' }
+//' @export
 //[[Rcpp::export]]
- std::vector<std::vector<double>> get_dissimilarity_from_csv_file(
+ std::vector<std::vector<double>> get_dissimilarity_from_txt_file(
                                                    const std::string& filename,
                                                    const DataFrame& ATCtree,
                                                    bool normalization = true){
@@ -1363,6 +1475,17 @@ std::vector<std::vector<double>> get_dissimilarity_from_genetic_results(const Rc
 //' @param normalization : Do we keep the distance between cocktail in the range [0;1] ? 
 //' 
 //' @return The square matrix of distances between cocktails
+//'@examples
+//'\dontrun{
+//' data("ATC_Tree_UpperBound_2024")
+//' 
+//' cocktails = list(c(561, 904),
+//'                c(1902, 4585)) # only size 2 cocktails allowed for this function
+//' 
+//' distance_matrix = get_dissimilarity_from_cocktail_list(cocktails = cocktails,
+//'                               ATCtree = ATC_Tree_UpperBound_2024, 
+//'                               normalization = T)
+//'}
 //[[Rcpp::export]]
 std::vector<std::vector<double>> get_dissimilarity_from_cocktail_list(const std::vector<std::vector<int>>& cocktails,
                                                                 const Rcpp::DataFrame& ATCtree,

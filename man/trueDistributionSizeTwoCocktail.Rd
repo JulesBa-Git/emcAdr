@@ -47,3 +47,12 @@ encountered during the run.
 \description{
 The true distribution of the score among every size-two cocktails
 }
+\examples{
+\dontrun{
+data("ATC_Tree_UpperBound_2024")
+data("FAERS_myopathy")
+
+size_2_score_distribution = trueDistributionSizeTwoCocktail(ATCtree = ATC_Tree_UpperBound_2024,
+            observations = FAERS_myopathy, beta = 4, ...)
+}
+}

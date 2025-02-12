@@ -23,3 +23,16 @@ Multiple DA metrics computed on CocktailList cocktails
 \description{
 Function used in the reference article to compare diverse Disproportionality Analysis metrics
 }
+\examples{
+\dontrun{
+data("ATC_Tree_UpperBound_2024")
+data("FAERS_myopathy")
+
+cocktails = list(c(561, 904),
+               c(1902, 4585)) # only size 2 cocktails allowed for this function
+
+scores_of_cocktails = computeMetrics_size2(cocktails = cocktails,
+                              ATCtree = ATC_Tree_UpperBound_2024, 
+                              observations = FAERS_myopathy, ...)
+}
+}

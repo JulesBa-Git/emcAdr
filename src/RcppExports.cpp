@@ -12,14 +12,15 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // ATCtoNumeric
-void ATCtoNumeric(DataFrame& patients, const DataFrame& tree);
-RcppExport SEXP _emcAdr_ATCtoNumeric(SEXP patientsSEXP, SEXP treeSEXP) {
+std::vector<std::vector<int>> ATCtoNumeric(const std::vector<std::string>& patientATC, const DataFrame& tree);
+RcppExport SEXP _emcAdr_ATCtoNumeric(SEXP patientATCSEXP, SEXP treeSEXP) {
 BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< DataFrame& >::type patients(patientsSEXP);
+    Rcpp::traits::input_parameter< const std::vector<std::string>& >::type patientATC(patientATCSEXP);
     Rcpp::traits::input_parameter< const DataFrame& >::type tree(treeSEXP);
-    ATCtoNumeric(patients, tree);
-    return R_NilValue;
+    rcpp_result_gen = Rcpp::wrap(ATCtoNumeric(patientATC, tree));
+    return rcpp_result_gen;
 END_RCPP
 }
 // histogramToDitribution
@@ -33,15 +34,15 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// OustandingScoreToDistribution
-Rcpp::NumericVector OustandingScoreToDistribution(const std::vector<double>& outstanding_score, int max_score);
-RcppExport SEXP _emcAdr_OustandingScoreToDistribution(SEXP outstanding_scoreSEXP, SEXP max_scoreSEXP) {
+// OutsandingScoreToDistribution
+Rcpp::NumericVector OutsandingScoreToDistribution(const std::vector<double>& outstanding_score, int max_score);
+RcppExport SEXP _emcAdr_OutsandingScoreToDistribution(SEXP outstanding_scoreSEXP, SEXP max_scoreSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::vector<double>& >::type outstanding_score(outstanding_scoreSEXP);
     Rcpp::traits::input_parameter< int >::type max_score(max_scoreSEXP);
-    rcpp_result_gen = Rcpp::wrap(OustandingScoreToDistribution(outstanding_score, max_score));
+    rcpp_result_gen = Rcpp::wrap(OutsandingScoreToDistribution(outstanding_score, max_score));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -258,16 +259,16 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// get_dissimilarity_from_csv_file
-std::vector<std::vector<double>> get_dissimilarity_from_csv_file(const std::string& filename, const DataFrame& ATCtree, bool normalization);
-RcppExport SEXP _emcAdr_get_dissimilarity_from_csv_file(SEXP filenameSEXP, SEXP ATCtreeSEXP, SEXP normalizationSEXP) {
+// get_dissimilarity_from_txt_file
+std::vector<std::vector<double>> get_dissimilarity_from_txt_file(const std::string& filename, const DataFrame& ATCtree, bool normalization);
+RcppExport SEXP _emcAdr_get_dissimilarity_from_txt_file(SEXP filenameSEXP, SEXP ATCtreeSEXP, SEXP normalizationSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::string& >::type filename(filenameSEXP);
     Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
     Rcpp::traits::input_parameter< bool >::type normalization(normalizationSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_dissimilarity_from_csv_file(filename, ATCtree, normalization));
+    rcpp_result_gen = Rcpp::wrap(get_dissimilarity_from_txt_file(filename, ATCtree, normalization));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -288,7 +289,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_ATCtoNumeric", (DL_FUNC) &_emcAdr_ATCtoNumeric, 2},
     {"_emcAdr_histogramToDitribution", (DL_FUNC) &_emcAdr_histogramToDitribution, 1},
-    {"_emcAdr_OustandingScoreToDistribution", (DL_FUNC) &_emcAdr_OustandingScoreToDistribution, 2},
+    {"_emcAdr_OutsandingScoreToDistribution", (DL_FUNC) &_emcAdr_OutsandingScoreToDistribution, 2},
     {"_emcAdr_p_value_csv_file", (DL_FUNC) &_emcAdr_p_value_csv_file, 4},
     {"_emcAdr_csv_to_population", (DL_FUNC) &_emcAdr_csv_to_population, 3},
     {"_emcAdr_string_list_to_int_cocktails", (DL_FUNC) &_emcAdr_string_list_to_int_cocktails, 2},
@@ -303,7 +304,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_hyperparam_test_genetic_algorithm", (DL_FUNC) &_emcAdr_hyperparam_test_genetic_algorithm, 10},
     {"_emcAdr_print_csv", (DL_FUNC) &_emcAdr_print_csv, 5},
     {"_emcAdr_get_dissimilarity_from_genetic_results", (DL_FUNC) &_emcAdr_get_dissimilarity_from_genetic_results, 3},
-    {"_emcAdr_get_dissimilarity_from_csv_file", (DL_FUNC) &_emcAdr_get_dissimilarity_from_csv_file, 3},
+    {"_emcAdr_get_dissimilarity_from_txt_file", (DL_FUNC) &_emcAdr_get_dissimilarity_from_txt_file, 3},
     {"_emcAdr_get_dissimilarity_from_cocktail_list", (DL_FUNC) &_emcAdr_get_dissimilarity_from_cocktail_list, 3},
     {NULL, NULL, 0}
 };

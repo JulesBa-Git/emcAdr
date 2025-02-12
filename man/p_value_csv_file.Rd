@@ -27,3 +27,12 @@ or normal distribution (filtered distribution by default)}
 Used to add the p_value to each cocktail of a csv_file that is an
 output of the genetic algorithm
 }
+\examples{
+\dontrun{
+  DistributionApproximationResults_size2 = DistributionApproximation(epochs = 1000, ..., Smax = 2)
+  DistributionApproximationResults_size3 = DistributionApproximation(epochs = 1000, ..., Smax = 3)
+  score_distribtuion_list = c(DistributionApproximationResults_size2,
+                              DistributionApproximationResults_size3)
+  p_value_csv_file(score_distribution_list, "path/to/output.csv", ..)
+}
+}

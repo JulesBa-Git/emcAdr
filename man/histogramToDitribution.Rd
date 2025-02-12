@@ -17,3 +17,9 @@ A vector containing sampled risk during the MCMC algorithm
 Convert the histogram returned by the DistributionApproximation function, to a real number distribution
 (that can be used in a test for example)
 }
+\examples{
+\dontrun{
+  DistributionApproximationResults = DistributionApproximation(epochs = 1000, ...)
+  histogramToDitribution(DistributionApproximationResults$Distribution)
+}
+}

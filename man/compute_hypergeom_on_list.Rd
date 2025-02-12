@@ -23,3 +23,16 @@ Hypergeometric score among "cocktails" parameters
 \description{
 Function used to compute the Hypergeometric score on a list of cocktails
 }
+\examples{
+\dontrun{
+data("ATC_Tree_UpperBound_2024")
+data("FAERS_myopathy")
+
+cocktails = list(c(561, 904),
+               c(1902, 4585))
+
+Hypergeom_of_cocktails = compute_hypergeom_on_list(cocktails = cocktails,
+                              ATCtree = ATC_Tree_UpperBound_2024, 
+                              observations = FAERS_myopathy, ...)
+}
+}

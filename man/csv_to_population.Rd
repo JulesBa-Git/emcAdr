@@ -21,3 +21,9 @@ An R List that can be used by other algorithms (e.g. clustering algorithm)
 Function used to convert your genetic algorithm results that are stored into 
 a .csv file to a Data structure that can be used by the clustering algorithm
 }
+\examples{
+\dontrun{
+  genetic_results = csv_to_population(ATC_Tree_UpperBound_2024$Name,
+                    "path/to/output.csv", ..)
+}
+}

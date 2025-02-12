@@ -4,14 +4,18 @@
 \alias{ATCtoNumeric}
 \title{Convert ATC Code for each patients to the corresponding DFS number of the ATC tree}
 \usage{
-ATCtoNumeric(patients, tree)
+ATCtoNumeric(patientATC, tree)
 }
 \arguments{
-\item{patients}{: patients observations, for each patient we got a string 
-containing taken medications}
+\item{patientATC}{: patients observations, for each patient we got a string 
+containing taken medications (ATC code)}
 
 \item{tree}{: ATC tree (we assume that there is a column 'ATCCode' )}
 }
 \description{
 Convert ATC Code for each patients to the corresponding DFS number of the ATC tree
+}
+\examples{
+ATC_code <- c('A01AA30 A01AB03', 'A10AC30')
+ATCtoNumeric(code, ATC_Tree_UpperBound_2024)
 }

@@ -32,3 +32,13 @@ Print every cocktails found during the genetic algorithm when used with the
 hyperparam_test_genetic_algorithm function. This enables to condense the solutions 
 found in each files by collapsing similar cocktail in a single row by cocktail.
 }
+\examples{
+\dontrun{
+ data("ATC_Tree_UpperBound_2024")
+ data("FAERS_myopathy")
+ files = c('250e_700ind_0.2mr_0ne_2alpha.txt',..) # results of hyperparam_test_genetic_algorithm
+
+ print_csv(input_filenames = files, observations = FAERS_myopathy,
+          repetition = 5, ATCtree = ATC_Tree_UpperBound_2024, ...)
+}
+}

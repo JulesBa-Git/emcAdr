@@ -55,3 +55,20 @@ can regroup the results of each run in a csv file by using the print_csv functio
 specifying the names of each file that needs to be treated and the number of 
 performed runs on each parameter set
 }
+\examples{
+\dontrun{
+data("ATC_Tree_UpperBound_2024")
+data("FAERS_myopathy")
+
+# different parameter to test for
+mutation_rate = c(.1,.2,.3)
+nb_elite = c(0,1,2)
+alphas = c(0.5,1,2)
+hyperparam_test_genetic_algorithm(epochs = 1000, nb_individuals = 100,
+                              ATCtree = ATC_Tree_UpperBound_2024, 
+                              observations = FAERS_myopathy,
+                              nb_test_desired = 5, mutation_rate = mutation_rate,
+                              nb_elite = nb_elite, alphas = alphas,
+                               ...)
+}
+}

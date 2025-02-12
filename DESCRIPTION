@@ -3,12 +3,15 @@ Type: Package
 Title: Evolutionary Version of the Metropolis-Hastings Algorithm
 Version: 1.2
 Date: 2025-01-31
-Author: Bangard Jules
+Author: Jules Bangard [aut, cre] (<https://orcid.org/0009-0007-4670-7860>),
+Authors@R: c(
+    person("Jules", "Bangard", , "jules.bangard@etu.unistra.fr", role = c("aut", "cre"),
+           comment = c(ORCID = "0009-0007-4670-7860")))
 Maintainer: Bangard Jules <jules.bangard@etu.unistra.fr>
-Description: Provides an evolutionary version of the Metropolis-Hastings algorithm,
-    designed to run long Markov Chain trajectories. This package is optimized for 
-    analyzing individual case safety reports (ICSRs), which contain patient drug 
-    intake data and related adverse events.
+Description: Provides computational methods for detecting adverse high-order drug interactions
+         from individual case safety reports using statistical techniques.
+         It implements algorithms to detect drug-drug interactions (DDIs) beyond pairwise analysis,
+         allowing the exploration of higher-order interactions among drug cocktails.
 License: GPL-3
 Imports: 
     Rcpp (>= 1.0.7), 

@@ -63,3 +63,12 @@ encountered during the run.
 \description{
 The MCMC method that runs the random walk on a single cocktail in order to estimate the distribution of score among cocktails of size Smax.
 }
+\examples{
+\dontrun{
+data("ATC_Tree_UpperBound_2024")
+data("FAERS_myopathy")
+
+estimation = DistributionApproximation(epochs = 10, ATCtree = ATC_Tree_UpperBound_2024,
+            observations = FAERS_myopathy, ...)
+}
+}
