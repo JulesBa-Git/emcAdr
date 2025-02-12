@@ -8,7 +8,7 @@
 #'containing taken medications (ATC code)
 #'@examples
 #' ATC_code <- c('A01AA30 A01AB03', 'A10AC30')
-#' ATCtoNumeric(code, ATC_Tree_UpperBound_2024)
+#' ATCtoNumeric(ATC_code, ATC_Tree_UpperBound_2024)
 #'@export
 ATCtoNumeric <- function(patientATC, tree) {
     .Call(`_emcAdr_ATCtoNumeric`, patientATC, tree)
@@ -196,7 +196,8 @@ DistributionApproximation <- function(epochs, ATCtree, observations, temperature
 #' data("ATC_Tree_UpperBound_2024")
 #' data("FAERS_myopathy")
 #' 
-#' results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, ATCtree = ATC_Tree_UpperBound_2024,
+#' results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, 
+#'             ATCtree = ATC_Tree_UpperBound_2024,
 #'             observations = FAERS_myopathy, ...)
 #'}
 #'@export
@@ -440,7 +441,8 @@ print_csv <- function(input_filenames, observations, repetition, ATCtree, csv_fi
 #'  data("ATC_Tree_UpperBound_2024")
 #'  data("FAERS_myopathy")
 #'  
-#'  genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, ATCtree = ATC_Tree_UpperBound_2024,
+#'  genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200,
+#'             ATCtree = ATC_Tree_UpperBound_2024,
 #'             observations = FAERS_myopathy, ...)
 #'  distance_matrix = get_dissimilarity_from_genetic_results(genetic_results = genetic_results,
 #'                         ATCtree = ATC_Tree_UpperBound_2024, normalization = T)

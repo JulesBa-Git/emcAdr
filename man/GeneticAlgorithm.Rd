@@ -64,7 +64,8 @@ the fitness function, Hypergeometric score in our case)
 data("ATC_Tree_UpperBound_2024")
 data("FAERS_myopathy")
 
-results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, ATCtree = ATC_Tree_UpperBound_2024,
+results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, 
+            ATCtree = ATC_Tree_UpperBound_2024,
             observations = FAERS_myopathy, ...)
 }
 }

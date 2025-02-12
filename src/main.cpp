@@ -346,7 +346,8 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
 //' data("ATC_Tree_UpperBound_2024")
 //' data("FAERS_myopathy")
 //' 
-//' results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, ATCtree = ATC_Tree_UpperBound_2024,
+//' results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, 
+//'             ATCtree = ATC_Tree_UpperBound_2024,
 //'             observations = FAERS_myopathy, ...)
 //'}
 //'@export
@@ -1382,7 +1383,8 @@ std::vector<std::vector<double>> dissim(const Population& pop,
 //'  data("ATC_Tree_UpperBound_2024")
 //'  data("FAERS_myopathy")
 //'  
-//'  genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, ATCtree = ATC_Tree_UpperBound_2024,
+//'  genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200,
+//'             ATCtree = ATC_Tree_UpperBound_2024,
 //'             observations = FAERS_myopathy, ...)
 //'  distance_matrix = get_dissimilarity_from_genetic_results(genetic_results = genetic_results,
 //'                         ATCtree = ATC_Tree_UpperBound_2024, normalization = T)
