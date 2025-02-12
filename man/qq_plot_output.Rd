@@ -5,7 +5,7 @@
 \title{Make a Quantile-Quantile diagram from the output of the MCMC algorithm (DistributionAproximation)
 and the algorithm that exhaustively calculates the distribution}
 \usage{
-qq_plot_output(estimated, true, filtered = F, color = "steelblue")
+qq_plot_output(estimated, true, filtered = FALSE, color = "steelblue")
 }
 \arguments{
 \item{estimated}{Outputed object of DistributionApproximation function}

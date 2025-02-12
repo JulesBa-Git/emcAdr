@@ -58,13 +58,13 @@ calculate_divergence <- function(empirical_distribution, true_distribution, meth
   
   if(RRmax > 30){
     if(Filtered){
-      dist_ouststandingRR <- incorporateOustandingRRToDistribution(true_distribution$OutstandingRR, RRmax)
+      dist_ouststandingRR <- OustandingScoreToDistribution(true_distribution$OutstandingRR, RRmax)
       length(true_distribution$FilteredDistribution) <- length(dist_ouststandingRR)
       true_distribution$FilteredDistribution[is.na(true_distribution$FilteredDistribution)] <- 0
       true_distribution$FilteredDistribution <- true_distribution$FilteredDistribution + dist_ouststandingRR
     }
     else{
-      dist_ouststandingRR <- incorporateOustandingRRToDistribution(true_distribution$OutstandingRR, RRmax)
+      dist_ouststandingRR <- OustandingScoreToDistribution(true_distribution$OutstandingRR, RRmax)
       length(true_distribution$Distribution) <- length(dist_ouststandingRR)
       true_distribution$Distribution[is.na(true_distribution$Distribution)] <- 0
       true_distribution$Distribution <- true_distribution$Distribution + dist_ouststandingRR

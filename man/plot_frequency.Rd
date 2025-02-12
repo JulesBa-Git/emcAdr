@@ -6,7 +6,7 @@
 \usage{
 plot_frequency(
   freq_array,
-  sqrt = F,
+  sqrt = FALSE,
   binwidth = 0.1,
   hist_color = "#69b3a2",
   density_color = "#FF5733",

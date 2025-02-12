@@ -9,30 +9,41 @@
 #' @import ggplot2
 #' @import dplyr
 #' @importFrom grid units
+#' @importFrom rlang .data
 #' @export
 #'
 plot_evolution <- function(list, mean_color = "#F2A900", best_color = "#008080", xlab = "Epochs", ylab = "Score") {
-  requireNamespace(dplyr)
-  requireNamespace(ggplot2)
+  requireNamespace("dplyr") 
+  requireNamespace("ggplot2")
   
   epochs <- seq_along(list$meanFitnesses)
   
   data <- data.frame(epochs = epochs, mean = list$meanFitnesses, best = list$BestFitnesses)  
   
-  ggplot2::ggplot(data, aes(x = epochs)) +
-    geom_point(aes(y = best, color = "Best"), size = 2, shape = 16, fill = "white") +
-    geom_point(aes(y = mean, color = "Mean"), size = 2, shape = 16, fill = "white") +
-    geom_segment(aes(x = epochs, xend = dplyr::lead(epochs, default = last(epochs)), y = mean, yend = lead(mean, default = last(mean))), color = mean_color, size = 0.5, linetype = "dashed") +
-    geom_segment(aes(x = epochs, xend = dplyr::lead(epochs, default = last(epochs)), y = best, yend = lead(best, default = last(best))), color = best_color, size = 0.5, linetype = "dashed") +
-    scale_color_manual(values = c(best_color, mean_color)) +
-    labs(title = "Evolution of the population", x = xlab, y = ylab) +
-    theme_bw() +
-    theme(plot.title = element_text(face = "bold", size = unit(16, "pt"), margin = margin(b = 10)),
-          axis.title = element_text(face = "bold", size = unit(14, "pt")),
-          axis.text = element_text(size = unit(12, "pt")),
-          legend.title = element_blank(),
-          legend.text = element_text(face = "bold", size = unit(12, "pt")),
-          legend.position = "top")
+  ggplot2::ggplot(data, ggplot2::aes(x = .data$epochs)) +
+    ggplot2::geom_point(ggplot2::aes(y = .data$best, color = "Best"), size = 2, shape = 16, fill = "white") +
+    ggplot2::geom_point(ggplot2::aes(y = .data$mean, color = "Mean"), size = 2, shape = 16, fill = "white") +
+    ggplot2::geom_segment(ggplot2::aes(x = .data$epochs, 
+                                       xend = dplyr::lead(.data$epochs, default = dplyr::last(.data$epochs)), 
+                                       y = .data$mean, 
+                                       yend = dplyr::lead(.data$mean, default = dplyr::last(.data$mean))), 
+                          color = mean_color, size = 0.5, linetype = "dashed") +
+    ggplot2::geom_segment(ggplot2::aes(x = .data$epochs, 
+                                       xend = dplyr::lead(.data$epochs, default = dplyr::last(.data$epochs)), 
+                                       y = .data$best, 
+                                       yend = dplyr::lead(.data$best, default = dplyr::last(.data$best))), 
+                          color = best_color, size = 0.5, linetype = "dashed") +
+    ggplot2::scale_color_manual(values = c(best_color, mean_color)) +
+    ggplot2::labs(title = "Evolution of the population", x = xlab, y = ylab) +
+    ggplot2::theme_bw() +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(face = "bold", size = ggplot2::unit(16, "pt"), margin = ggplot2::margin(b = 10)),
+      axis.title = ggplot2::element_text(face = "bold", size = ggplot2::unit(14, "pt")),
+      axis.text = ggplot2::element_text(size = ggplot2::unit(12, "pt")),
+      legend.title = ggplot2::element_blank(),
+      legend.text = ggplot2::element_text(face = "bold", size = ggplot2::unit(12, "pt")),
+      legend.position = "top"
+    )
 }
 
 #' Make a Quantile-Quantile diagram from the output of the MCMC algorithm (DistributionAproximation)
@@ -45,32 +56,33 @@ plot_evolution <- function(list, mean_color = "#F2A900", best_color = "#008080",
 #' (number of patient taking the cocktail > beta)
 #' @param color The color of the dashed line of the qq-plot
 #' 
-#' @import ggplot2
+#' @importFrom ggplot2 ggplot aes geom_point geom_abline theme_minimal labs
 #' @export
-qq_plot_output <- function(estimated, true, filtered = F, color = "steelblue"){
-  requireNamespace(ggplot2)
-  if(filtered){
+qq_plot_output <- function(estimated, true, filtered = FALSE, color = "steelblue") {
+  
+  requireNamespace("ggplot2")
+  
+  if (filtered) {
     estimated_distribution <- histogramToDitribution(estimated$FilteredDistribution[2:length(estimated$FilteredDistribution)])
     true_distribution <- histogramToDitribution(true$FilteredDistribution[2:length(true$FilteredDistribution)])
-  }
-  else{
+  } else {
     estimated_distribution <- histogramToDitribution(estimated$Distribution[2:length(estimated$Distribution)])
     true_distribution <- histogramToDitribution(true$Distribution[2:length(true$Distribution)])
   }
   
   num_quantiles <- min(length(estimated_distribution), length(true_distribution))
-  probs <- seq(0,1, length.out = num_quantiles)
+  probs <- seq(0, 1, length.out = num_quantiles)
   
   quantiles_estim <- quantile(estimated_distribution, probs)
   quantiles_true <- quantile(true_distribution, probs)
   
   qq_df <- data.frame(estimated_quantiles = quantiles_estim, true_quantiles = quantiles_true)
-  View(qq_df)
-  ggplot(qq_df, aes(x = estimated_quantiles, y = true_quantiles)) +
-    geom_point() +
-    geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = color) + # Adds a reference line y = x
-    theme_minimal() +
-    labs(x = "Estimated Distribution", y = "True Distribution", title = "QQ Plot of Estimated vs True distribution")
+  
+  ggplot2::ggplot(qq_df, ggplot2::aes(x = .data$estimated_quantiles, y = .data$true_quantiles)) +
+    ggplot2::geom_point() +
+    ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = color) + # Adds a reference line y = x
+    ggplot2::theme_minimal() +
+    ggplot2::labs(x = "Estimated Distribution", y = "True Distribution", title = "QQ Plot of Estimated vs True Distribution")
 }
 
 #' Plot the histogram of the approximation of the RR distribution 
@@ -81,29 +93,27 @@ qq_plot_output <- function(estimated, true, filtered = F, color = "steelblue"){
 #' @param sqrt A Boolean to specify whether we normalize the freq_array or not, it is recommended on large random walk.
 #' @param xlab Label of X axis
 #'
-#' @import ggplot2
+#' @importFrom ggplot2 ggplot aes geom_histogram labs theme_minimal after_stat
 #' @importFrom dplyr data_frame
+#' @importFrom rlang .data
 #' @export
-plot_frequency <- function(freq_array, sqrt = F, binwidth = .1, hist_color = "#69b3a2", density_color = "#FF5733",
+plot_frequency <- function(freq_array, sqrt = FALSE, binwidth = 0.1, hist_color = "#69b3a2", density_color = "#FF5733",
                            xlab = "Score") {
-  requireNamespace(dplyr)
-  requireNamespace(ggplot2)
+  requireNamespace("dplyr")
+  requireNamespace("ggplot2")
   
   # Create a data frame from the returned value array
-  if(sqrt){
+  if (sqrt) {
     df <- data.frame(x = histogramToDitribution(sqrt(freq_array)))
-    y_lab = "sqrt(frequency)"
-  }else{
+    y_lab <- "sqrt(frequency)"
+  } else {
     df <- data.frame(x = histogramToDitribution(freq_array))
-    y_lab = "frequency"
+    y_lab <- "frequency"
   }
   
   # Create histogram plot
-  ggplot(df, aes(x = x, y = after_stat(density))) +
-    geom_histogram(binwidth = binwidth, fill = hist_color, color = "#e9ecef") +
-    labs(title = "The approximation of the distribution histogram", x = xlab, y = y_lab) +
-    theme_minimal()# +
-    #geom_density(color = density_color, size = 1, alpha = .2, fill = density_color)
+  ggplot2::ggplot(df, ggplot2::aes(x = .data$x, y = ggplot2::after_stat(density))) +
+    ggplot2::geom_histogram(binwidth = binwidth, fill = hist_color, color = "#e9ecef") +
+    ggplot2::labs(title = "The approximation of the distribution histogram", x = xlab, y = y_lab) +
+    ggplot2::theme_minimal()
 }
-
-

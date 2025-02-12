@@ -9,6 +9,7 @@
 #' @export
 hclust_genetic_solution <- function(genetic_results,ATCtree, dist.normalize = T,
                                     method = "complete"){
+  requireNamespace("stats")
   
   if(dist.normalize){
     divergence <- get_dissimilarity_from_genetic_results(genetic_results, ATCtree)
@@ -16,8 +17,8 @@ hclust_genetic_solution <- function(genetic_results,ATCtree, dist.normalize = T,
     divergence <- get_dissimilarity_from_genetic_results(genetic_results, ATCtree, F)
   }
   divergence <- do.call(rbind,divergence)
-  divergence <- as.dist(divergence)
-  hc <- hclust(divergence, method = method)
+  divergence <- stats::as.dist(divergence)
+  hc <- stats::hclust(divergence, method = method)
   
   return (hc)
 }
@@ -50,7 +51,7 @@ clustering_genetic_algorithm <- function(genetic_results,ATCtree,dist.normalize 
   
   umap_results <- umap::umap(divergence, config = umap_config)
   layout <- umap_results$layout
-  dbscan_results <- dbscan::dbscan(umap)
+  dbscan_results <- dbscan::dbscan(layout)
   return (data.frame(cocktails = genetic_results,
                      UMAP1 = umap_results$layout[,1],
                      UMAP2 = umap_results$layout[,2],

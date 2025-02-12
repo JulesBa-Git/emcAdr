@@ -1,14 +1,22 @@
 Package: emcAdr
 Type: Package
-Title: Evolutionary version of the Metropolis-Hastings algorithm
+Title: Evolutionary Version of the Metropolis-Hastings Algorithm
 Version: 1.2
 Date: 2025-01-31
-Author: Bangard Jules 
-Maintainer: Bangard Jules <jules.bangard@etu.unistra.com>
-Description: Evolutionary version of the Metropolis-Hastings algorithm. This package has been done to run long Markov Chain trajectories, it is designed to be used with individuals case safety reports data (file containing patients drug intake and experienced adverse event).
+Author: Bangard Jules
+Maintainer: Bangard Jules <jules.bangard@etu.unistra.fr>
+Description: Provides an evolutionary version of the Metropolis-Hastings algorithm,
+    designed to run long Markov Chain trajectories. This package is optimized for 
+    analyzing individual case safety reports (ICSRs), which contain patient drug 
+    intake data and related adverse events.
 License: GPL-3
-Imports: Rcpp (>= 1.0.7), ggplot2, dplyr, umap, dbscan
+Imports: 
+    Rcpp (>= 1.0.7), 
+    ggplot2, 
+    dplyr, 
+    umap, 
+    dbscan,
+    stats
 LinkingTo: Rcpp, RcppArmadillo
 RoxygenNote: 7.2.3
 LazyData: true
-Suggests: 
