@@ -26,3 +26,23 @@ A numeric value representing the empirical p-value
 \description{
 Calculate p-value of sampled value
 }
+\examples{
+\dontrun{
+data("ATC_Tree_UpperBound_2024")
+data("FAERS_myopathy")
+
+cocktails = list(c(561, 904),
+               c(1902, 4585))
+               
+estimated_score_distribution = DistributionApproximation(epochs = 10,
+            ATCtree = ATC_Tree_UpperBound_2024,
+            observations = FAERS_myopathy, ...)
+            
+Hypergeom_of_cocktails = compute_hypergeom_on_list(cocktails = cocktails,
+                              ATCtree = ATC_Tree_UpperBound_2024, 
+                              observations = FAERS_myopathy, ...)
+            
+p_value = p_value_on_sampled(empirical_distribution = estimated_score_distribution,
+      sampled_values = Hypergeom_of_cocktails, ...)
+}
+}

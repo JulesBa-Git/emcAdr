@@ -29,3 +29,14 @@ plot_frequency(
 \description{
 Plot the histogram of the approximation of the RR distribution
 }
+\examples{
+\dontrun{
+data("ATC_Tree_UpperBound_2024")
+data("FAERS_myopathy")
+
+estimation = DistributionApproximation(epochs = 10, ATCtree = ATC_Tree_UpperBound_2024,
+            observations = FAERS_myopathy, ...)
+
+plot_frequency(freq_array = estimation$ScoreDistribution, ...)
+}
+}

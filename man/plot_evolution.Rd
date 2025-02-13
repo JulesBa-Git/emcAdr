@@ -26,3 +26,15 @@ plot_evolution(
 \description{
 Plot the evolution of the mean and the best value of the population used by the GeneticAlgorithm
 }
+\examples{
+\dontrun{
+data("ATC_Tree_UpperBound_2024")
+data("FAERS_myopathy")
+
+results = GeneticAlgorithm(epochs = 10, nbIndividuals = 100, 
+            ATCtree = ATC_Tree_UpperBound_2024,
+            observations = FAERS_myopathy, ...)
+
+plot_evolution(list = results, ...)
+}
+}

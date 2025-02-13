@@ -10,6 +10,18 @@
 #' @import dplyr
 #' @importFrom grid units
 #' @importFrom rlang .data
+#' 
+#' @examples
+#' \dontrun{
+#' data("ATC_Tree_UpperBound_2024")
+#' data("FAERS_myopathy")
+#' 
+#' results = GeneticAlgorithm(epochs = 10, nbIndividuals = 100, 
+#'             ATCtree = ATC_Tree_UpperBound_2024,
+#'             observations = FAERS_myopathy, ...)
+#' 
+#' plot_evolution(list = results, ...)
+#'}
 #' @export
 #'
 plot_evolution <- function(list, mean_color = "#F2A900", best_color = "#008080", xlab = "Epochs", ylab = "Score") {
@@ -57,17 +69,32 @@ plot_evolution <- function(list, mean_color = "#F2A900", best_color = "#008080",
 #' @param color The color of the dashed line of the qq-plot
 #' 
 #' @importFrom ggplot2 ggplot aes geom_point geom_abline theme_minimal labs
+#' @examples
+#' \dontrun{
+#' data("ATC_Tree_UpperBound_2024")
+#' data("FAERS_myopathy")
+#' 
+#' estimated_score_distribution = DistributionApproximation(epochs = 10,
+#'             ATCtree = ATC_Tree_UpperBound_2024,
+#'             observations = FAERS_myopathy, Smax =2, ...)
+#'             
+#' true_score_distribution = trueDistributionSizeTwoCocktail(ATCtree = ATC_Tree_UpperBound_2024,
+#'             observations = FAERS_myopathy, beta = 4, ...)
+#' 
+#' qq_plot_output(estimated = estimated_score_distribution,
+#'                 true = true_score_distribution, ...)
+#'}
 #' @export
 qq_plot_output <- function(estimated, true, filtered = FALSE, color = "steelblue") {
   
   requireNamespace("ggplot2")
   
   if (filtered) {
-    estimated_distribution <- histogramToDitribution(estimated$FilteredDistribution[2:length(estimated$FilteredDistribution)])
-    true_distribution <- histogramToDitribution(true$FilteredDistribution[2:length(true$FilteredDistribution)])
+    estimated_distribution <- histogramToDitribution(estimated$Filtered_score_distribution[2:length(estimated$Filtered_score_distribution)])
+    true_distribution <- histogramToDitribution(true$Filtered_score_distribution[2:length(true$Filtered_score_distribution)])
   } else {
-    estimated_distribution <- histogramToDitribution(estimated$Distribution[2:length(estimated$Distribution)])
-    true_distribution <- histogramToDitribution(true$Distribution[2:length(true$Distribution)])
+    estimated_distribution <- histogramToDitribution(estimated$ScoreDistribution[2:length(estimated$ScoreDistribution)])
+    true_distribution <- histogramToDitribution(true$ScoreDistribution[2:length(true$ScoreDistribution)])
   }
   
   num_quantiles <- min(length(estimated_distribution), length(true_distribution))
@@ -96,6 +123,16 @@ qq_plot_output <- function(estimated, true, filtered = FALSE, color = "steelblue
 #' @importFrom ggplot2 ggplot aes geom_histogram labs theme_minimal after_stat
 #' @importFrom dplyr data_frame
 #' @importFrom rlang .data
+#' @examples
+#' \dontrun{
+#' data("ATC_Tree_UpperBound_2024")
+#' data("FAERS_myopathy")
+#' 
+#' estimation = DistributionApproximation(epochs = 10, ATCtree = ATC_Tree_UpperBound_2024,
+#'             observations = FAERS_myopathy, ...)
+#' 
+#' plot_frequency(freq_array = estimation$ScoreDistribution, ...)
+#'}
 #' @export
 plot_frequency <- function(freq_array, sqrt = FALSE, binwidth = 0.1, hist_color = "#69b3a2", density_color = "#FF5733",
                            xlab = "Score") {

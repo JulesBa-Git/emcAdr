@@ -5,26 +5,44 @@
 #' @param isFiltered A boolean representing if we want to use the filtered distribution or the distribution as is (False by default)
 #' @param includeZeroValue A boolean that indicate if you want to take into account the null score (False by default)
 #' @return A numeric value representing the empirical p-value
-#'
+#' @examples
+#' \dontrun{
+#' data("ATC_Tree_UpperBound_2024")
+#' data("FAERS_myopathy")
+#' 
+#' cocktails = list(c(561, 904),
+#'                c(1902, 4585))
+#'                
+#' estimated_score_distribution = DistributionApproximation(epochs = 10,
+#'             ATCtree = ATC_Tree_UpperBound_2024,
+#'             observations = FAERS_myopathy, ...)
+#'             
+#' Hypergeom_of_cocktails = compute_hypergeom_on_list(cocktails = cocktails,
+#'                               ATCtree = ATC_Tree_UpperBound_2024, 
+#'                               observations = FAERS_myopathy, ...)
+#'             
+#' p_value = p_value_on_sampled(empirical_distribution = estimated_score_distribution,
+#'       sampled_values = Hypergeom_of_cocktails, ...)
+#'}
 #' @export
 p_value_on_sampled <- function(empirical_distribution, sampled_values, isFiltered = F, includeZeroValue = F) {
   # Sort empirical distribution in ascending order (if the distribution comes. from 
   # the histogramToDitribution function it should already be sorted)
   if(isFiltered){
     if(includeZeroValue){
-      empirical_distribution_array <- histogramToDitribution(empirical_distribution$FilteredDistribution)
+      empirical_distribution_array <- histogramToDitribution(empirical_distribution$Filtered_score_distribution)
       }else{
-      empirical_distribution_array <- histogramToDitribution(empirical_distribution$FilteredDistribution[2:length(
-        empirical_distribution$FilteredDistribution)])
+      empirical_distribution_array <- histogramToDitribution(empirical_distribution$Filtered_score_distribution[2:length(
+        empirical_distribution$Filtered_score_distribution)])
       }
     empirical_distribution_array <- append(empirical_distribution_array, empirical_distribution$OutstandingRR)
   }
   else{
     if(includeZeroValue){
-      empirical_distribution_array <- histogramToDitribution(empirical_distribution$Distribution)
+      empirical_distribution_array <- histogramToDitribution(empirical_distribution$ScoreDistribution)
     }else{
-      empirical_distribution_array <- histogramToDitribution(empirical_distribution$Distribution[2:length(
-        empirical_distribution$Distribution)])
+      empirical_distribution_array <- histogramToDitribution(empirical_distribution$ScoreDistribution[2:length(
+        empirical_distribution$ScoreDistribution)])
     }
     empirical_distribution_array <- append(empirical_distribution_array, empirical_distribution$OutstandingRR)
   }
@@ -51,46 +69,60 @@ p_value_on_sampled <- function(empirical_distribution, sampled_values, isFiltere
 #' @param method A string, either "TV" or "KL" to respectively use the total variation distance or the Kullback-Leibler divergence. (default = "TV")
 #' @param Filtered Should we use the filtered distribution or the normal one
 #' @return A numeric value representing the divergence of the 2 distributions
+#' @examples
+#' \dontrun{
+#' data("ATC_Tree_UpperBound_2024")
+#' data("FAERS_myopathy")
 #' 
+#' estimated_score_distribution = DistributionApproximation(epochs = 10,
+#'             ATCtree = ATC_Tree_UpperBound_2024,
+#'             observations = FAERS_myopathy, Smax =2, ...)
+#'             
+#' true_score_distribution = trueDistributionSizeTwoCocktail(ATCtree = ATC_Tree_UpperBound_2024,
+#'             observations = FAERS_myopathy, beta = 4, ...)
+#' 
+#' divergence <- calculate_divergence(empirical_distribution = estimated_score_distribution,
+#'                 true_distribution = true_score_distribution, ...)
+#'}
 #' @export
 calculate_divergence <- function(empirical_distribution, true_distribution, method = "TV", Filtered = F){
-  RRmax <- (length(empirical_distribution$Distribution) - 1) / 10
+  RRmax <- (length(empirical_distribution$ScoreDistribution) - 1) / 10
   
   if(RRmax > 30){
     if(Filtered){
       dist_ouststandingRR <- OutsandingScoreToDistribution(true_distribution$OutstandingRR, RRmax)
-      length(true_distribution$FilteredDistribution) <- length(dist_ouststandingRR)
-      true_distribution$FilteredDistribution[is.na(true_distribution$FilteredDistribution)] <- 0
-      true_distribution$FilteredDistribution <- true_distribution$FilteredDistribution + dist_ouststandingRR
+      length(true_distribution$Filtered_score_distribution) <- length(dist_ouststandingRR)
+      true_distribution$Filtered_score_distribution[is.na(true_distribution$Filtered_score_distribution)] <- 0
+      true_distribution$Filtered_score_distribution <- true_distribution$Filtered_score_distribution + dist_ouststandingRR
     }
     else{
       dist_ouststandingRR <- OutsandingScoreToDistribution(true_distribution$OutstandingRR, RRmax)
-      length(true_distribution$Distribution) <- length(dist_ouststandingRR)
-      true_distribution$Distribution[is.na(true_distribution$Distribution)] <- 0
-      true_distribution$Distribution <- true_distribution$Distribution + dist_ouststandingRR
+      length(true_distribution$ScoreDistribution) <- length(dist_ouststandingRR)
+      true_distribution$ScoreDistribution[is.na(true_distribution$ScoreDistribution)] <- 0
+      true_distribution$ScoreDistribution <- true_distribution$ScoreDistribution + dist_ouststandingRR
     }
   }
   else if(RRmax < 30){
     if(Filtered){
-      true_distribution$FilteredDistribution[((RRmax*10)+1)] <- sum(true_distribution$FilteredDistribution[((RRmax*10)+1):length(true_distribution$FilteredDistribution)]) + length(true_distribution$OutstandingRR)
-      length(true_distribution$FilteredDistribution) <- ((RRmax*10)+1)
+      true_distribution$Filtered_score_distribution[((RRmax*10)+1)] <- sum(true_distribution$Filtered_score_distribution[((RRmax*10)+1):length(true_distribution$Filtered_score_distribution)]) + length(true_distribution$OutstandingRR)
+      length(true_distribution$Filtered_score_distribution) <- ((RRmax*10)+1)
     }else{
-      true_distribution$Distribution[((RRmax*10)+1)] <- sum(true_distribution$Distribution[((RRmax*10)+1):length(true_distribution$Distribution)]) + length(true_distribution$OutstandingRR)
-      length(true_distribution$Distribution) <- ((RRmax*10)+1)
+      true_distribution$ScoreDistribution[((RRmax*10)+1)] <- sum(true_distribution$ScoreDistribution[((RRmax*10)+1):length(true_distribution$ScoreDistribution)]) + length(true_distribution$OutstandingRR)
+      length(true_distribution$ScoreDistribution) <- ((RRmax*10)+1)
     }
   }
   else{
     if (Filtered) {
-      true_distribution$FilteredDistribution[((RRmax*10)+1)] <- length(true_distribution$OutstandingRR)
+      true_distribution$Filtered_score_distribution[((RRmax*10)+1)] <- length(true_distribution$OutstandingRR)
     }else{
-      true_distribution$Distribution[((RRmax*10)+1)] <- length(true_distribution$OutstandingRR)
+      true_distribution$ScoreDistribution[((RRmax*10)+1)] <- length(true_distribution$OutstandingRR)
     }
   }
   
-  #empirical_distribution$Distribution <- empirical_distribution$Distribution / sum(empirical_distribution$Distribution)
-  #true_distribution$Distribution <- true_distribution$Distribution / sum(true_distribution$Distribution)
-  adjusted_empirical <- empirical_distribution$Distribution[2:length(empirical_distribution$Distribution)] / sum(empirical_distribution$Distribution[2:length(empirical_distribution$Distribution)])
-  adjusted_true <- true_distribution$Distribution[2:length(true_distribution$Distribution)] / sum(true_distribution$Distribution[2:length(true_distribution$Distribution)])
+  #empirical_distribution$ScoreDistribution <- empirical_distribution$ScoreDistribution / sum(empirical_distribution$ScoreDistribution)
+  #true_distribution$ScoreDistribution <- true_distribution$ScoreDistribution / sum(true_distribution$ScoreDistribution)
+  adjusted_empirical <- empirical_distribution$ScoreDistribution[2:length(empirical_distribution$ScoreDistribution)] / sum(empirical_distribution$ScoreDistribution[2:length(empirical_distribution$ScoreDistribution)])
+  adjusted_true <- true_distribution$ScoreDistribution[2:length(true_distribution$ScoreDistribution)] / sum(true_distribution$ScoreDistribution[2:length(true_distribution$ScoreDistribution)])
   
   if(method == "TV"){
     #return(sum(abs(empirical_distribution$Distribution - true_distribution$Distribution)))
