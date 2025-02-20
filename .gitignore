@@ -11,3 +11,4 @@ src/*.dll
 .Rbuildignore
 *.Rproj
 .Rproj.user
+inst/doc

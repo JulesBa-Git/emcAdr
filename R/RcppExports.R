@@ -48,6 +48,60 @@ OutsandingScoreToDistribution <- function(outstanding_score, max_score) {
     .Call(`_emcAdr_OutsandingScoreToDistribution`, outstanding_score, max_score)
 }
 
+#'Function used to compute the Relative Risk on a list of cocktails
+#'
+#'@param cocktails : A list containing cocktails in the form of vector of integers (ATC index)
+#'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
+#'@param observations : observation of the AE based on the medications of each patients
+#'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+#' on which we want to compute the risk distribution
+#'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
+#' 
+#'@return RR score among "cocktails" parameters
+#'@examples
+#'\dontrun{
+#' data("ATC_Tree_UpperBound_2024")
+#' data("FAERS_myopathy")
+#' 
+#' cocktails = list(c(561, 904),
+#'                c(1902, 4585))
+#' 
+#' RR_of_cocktails = compute_RR_on_list(cocktails = cocktails,
+#'                               ATCtree = ATC_Tree_UpperBound_2024, 
+#'                               observations = FAERS_myopathy, ...)
+#'}
+#'@export
+compute_RR_on_list <- function(cocktails, ATCtree, observations, num_thread = 1L) {
+    .Call(`_emcAdr_compute_RR_on_list`, cocktails, ATCtree, observations, num_thread)
+}
+
+#'Function used to compute the Hypergeometric score on a list of cocktails
+#'
+#'@param cocktails : A list containing cocktails in the form of vector of integers (ATC index)
+#'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
+#'@param observations : observation of the AE based on the medications of each patients
+#'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+#' on which we want to compute the risk distribution
+#'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
+#' 
+#'@return Hypergeometric score among "cocktails" parameters
+#'@examples
+#'\dontrun{
+#' data("ATC_Tree_UpperBound_2024")
+#' data("FAERS_myopathy")
+#' 
+#' cocktails = list(c(561, 904),
+#'                c(1902, 4585))
+#' 
+#' Hypergeom_of_cocktails = compute_hypergeom_on_list(cocktails = cocktails,
+#'                               ATCtree = ATC_Tree_UpperBound_2024, 
+#'                               observations = FAERS_myopathy, ...)
+#'}
+#'@export
+compute_hypergeom_on_list <- function(cocktails, ATCtree, observations, num_thread = 1L) {
+    .Call(`_emcAdr_compute_hypergeom_on_list`, cocktails, ATCtree, observations, num_thread)
+}
+
 #' Used to add the p_value to each cocktail of a csv_file that is an
 #' output of the genetic algorithm
 #' @param distribution_outputs A list of distribution of cocktails of different sizes
@@ -66,8 +120,59 @@ OutsandingScoreToDistribution <- function(outstanding_score, max_score) {
 #'   p_value_csv_file(score_distribution_list, "path/to/output.csv", ..)
 #' }
 #' @export
-p_value_csv_file <- function(distribution_outputs, filename, filtred_distribution = TRUE, sep = ";") {
+p_value_csv_file <- function(distribution_outputs, filename, filtred_distribution = FALSE, sep = ";") {
     invisible(.Call(`_emcAdr_p_value_csv_file`, distribution_outputs, filename, filtred_distribution, sep))
+}
+
+#' Used to add the p_value to each cocktail of an output of the genetic algorithm
+#' @param distribution_outputs A list of distribution of cocktails of different sizes
+#' in order to compute the p_value for multiple cocktail sizes
+#' @param genetic_results outputs of the genetic algorithm
+#' @param filtred_distribution Does the p-values have to be computed using filtered distribution
+#' or normal distribution (filtered distribution by default)
+#' 
+#' @examples
+#' \dontrun{
+#'   DistributionApproximationResults_size2 = DistributionApproximation(epochs = 1000, ..., Smax = 2)
+#'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 1000, ..., Smax = 3)
+#'   score_distribtuion_list = c(DistributionApproximationResults_size2,
+#'                               DistributionApproximationResults_size3)
+#'.  genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, 
+#'             ATCtree = ATC_Tree_UpperBound_2024,
+#'             observations = FAERS_myopathy, ...)
+#'   p_value_genetic_results(score_distribution_list, genetic_results, ..)
+#' }
+#' @export
+p_value_genetic_results <- function(distribution_outputs, genetic_results, filtred_distribution = FALSE) {
+    .Call(`_emcAdr_p_value_genetic_results`, distribution_outputs, genetic_results, filtred_distribution)
+}
+
+#' Used to add the p_value to each cocktail of cocktail list
+#' @param distribution_outputs A list of distribution of cocktails of different sizes
+#' in order to compute the p_value for multiple cocktail sizes
+#' @param cocktails A list containing cocktails in the form of vector of integers (ATC index)
+#' @param ATCtree ATC tree with upper bound of the DFS (without the root)
+#' @param observations observation of the AE based on the medications of each patients
+#'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+#' on which we want to compute the risk distribution
+#' @param filtred_distribution Does the p-values have to be computed using filtered distribution
+#' or normal distribution (filtered distribution by default)
+#' 
+#' @examples
+#' \dontrun{
+#'   DistributionApproximationResults_size2 = DistributionApproximation(epochs = 1000, ..., Smax = 2)
+#'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 1000, ..., Smax = 3)
+#'   score_distribtuion_list = c(DistributionApproximationResults_size2,
+#'                               DistributionApproximationResults_size3)
+#' 
+#'   cocktails = list(c(561, 904),
+#'                c(1902, 4585))
+#'.  
+#'   p_value_cocktails(score_distribution_list, cocktails, ..)
+#' }
+#' @export
+p_value_cocktails <- function(distribution_outputs, cocktails, ATCtree, observations, num_thread = 1L, filtred_distribution = FALSE) {
+    .Call(`_emcAdr_p_value_cocktails`, distribution_outputs, cocktails, ATCtree, observations, num_thread, filtred_distribution)
 }
 
 #' Function used to convert your genetic algorithm results that are stored into 
@@ -143,14 +248,14 @@ int_cocktail_to_string_cocktail <- function(cocktails, ATC_name) {
 #'@return I no problem, return a List containing :
 #' - ScoreDistribution : the distribution of the score as an array with each cells
 #' representing the number of risks =  (index-1)/ 10
-#' - OutstandingScore : An array of the score greater than max_score,
-#' - bestCockatils : the nbResults bests cocktails encountered during the run.
-#' - bestScore : Score corresponding to the bestCocktails.
+#' - Outstanding_score : An array of the score greater than max_score,
+#' - Best_cocktails : the nbResults bests cocktails encountered during the run.
+#' - Best_scores : Score corresponding to the bestCocktails.
 #' - FilteredDistribution : Distribution containing score for cocktails taken by at
 #' least beta patients.
-#' - bestCocktailsBeta : the nbResults bests cocktails taken by at least beta patients
+#' - Best_cocktails_beta : the nbResults bests cocktails taken by at least beta patients
 #' encountered during the run.
-#' - bestScoreBeta : Score corresponding to the bestCocktailsBeta.
+#' - Best_scores_beta : Score corresponding to the bestCocktailsBeta.
 #' - cocktailSize : Smax parameter used during the run.
 #'; Otherwise the list is empty
 #'
@@ -279,60 +384,6 @@ trueDistributionDrugs <- function(ATCtree, observations, beta, max_score = 1000L
 #'@export
 trueDistributionSizeTwoCocktail <- function(ATCtree, observations, beta, max_score = 100L, nbResults = 100L, num_thread = 1L) {
     .Call(`_emcAdr_trueDistributionSizeTwoCocktail`, ATCtree, observations, beta, max_score, nbResults, num_thread)
-}
-
-#'Function used to compute the Relative Risk on a list of cocktails
-#'
-#'@param cocktails : A list containing cocktails in the form of vector of integers (ATC index)
-#'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
-#'@param observations : observation of the AE based on the medications of each patients
-#'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
-#' on which we want to compute the risk distribution
-#'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
-#' 
-#'@return RR score among "cocktails" parameters
-#'@examples
-#'\dontrun{
-#' data("ATC_Tree_UpperBound_2024")
-#' data("FAERS_myopathy")
-#' 
-#' cocktails = list(c(561, 904),
-#'                c(1902, 4585))
-#' 
-#' RR_of_cocktails = compute_RR_on_list(cocktails = cocktails,
-#'                               ATCtree = ATC_Tree_UpperBound_2024, 
-#'                               observations = FAERS_myopathy, ...)
-#'}
-#'@export
-compute_RR_on_list <- function(cocktails, ATCtree, observations, num_thread = 1L) {
-    .Call(`_emcAdr_compute_RR_on_list`, cocktails, ATCtree, observations, num_thread)
-}
-
-#'Function used to compute the Hypergeometric score on a list of cocktails
-#'
-#'@param cocktails : A list containing cocktails in the form of vector of integers (ATC index)
-#'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
-#'@param observations : observation of the AE based on the medications of each patients
-#'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
-#' on which we want to compute the risk distribution
-#'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
-#' 
-#'@return Hypergeometric score among "cocktails" parameters
-#'@examples
-#'\dontrun{
-#' data("ATC_Tree_UpperBound_2024")
-#' data("FAERS_myopathy")
-#' 
-#' cocktails = list(c(561, 904),
-#'                c(1902, 4585))
-#' 
-#' Hypergeom_of_cocktails = compute_hypergeom_on_list(cocktails = cocktails,
-#'                               ATCtree = ATC_Tree_UpperBound_2024, 
-#'                               observations = FAERS_myopathy, ...)
-#'}
-#'@export
-compute_hypergeom_on_list <- function(cocktails, ATCtree, observations, num_thread = 1L) {
-    .Call(`_emcAdr_compute_hypergeom_on_list`, cocktails, ATCtree, observations, num_thread)
 }
 
 #'Function used in the reference article to compare diverse Disproportionality Analysis metrics 

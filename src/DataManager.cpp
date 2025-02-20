@@ -1,4 +1,5 @@
 #include "RcppArmadillo.h"
+#include "MCMC.h"
 #include <vector>
 #include <numeric>
 #include <iostream>
@@ -187,6 +188,101 @@ std::vector<std::vector<std::string>> check_extension_and_read_csv(
   return file;
 }
 
+//'Function used to compute the Relative Risk on a list of cocktails
+//'
+//'@param cocktails : A list containing cocktails in the form of vector of integers (ATC index)
+//'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
+//'@param observations : observation of the AE based on the medications of each patients
+//'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+//' on which we want to compute the risk distribution
+//'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
+//' 
+//'@return RR score among "cocktails" parameters
+//'@examples
+//'\dontrun{
+//' data("ATC_Tree_UpperBound_2024")
+//' data("FAERS_myopathy")
+//' 
+//' cocktails = list(c(561, 904),
+//'                c(1902, 4585))
+//' 
+//' RR_of_cocktails = compute_RR_on_list(cocktails = cocktails,
+//'                               ATCtree = ATC_Tree_UpperBound_2024, 
+//'                               observations = FAERS_myopathy, ...)
+//'}
+//'@export
+//[[Rcpp::export]]
+std::vector<double> compute_RR_on_list(const std::vector<std::vector<int>> &cocktails, 
+                                      const DataFrame& ATCtree, 
+                                      const DataFrame& observations,
+                                      int num_thread = 1)
+{
+ std::vector<double> RR;
+ RR.reserve(cocktails.size());
+ Rcpp::LogicalVector observationsADR = observations["patientADR"];
+ std::vector<std::vector<int>> observationMed = observations["patientATC"];
+ 
+ std::vector<int> upperBounds = ATCtree["upperBound"];
+ 
+ for(const auto& cocktail : cocktails){
+   RR.push_back(Individual(cocktail).computeRR(observationMed,
+                           observationsADR,
+                           upperBounds, 100000,
+                           num_thread).first);
+ }
+ return RR;
+}
+
+
+//'Function used to compute the Hypergeometric score on a list of cocktails
+//'
+//'@param cocktails : A list containing cocktails in the form of vector of integers (ATC index)
+//'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
+//'@param observations : observation of the AE based on the medications of each patients
+//'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+//' on which we want to compute the risk distribution
+//'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
+//' 
+//'@return Hypergeometric score among "cocktails" parameters
+//'@examples
+//'\dontrun{
+//' data("ATC_Tree_UpperBound_2024")
+//' data("FAERS_myopathy")
+//' 
+//' cocktails = list(c(561, 904),
+//'                c(1902, 4585))
+//' 
+//' Hypergeom_of_cocktails = compute_hypergeom_on_list(cocktails = cocktails,
+//'                               ATCtree = ATC_Tree_UpperBound_2024, 
+//'                               observations = FAERS_myopathy, ...)
+//'}
+//'@export
+//[[Rcpp::export]]
+std::vector<double> compute_hypergeom_on_list(const std::vector<std::vector<int>> &cocktails, 
+                                             const DataFrame& ATCtree, 
+                                             const DataFrame& observations,
+                                             int num_thread = 1)
+{
+ std::vector<double> Phyper;
+ Phyper.reserve(cocktails.size());
+ Rcpp::LogicalVector observationsADR = observations["patientADR"];
+ std::vector<std::vector<int>> observationsMedication = observations["patientATC"];
+ 
+ std::vector<int> upperBounds = ATCtree["upperBound"];
+ int ADRCount = std::count(observationsADR.begin(), observationsADR.end(), true);
+ int patient_number = observationsMedication.size();
+ 
+ for(const auto& cocktail : cocktails){
+   Phyper.push_back(Individual(cocktail).
+                      computePHypergeom(observationsMedication, observationsADR,
+                                        upperBounds, ADRCount, 
+                                        patient_number - ADRCount,
+                                        10000, num_thread).first);
+ }
+ 
+ return Phyper;
+}
+
 
 //' Used to add the p_value to each cocktail of a csv_file that is an
 //' output of the genetic algorithm
@@ -208,7 +304,7 @@ std::vector<std::vector<std::string>> check_extension_and_read_csv(
 //' @export
 //[[Rcpp::export]]
 void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const std::string& filename,
-                                            bool filtred_distribution = true,
+                                            bool filtred_distribution = false,
                                             const std::string & sep = ";"){
   
   std::vector<std::vector<std::string>> file = check_extension_and_read_csv(filename, sep[0]);
@@ -217,7 +313,7 @@ void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const
     return;
   }
   
-  Rcpp::Function compute_p_value = Rf_findFun(Rf_install("p_value_greater_than_empirical"),
+  Rcpp::Function compute_p_value = Rf_findFun(Rf_install("p_value_on_sampled"),
                                               R_GlobalEnv);
   
   file[0].push_back(" p_value");
@@ -231,7 +327,7 @@ void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const
       if(std::count((*it)[1].begin(), (*it)[1].end(), ':') == k-1){
         (*it).push_back(std::to_string(
                           Rcpp::as<double>(
-                            compute_p_value(list, std::stod((*it)[0]),false)
+                            compute_p_value(list, std::stod((*it)[0]),filtred_distribution)
                           )
                         ));
       }
@@ -254,6 +350,108 @@ void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const
     ofstr << line[line_size-1] << "\n";
   }
   
+}
+
+//' Used to add the p_value to each cocktail of an output of the genetic algorithm
+//' @param distribution_outputs A list of distribution of cocktails of different sizes
+//' in order to compute the p_value for multiple cocktail sizes
+//' @param genetic_results outputs of the genetic algorithm
+//' @param filtred_distribution Does the p-values have to be computed using filtered distribution
+//' or normal distribution (filtered distribution by default)
+//' 
+//' @examples
+//' \dontrun{
+//'   DistributionApproximationResults_size2 = DistributionApproximation(epochs = 1000, ..., Smax = 2)
+//'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 1000, ..., Smax = 3)
+//'   score_distribtuion_list = c(DistributionApproximationResults_size2,
+//'                               DistributionApproximationResults_size3)
+//'.  genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, 
+//'             ATCtree = ATC_Tree_UpperBound_2024,
+//'             observations = FAERS_myopathy, ...)
+//'   p_value_genetic_results(score_distribution_list, genetic_results, ..)
+//' }
+//' @export
+//[[Rcpp::export]]
+std::vector<double> p_value_genetic_results(const std::vector<Rcpp::List>& distribution_outputs, 
+                      const Rcpp::List& genetic_results,
+                      bool filtred_distribution = false){
+ 
+ Rcpp::List population_list = genetic_results["FinalPopulation"];
+ std::vector<std::vector<int>> cocktails = population_list["cocktails"];
+ std::vector<double> score = population_list["score"];
+ std::vector<double> p_value;
+ p_value.resize(cocktails.size(), std::numeric_limits<double>::infinity());
+ 
+ Rcpp::Function compute_p_value = Rf_findFun(Rf_install("p_value_on_sampled"),
+                                             R_GlobalEnv);
+ 
+ for(const Rcpp::List& list : distribution_outputs){
+    int k = list["cocktailSize"];
+    
+    for(int i = 0 ; i < cocktails.size(); ++i){
+      if(cocktails[i].size() == k){
+        p_value[i] = Rcpp::as<double>(compute_p_value(list, score[i], filtred_distribution));
+      }
+    }
+ }
+ 
+ return p_value;
+}
+
+
+//' Used to add the p_value to each cocktail of cocktail list
+//' @param distribution_outputs A list of distribution of cocktails of different sizes
+//' in order to compute the p_value for multiple cocktail sizes
+//' @param cocktails A list containing cocktails in the form of vector of integers (ATC index)
+//' @param ATCtree ATC tree with upper bound of the DFS (without the root)
+//' @param observations observation of the AE based on the medications of each patients
+//'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
+//' on which we want to compute the risk distribution
+//' @param filtred_distribution Does the p-values have to be computed using filtered distribution
+//' or normal distribution (filtered distribution by default)
+//' 
+//' @examples
+//' \dontrun{
+//'   DistributionApproximationResults_size2 = DistributionApproximation(epochs = 1000, ..., Smax = 2)
+//'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 1000, ..., Smax = 3)
+//'   score_distribtuion_list = c(DistributionApproximationResults_size2,
+//'                               DistributionApproximationResults_size3)
+//' 
+//'   cocktails = list(c(561, 904),
+//'                c(1902, 4585))
+//'.  
+//'   p_value_cocktails(score_distribution_list, cocktails, ..)
+//' }
+//' @export
+//[[Rcpp::export]]
+std::vector<double> p_value_cocktails(const std::vector<Rcpp::List>& distribution_outputs, 
+                                           const std::vector<std::vector<int>>& cocktails,
+                                           const DataFrame& ATCtree,
+                                           const DataFrame& observations,
+                                           int num_thread = 1,
+                                           bool filtred_distribution = false){
+ 
+ std::vector<double> score = compute_hypergeom_on_list(cocktails,
+                                                       ATCtree,
+                                                       observations,
+                                                       num_thread);
+ std::vector<double> p_value;
+ p_value.resize(cocktails.size(), std::numeric_limits<double>::infinity());
+ 
+ Rcpp::Function compute_p_value = Rf_findFun(Rf_install("p_value_on_sampled"),
+                                             R_GlobalEnv);
+ 
+ for(const Rcpp::List& list : distribution_outputs){
+   int k = list["cocktailSize"];
+   
+   for(int i = 0 ; i < cocktails.size(); ++i){
+     if(cocktails[i].size() == k){
+       p_value[i] = Rcpp::as<double>(compute_p_value(list, score[i], filtred_distribution));
+     }
+   }
+ }
+ 
+ return p_value;
 }
 
 //' Function used to convert your genetic algorithm results that are stored into 

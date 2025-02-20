@@ -49,14 +49,14 @@ one would be added to the distribution as the value max_score. Default is 500}
 I no problem, return a List containing :
 - ScoreDistribution : the distribution of the score as an array with each cells
 representing the number of risks =  (index-1)/ 10
-- OutstandingScore : An array of the score greater than max_score,
-- bestCockatils : the nbResults bests cocktails encountered during the run.
-- bestScore : Score corresponding to the bestCocktails.
+- Outstanding_score : An array of the score greater than max_score,
+- Best_cocktails : the nbResults bests cocktails encountered during the run.
+- Best_scores : Score corresponding to the bestCocktails.
 - FilteredDistribution : Distribution containing score for cocktails taken by at
 least beta patients.
-- bestCocktailsBeta : the nbResults bests cocktails taken by at least beta patients
+- Best_cocktails_beta : the nbResults bests cocktails taken by at least beta patients
 encountered during the run.
-- bestScoreBeta : Score corresponding to the bestCocktailsBeta.
+- Best_scores_beta : Score corresponding to the bestCocktailsBeta.
 - cocktailSize : Smax parameter used during the run.
 ; Otherwise the list is empty
 }

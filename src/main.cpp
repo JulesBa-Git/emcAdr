@@ -41,14 +41,14 @@ using Rcpp::DataFrame;
 //'@return I no problem, return a List containing :
 //' - ScoreDistribution : the distribution of the score as an array with each cells
 //' representing the number of risks =  (index-1)/ 10
-//' - OutstandingScore : An array of the score greater than max_score,
-//' - bestCockatils : the nbResults bests cocktails encountered during the run.
-//' - bestScore : Score corresponding to the bestCocktails.
+//' - Outstanding_score : An array of the score greater than max_score,
+//' - Best_cocktails : the nbResults bests cocktails encountered during the run.
+//' - Best_scores : Score corresponding to the bestCocktails.
 //' - FilteredDistribution : Distribution containing score for cocktails taken by at
 //' least beta patients.
-//' - bestCocktailsBeta : the nbResults bests cocktails taken by at least beta patients
+//' - Best_cocktails_beta : the nbResults bests cocktails taken by at least beta patients
 //' encountered during the run.
-//' - bestScoreBeta : Score corresponding to the bestCocktailsBeta.
+//' - Best_scores_beta : Score corresponding to the bestCocktailsBeta.
 //' - cocktailSize : Smax parameter used during the run.
 //'; Otherwise the list is empty
 //'
@@ -309,11 +309,11 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
     Rcpp::Rcout << "number of false cocktail concidered in the distribution during the run : " << falseAcceptedCocktailCount << '\n';
   }
   
-  return Rcpp::List::create(Rcpp::Named("ScoreDistribution") = score_distribution, Rcpp::Named("OutstandingScore") = outstanding_score, 
-                            Rcpp::Named("bestCockatils") = returnedMed, Rcpp::Named("bestScore") = returned_score,
-                            Rcpp::Named("FilteredDistribution") = score_distribution_beta,
-                            Rcpp::Named("bestCocktailsBeta") = returnedMedBeta,
-                            Rcpp::Named("bestScoreBeta") = returned_scoreBeta,
+  return Rcpp::List::create(Rcpp::Named("ScoreDistribution") = score_distribution, Rcpp::Named("Outstanding_score") = outstanding_score, 
+                            Rcpp::Named("Best_cocktails") = returnedMed, Rcpp::Named("Best_scores") = returned_score,
+                            Rcpp::Named("Filtered_score_distribution") = score_distribution_beta,
+                            Rcpp::Named("Best_cocktails_beta") = returnedMedBeta,
+                            Rcpp::Named("Best_scores_beta") = returned_scoreBeta,
                             Rcpp::Named("cocktailSize") = Smax);
 }
 
@@ -799,100 +799,7 @@ Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataF
                             Rcpp::Named("Best_scores_beta") = returned_scoreBeta);
 }
 
-//'Function used to compute the Relative Risk on a list of cocktails
-//'
-//'@param cocktails : A list containing cocktails in the form of vector of integers (ATC index)
-//'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
-//'@param observations : observation of the AE based on the medications of each patients
-//'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
-//' on which we want to compute the risk distribution
-//'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
-//' 
-//'@return RR score among "cocktails" parameters
-//'@examples
-//'\dontrun{
-//' data("ATC_Tree_UpperBound_2024")
-//' data("FAERS_myopathy")
-//' 
-//' cocktails = list(c(561, 904),
-//'                c(1902, 4585))
-//' 
-//' RR_of_cocktails = compute_RR_on_list(cocktails = cocktails,
-//'                               ATCtree = ATC_Tree_UpperBound_2024, 
-//'                               observations = FAERS_myopathy, ...)
-//'}
-//'@export
-//[[Rcpp::export]]
-std::vector<double> compute_RR_on_list(const std::vector<std::vector<int>> &cocktails, 
-                                       const DataFrame& ATCtree, 
-                                       const DataFrame& observations,
-                                       int num_thread = 1)
-{
-  std::vector<double> RR;
-  RR.reserve(cocktails.size());
-  Rcpp::LogicalVector observationsADR = observations["patientADR"];
-  std::vector<std::vector<int>> observationMed = observations["patientATC"];
-  
-  std::vector<int> upperBounds = ATCtree["upperBound"];
-  
-  for(const auto& cocktail : cocktails){
-    RR.push_back(Individual(cocktail).computeRR(observationMed,
-                                               observationsADR,
-                                               upperBounds, 100000,
-                                               num_thread).first);
-  }
-  return RR;
-}
 
-
-//'Function used to compute the Hypergeometric score on a list of cocktails
-//'
-//'@param cocktails : A list containing cocktails in the form of vector of integers (ATC index)
-//'@param ATCtree : ATC tree with upper bound of the DFS (without the root)
-//'@param observations : observation of the AE based on the medications of each patients
-//'(a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
-//' on which we want to compute the risk distribution
-//'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
-//' 
-//'@return Hypergeometric score among "cocktails" parameters
-//'@examples
-//'\dontrun{
-//' data("ATC_Tree_UpperBound_2024")
-//' data("FAERS_myopathy")
-//' 
-//' cocktails = list(c(561, 904),
-//'                c(1902, 4585))
-//' 
-//' Hypergeom_of_cocktails = compute_hypergeom_on_list(cocktails = cocktails,
-//'                               ATCtree = ATC_Tree_UpperBound_2024, 
-//'                               observations = FAERS_myopathy, ...)
-//'}
-//'@export
-//[[Rcpp::export]]
-std::vector<double> compute_hypergeom_on_list(const std::vector<std::vector<int>> &cocktails, 
-                                              const DataFrame& ATCtree, 
-                                              const DataFrame& observations,
-                                              int num_thread = 1)
-{
-  std::vector<double> Phyper;
-  Phyper.reserve(cocktails.size());
-  Rcpp::LogicalVector observationsADR = observations["patientADR"];
-  std::vector<std::vector<int>> observationsMedication = observations["patientATC"];
-  
-  std::vector<int> upperBounds = ATCtree["upperBound"];
-  int ADRCount = std::count(observationsADR.begin(), observationsADR.end(), true);
-  int patient_number = observationsMedication.size();
-  
-  for(const auto& cocktail : cocktails){
-    Phyper.push_back(Individual(cocktail).
-                       computePHypergeom(observationsMedication, observationsADR,
-                                         upperBounds, ADRCount, 
-                                         patient_number - ADRCount,
-                                         10000, num_thread).first);
-  }
-  
-  return Phyper;
-} 
 
 std::vector<double> MetricCalc_2(const std::vector<int> &cocktail, 
                                   const std::vector<int>& ATClength,

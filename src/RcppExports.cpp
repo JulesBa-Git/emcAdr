@@ -46,6 +46,34 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// compute_RR_on_list
+std::vector<double> compute_RR_on_list(const std::vector<std::vector<int>>& cocktails, const DataFrame& ATCtree, const DataFrame& observations, int num_thread);
+RcppExport SEXP _emcAdr_compute_RR_on_list(SEXP cocktailsSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP num_threadSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type cocktails(cocktailsSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
+    Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_RR_on_list(cocktails, ATCtree, observations, num_thread));
+    return rcpp_result_gen;
+END_RCPP
+}
+// compute_hypergeom_on_list
+std::vector<double> compute_hypergeom_on_list(const std::vector<std::vector<int>>& cocktails, const DataFrame& ATCtree, const DataFrame& observations, int num_thread);
+RcppExport SEXP _emcAdr_compute_hypergeom_on_list(SEXP cocktailsSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP num_threadSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type cocktails(cocktailsSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
+    Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_hypergeom_on_list(cocktails, ATCtree, observations, num_thread));
+    return rcpp_result_gen;
+END_RCPP
+}
 // p_value_csv_file
 void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const std::string& filename, bool filtred_distribution, const std::string& sep);
 RcppExport SEXP _emcAdr_p_value_csv_file(SEXP distribution_outputsSEXP, SEXP filenameSEXP, SEXP filtred_distributionSEXP, SEXP sepSEXP) {
@@ -57,6 +85,35 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::string& >::type sep(sepSEXP);
     p_value_csv_file(distribution_outputs, filename, filtred_distribution, sep);
     return R_NilValue;
+END_RCPP
+}
+// p_value_genetic_results
+std::vector<double> p_value_genetic_results(const std::vector<Rcpp::List>& distribution_outputs, const Rcpp::List& genetic_results, bool filtred_distribution);
+RcppExport SEXP _emcAdr_p_value_genetic_results(SEXP distribution_outputsSEXP, SEXP genetic_resultsSEXP, SEXP filtred_distributionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::vector<Rcpp::List>& >::type distribution_outputs(distribution_outputsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type genetic_results(genetic_resultsSEXP);
+    Rcpp::traits::input_parameter< bool >::type filtred_distribution(filtred_distributionSEXP);
+    rcpp_result_gen = Rcpp::wrap(p_value_genetic_results(distribution_outputs, genetic_results, filtred_distribution));
+    return rcpp_result_gen;
+END_RCPP
+}
+// p_value_cocktails
+std::vector<double> p_value_cocktails(const std::vector<Rcpp::List>& distribution_outputs, const std::vector<std::vector<int>>& cocktails, const DataFrame& ATCtree, const DataFrame& observations, int num_thread, bool filtred_distribution);
+RcppExport SEXP _emcAdr_p_value_cocktails(SEXP distribution_outputsSEXP, SEXP cocktailsSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP num_threadSEXP, SEXP filtred_distributionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::vector<Rcpp::List>& >::type distribution_outputs(distribution_outputsSEXP);
+    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type cocktails(cocktailsSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
+    Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
+    Rcpp::traits::input_parameter< bool >::type filtred_distribution(filtred_distributionSEXP);
+    rcpp_result_gen = Rcpp::wrap(p_value_cocktails(distribution_outputs, cocktails, ATCtree, observations, num_thread, filtred_distribution));
+    return rcpp_result_gen;
 END_RCPP
 }
 // csv_to_population
@@ -171,34 +228,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// compute_RR_on_list
-std::vector<double> compute_RR_on_list(const std::vector<std::vector<int>>& cocktails, const DataFrame& ATCtree, const DataFrame& observations, int num_thread);
-RcppExport SEXP _emcAdr_compute_RR_on_list(SEXP cocktailsSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP num_threadSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type cocktails(cocktailsSEXP);
-    Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
-    Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
-    Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_RR_on_list(cocktails, ATCtree, observations, num_thread));
-    return rcpp_result_gen;
-END_RCPP
-}
-// compute_hypergeom_on_list
-std::vector<double> compute_hypergeom_on_list(const std::vector<std::vector<int>>& cocktails, const DataFrame& ATCtree, const DataFrame& observations, int num_thread);
-RcppExport SEXP _emcAdr_compute_hypergeom_on_list(SEXP cocktailsSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP num_threadSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type cocktails(cocktailsSEXP);
-    Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
-    Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
-    Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_hypergeom_on_list(cocktails, ATCtree, observations, num_thread));
-    return rcpp_result_gen;
-END_RCPP
-}
 // computeMetrics_size2
 Rcpp::DataFrame computeMetrics_size2(const std::vector<std::vector<int>>& CocktailList, const DataFrame& ATCtree, const DataFrame& observations, int num_thread);
 RcppExport SEXP _emcAdr_computeMetrics_size2(SEXP CocktailListSEXP, SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP num_threadSEXP) {
@@ -290,7 +319,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_ATCtoNumeric", (DL_FUNC) &_emcAdr_ATCtoNumeric, 2},
     {"_emcAdr_histogramToDitribution", (DL_FUNC) &_emcAdr_histogramToDitribution, 1},
     {"_emcAdr_OutsandingScoreToDistribution", (DL_FUNC) &_emcAdr_OutsandingScoreToDistribution, 2},
+    {"_emcAdr_compute_RR_on_list", (DL_FUNC) &_emcAdr_compute_RR_on_list, 4},
+    {"_emcAdr_compute_hypergeom_on_list", (DL_FUNC) &_emcAdr_compute_hypergeom_on_list, 4},
     {"_emcAdr_p_value_csv_file", (DL_FUNC) &_emcAdr_p_value_csv_file, 4},
+    {"_emcAdr_p_value_genetic_results", (DL_FUNC) &_emcAdr_p_value_genetic_results, 3},
+    {"_emcAdr_p_value_cocktails", (DL_FUNC) &_emcAdr_p_value_cocktails, 6},
     {"_emcAdr_csv_to_population", (DL_FUNC) &_emcAdr_csv_to_population, 3},
     {"_emcAdr_string_list_to_int_cocktails", (DL_FUNC) &_emcAdr_string_list_to_int_cocktails, 2},
     {"_emcAdr_int_cocktail_to_string_cocktail", (DL_FUNC) &_emcAdr_int_cocktail_to_string_cocktail, 2},
@@ -298,8 +331,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_GeneticAlgorithm", (DL_FUNC) &_emcAdr_GeneticAlgorithm, 12},
     {"_emcAdr_trueDistributionDrugs", (DL_FUNC) &_emcAdr_trueDistributionDrugs, 6},
     {"_emcAdr_trueDistributionSizeTwoCocktail", (DL_FUNC) &_emcAdr_trueDistributionSizeTwoCocktail, 6},
-    {"_emcAdr_compute_RR_on_list", (DL_FUNC) &_emcAdr_compute_RR_on_list, 4},
-    {"_emcAdr_compute_hypergeom_on_list", (DL_FUNC) &_emcAdr_compute_hypergeom_on_list, 4},
     {"_emcAdr_computeMetrics_size2", (DL_FUNC) &_emcAdr_computeMetrics_size2, 4},
     {"_emcAdr_hyperparam_test_genetic_algorithm", (DL_FUNC) &_emcAdr_hyperparam_test_genetic_algorithm, 10},
     {"_emcAdr_print_csv", (DL_FUNC) &_emcAdr_print_csv, 5},

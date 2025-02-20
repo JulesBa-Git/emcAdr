@@ -3,14 +3,13 @@ Type: Package
 Title: Evolutionary Version of the Metropolis-Hastings Algorithm
 Version: 1.2
 Date: 2025-01-31
-Author: Jules Bangard [aut, cre] (<https://orcid.org/0009-0007-4670-7860>),
+Author: Jules Bangard [aut, cre] (<https://orcid.org/0009-0007-4670-7860>)
 Authors@R: c(
     person("Jules", "Bangard", , "jules.bangard@etu.unistra.fr", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0007-4670-7860")))
-Maintainer: Bangard Jules <jules.bangard@etu.unistra.fr>
+Maintainer: Jules Bangard <jules.bangard@etu.unistra.fr>
 Description: Provides computational methods for detecting adverse high-order drug interactions
-         from individual case safety reports using statistical techniques.
-         It implements algorithms to detect drug-drug interactions (DDIs) beyond pairwise analysis,
+         from individual case safety reports using statistical techniques,
          allowing the exploration of higher-order interactions among drug cocktails.
 License: GPL-3
 Imports: 
@@ -23,3 +22,8 @@ Imports:
 LinkingTo: Rcpp, RcppArmadillo
 RoxygenNote: 7.2.3
 LazyData: true
+Suggests: 
+    knitr,
+    rmarkdown,
+    gridExtra
+VignetteBuilder: knitr
