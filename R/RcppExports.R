@@ -157,7 +157,7 @@ p_value_genetic_results <- function(distribution_outputs, genetic_results, filtr
 #' on which we want to compute the risk distribution
 #' @param filtred_distribution Does the p-values have to be computed using filtered distribution
 #' or normal distribution (filtered distribution by default)
-#' 
+#' @param num_thread Number of thread to run in parallel if openMP is available, 1 by default
 #' @examples
 #' \dontrun{
 #'   DistributionApproximationResults_size2 = DistributionApproximation(epochs = 1000, ..., Smax = 2)

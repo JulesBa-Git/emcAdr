@@ -25,6 +25,8 @@ in order to compute the p_value for multiple cocktail sizes}
 (a DataFrame containing the medication on the first column and the ADR (boolean) on the second)
 on which we want to compute the risk distribution}
 
+\item{num_thread}{Number of thread to run in parallel if openMP is available, 1 by default}
+
 \item{filtred_distribution}{Does the p-values have to be computed using filtered distribution
 or normal distribution (filtered distribution by default)}
 }
