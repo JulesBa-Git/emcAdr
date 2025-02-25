@@ -7,7 +7,7 @@
 clustering_genetic_algorithm(
   genetic_results,
   ATCtree,
-  dist.normalize = T,
+  dist.normalize = TRUE,
   umap_config = NULL
 )
 }
@@ -27,7 +27,7 @@ A dataframe containing UMAP 1/2 the two coordinates of each cocktails in the pla
 Clustering of the solutions of the genetic algorithm using the hclust algorithm
 }
 \examples{
-\dontrun{
+\donttest{
  data("ATC_Tree_UpperBound_2024")
 
  results = GeneticAlgorithm(epochs = 10, nbIndividuals = 100, 

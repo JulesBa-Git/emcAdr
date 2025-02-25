@@ -48,7 +48,7 @@ encountered during the run.
 The true distribution of the score among every size-two cocktails
 }
 \examples{
-\dontrun{
+\donttest{
 data("ATC_Tree_UpperBound_2024")
 data("FAERS_myopathy")
 

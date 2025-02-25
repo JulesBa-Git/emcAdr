@@ -23,12 +23,16 @@ or normal distribution (filtered distribution by default)}
 
 \item{sep}{The separator used in the csv file (';' by default)}
 }
+\value{
+A real valued number vector representing the p-value of the inputed
+csv file filename, computed on the distribution_outputs List.
+}
 \description{
 Used to add the p_value to each cocktail of a csv_file that is an
 output of the genetic algorithm
 }
 \examples{
-\dontrun{
+\donttest{
   DistributionApproximationResults_size2 = DistributionApproximation(epochs = 1000, ..., Smax = 2)
   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 1000, ..., Smax = 3)
   score_distribtuion_list = c(DistributionApproximationResults_size2,

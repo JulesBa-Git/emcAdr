@@ -3,13 +3,16 @@
 
 #'Convert ATC Code for each patients to the corresponding DFS number of the ATC tree 
 #'
-#'@param tree : ATC tree (we assume that there is a column 'ATCCode' )
-#'@param patientATC : patients observations, for each patient we got a string 
+#' @param tree : ATC tree (we assume that there is a column 'ATCCode' )
+#' @param patientATC : patients observations, for each patient we got a string 
 #'containing taken medications (ATC code)
-#'@examples
-#' ATC_code <- c('A01AA30 A01AB03', 'A10AC30')
-#' ATCtoNumeric(ATC_code, ATC_Tree_UpperBound_2024)
-#'@export
+#' @examples
+#'  ATC_code <- c('A01AA30 A01AB03', 'A10AC30')
+#'  ATCtoNumeric(ATC_code, ATC_Tree_UpperBound_2024)
+#'
+#' @return a matrix of the same size as patientATC but containing integer 
+#' that are the index of the corresponding ATC code.
+#' @export
 ATCtoNumeric <- function(patientATC, tree) {
     .Call(`_emcAdr_ATCtoNumeric`, patientATC, tree)
 }
@@ -21,7 +24,7 @@ ATCtoNumeric <- function(patientATC, tree) {
 #'
 #'@return A vector containing sampled risk during the MCMC algorithm 
 #'@examples
-#'\dontrun{
+#'\donttest{
 #'   DistributionApproximationResults = DistributionApproximation(epochs = 1000, ...)
 #'   histogramToDitribution(DistributionApproximationResults$Distribution)
 #' }
@@ -39,7 +42,7 @@ histogramToDitribution <- function(vec) {
 #' 
 #' @return outstanding_score in a format compatible with MCMC algorithm output
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'   DistributionApproximationResults = DistributionApproximation(epochs = 1000, ..., max_score = 100)
 #'   OutsandingScoreToDistribution(DistributionApproximationResults$OutstandingScore, max_score = 100)
 #' }
@@ -59,7 +62,7 @@ OutsandingScoreToDistribution <- function(outstanding_score, max_score) {
 #' 
 #'@return RR score among "cocktails" parameters
 #'@examples
-#'\dontrun{
+#'\donttest{
 #' data("ATC_Tree_UpperBound_2024")
 #' data("FAERS_myopathy")
 #' 
@@ -86,7 +89,7 @@ compute_RR_on_list <- function(cocktails, ATCtree, observations, num_thread = 1L
 #' 
 #'@return Hypergeometric score among "cocktails" parameters
 #'@examples
-#'\dontrun{
+#'\donttest{
 #' data("ATC_Tree_UpperBound_2024")
 #' data("FAERS_myopathy")
 #' 
@@ -112,13 +115,15 @@ compute_hypergeom_on_list <- function(cocktails, ATCtree, observations, num_thre
 #' @param sep The separator used in the csv file (';' by default)
 #' 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'   DistributionApproximationResults_size2 = DistributionApproximation(epochs = 1000, ..., Smax = 2)
 #'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 1000, ..., Smax = 3)
 #'   score_distribtuion_list = c(DistributionApproximationResults_size2,
 #'                               DistributionApproximationResults_size3)
 #'   p_value_csv_file(score_distribution_list, "path/to/output.csv", ..)
 #' }
+#' @return A real valued number vector representing the p-value of the inputed
+#' csv file filename, computed on the distribution_outputs List.
 #' @export
 p_value_csv_file <- function(distribution_outputs, filename, filtred_distribution = FALSE, sep = ";") {
     invisible(.Call(`_emcAdr_p_value_csv_file`, distribution_outputs, filename, filtred_distribution, sep))
@@ -132,16 +137,19 @@ p_value_csv_file <- function(distribution_outputs, filename, filtred_distributio
 #' or normal distribution (filtered distribution by default)
 #' 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'   DistributionApproximationResults_size2 = DistributionApproximation(epochs = 1000, ..., Smax = 2)
 #'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 1000, ..., Smax = 3)
 #'   score_distribtuion_list = c(DistributionApproximationResults_size2,
 #'                               DistributionApproximationResults_size3)
-#'.  genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, 
+#'   genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, 
 #'             ATCtree = ATC_Tree_UpperBound_2024,
 #'             observations = FAERS_myopathy, ...)
 #'   p_value_genetic_results(score_distribution_list, genetic_results, ..)
 #' }
+#' @return A real valued number vector representing the p-value of the inputed
+#' genetic algorithm results (genetic_results) computed on the 
+#' distribution_outputs List.
 #' @export
 p_value_genetic_results <- function(distribution_outputs, genetic_results, filtred_distribution = FALSE) {
     .Call(`_emcAdr_p_value_genetic_results`, distribution_outputs, genetic_results, filtred_distribution)
@@ -159,7 +167,7 @@ p_value_genetic_results <- function(distribution_outputs, genetic_results, filtr
 #' or normal distribution (filtered distribution by default)
 #' @param num_thread Number of thread to run in parallel if openMP is available, 1 by default
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'   DistributionApproximationResults_size2 = DistributionApproximation(epochs = 1000, ..., Smax = 2)
 #'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 1000, ..., Smax = 3)
 #'   score_distribtuion_list = c(DistributionApproximationResults_size2,
@@ -170,6 +178,8 @@ p_value_genetic_results <- function(distribution_outputs, genetic_results, filtr
 #'.  
 #'   p_value_cocktails(score_distribution_list, cocktails, ..)
 #' }
+#' @return A real valued number vector representing the p-value of the inputed
+#' cocktails computed on the distribution_outputs List.
 #' @export
 p_value_cocktails <- function(distribution_outputs, cocktails, ATCtree, observations, num_thread = 1L, filtred_distribution = FALSE) {
     .Call(`_emcAdr_p_value_cocktails`, distribution_outputs, cocktails, ATCtree, observations, num_thread, filtred_distribution)
@@ -182,7 +192,8 @@ p_value_cocktails <- function(distribution_outputs, cocktails, ATCtree, observat
 #' @param sep the separator to use when opening the csv file (';' by default)
 #' @return An R List that can be used by other algorithms (e.g. clustering algorithm)
 #' @examples
-#' \dontrun{
+#' \donttest{
+#'   data("ATC_Tree_UpperBound_2024")
 #'   genetic_results = csv_to_population(ATC_Tree_UpperBound_2024$Name,
 #'                     "path/to/output.csv", ..)
 #' }
@@ -197,7 +208,8 @@ csv_to_population <- function(ATC_name, filename, sep = ";") {
 #' @param lines A string vector of drugs cocktail in the form "drug1:drug2:...:drug_n"
 #' @return An R List that can be used by other algorithms (e.g. clustering algorithm)
 #' @examples
-#' \dontrun{
+#' \donttest{
+#'   data("ATC_Tree_UpperBound_2024")
 #'   string_list = c('hmg coa reductase inhibitors:nervous system',
 #'                   'metformin:prasugrel')
 #'   string_list_to_int_cocktails(ATC_Tree_UpperBound_2024$Name,
@@ -216,7 +228,8 @@ string_list_to_int_cocktails <- function(ATC_name, lines) {
 #' 
 #' @return The name of integer cocktails in cocktails
 #' @examples
-#' \dontrun{
+#' \donttest{
+#'   data("ATC_Tree_UpperBound_2024")
 #'   int_list = list(c(561, 904),
 #'                c(1902, 4585))
 #'   int_cocktail_to_string_cocktail(int_list, ATC_Tree_UpperBound_2024$Name)
@@ -260,7 +273,7 @@ int_cocktail_to_string_cocktail <- function(cocktails, ATC_name) {
 #'; Otherwise the list is empty
 #'
 #'@examples
-#'\dontrun{
+#'\donttest{
 #' data("ATC_Tree_UpperBound_2024")
 #' data("FAERS_myopathy")
 #' 
@@ -297,7 +310,7 @@ DistributionApproximation <- function(epochs, ATCtree, observations, temperature
 #' - FinalPopulation : The final population of the algorithm when finished (medications
 #' and corresponding scores)
 #'@examples
-#'\dontrun{
+#'\donttest{
 #' data("ATC_Tree_UpperBound_2024")
 #' data("FAERS_myopathy")
 #' 
@@ -336,7 +349,7 @@ GeneticAlgorithm <- function(epochs, nbIndividuals, ATCtree, observations, num_t
 #' - Best_scores : Score corresponding to the Best_cocktails.
 #' - Best_scores_beta : Score corresponding to the Best_cocktails_beta.
 #'@examples
-#'\dontrun{
+#'\donttest{
 #' data("ATC_Tree_UpperBound_2024")
 #' data("FAERS_myopathy")
 #' 
@@ -374,7 +387,7 @@ trueDistributionDrugs <- function(ATCtree, observations, beta, max_score = 1000L
 #' - Best_scores : Score corresponding to the Best_cocktails.
 #' - Best_scores_beta : Score corresponding to the Best_cocktails_beta.
 #'@examples
-#'\dontrun{
+#'\donttest{
 #' data("ATC_Tree_UpperBound_2024")
 #' data("FAERS_myopathy")
 #' 
@@ -397,7 +410,7 @@ trueDistributionSizeTwoCocktail <- function(ATCtree, observations, beta, max_sco
 #'
 #'@return Multiple DA metrics computed on CocktailList cocktails
 #'@examples
-#'\dontrun{
+#'\donttest{
 #' data("ATC_Tree_UpperBound_2024")
 #' data("FAERS_myopathy")
 #' 
@@ -433,8 +446,12 @@ computeMetrics_size2 <- function(CocktailList, ATCtree, observations, num_thread
 #' @param alphas : a vector with each alphas to be tested
 #' @param path : the path where the resulting files should be written
 #' @param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
+#' @return No return value, this function should output results of the runs of the 
+#' genetic algorithm in a specific format supported by function print_csv
+#' and p_value_csv_file. The files are outputed in path which is current 
+#' directory by default.
 #'@examples
-#'\dontrun{
+#'\donttest{
 #' data("ATC_Tree_UpperBound_2024")
 #' data("FAERS_myopathy")
 #' 
@@ -466,7 +483,7 @@ hyperparam_test_genetic_algorithm <- function(epochs, nb_individuals, ATCtree, o
 #' @param ATCtree : ATC tree with upper bound of the DFS (without the root)
 #' @param csv_filename : Name of the output file, "solutions.csv" by default
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'  data("ATC_Tree_UpperBound_2024")
 #'  data("FAERS_myopathy")
 #'  files = c('250e_700ind_0.2mr_0ne_2alpha.txt',..) # results of hyperparam_test_genetic_algorithm
@@ -474,6 +491,10 @@ hyperparam_test_genetic_algorithm <- function(epochs, nb_individuals, ATCtree, o
 #'  print_csv(input_filenames = files, observations = FAERS_myopathy,
 #'           repetition = 5, ATCtree = ATC_Tree_UpperBound_2024, ...)
 #' }
+#' @return No return value, should process the output of the genetic algorithm in 
+#' files produced by hyperparam_test_genetic_algorithm and output a summary csv file.
+#' The csv file is outputed in current directory and named after the csv_filename
+#' variable (solutions.csv by default).
 #' @export
 print_csv <- function(input_filenames, observations, repetition, ATCtree, csv_filename = "solutions.csv") {
     invisible(.Call(`_emcAdr_print_csv`, input_filenames, observations, repetition, ATCtree, csv_filename))
@@ -488,7 +509,7 @@ print_csv <- function(input_filenames, observations, repetition, ATCtree, csv_fi
 #' 
 #' @return The square matrix of distances between cocktails
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'  data("ATC_Tree_UpperBound_2024")
 #'  data("FAERS_myopathy")
 #'  
@@ -513,7 +534,7 @@ get_dissimilarity_from_genetic_results <- function(genetic_results, ATCtree, nor
 #' 
 #' @return The square matrix of distances between cocktails
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'  data("ATC_Tree_UpperBound_2024")
 #'  
 #'  distance_matrix = get_dissimilarity_from_txt_file(filename = '250e_700ind_0.2mr_0ne_2alpha.txt',
@@ -534,7 +555,7 @@ get_dissimilarity_from_txt_file <- function(filename, ATCtree, normalization = T
 #' 
 #' @return The square matrix of distances between cocktails
 #'@examples
-#'\dontrun{
+#'\donttest{
 #' data("ATC_Tree_UpperBound_2024")
 #' 
 #' cocktails = list(c(561, 904),

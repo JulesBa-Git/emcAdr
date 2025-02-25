@@ -13,13 +13,16 @@ using Rcpp::DataFrame;
 // [[Rcpp::depends(RcppArmadillo)]]
 //'Convert ATC Code for each patients to the corresponding DFS number of the ATC tree 
 //'
-//'@param tree : ATC tree (we assume that there is a column 'ATCCode' )
-//'@param patientATC : patients observations, for each patient we got a string 
+//' @param tree : ATC tree (we assume that there is a column 'ATCCode' )
+//' @param patientATC : patients observations, for each patient we got a string 
 //'containing taken medications (ATC code)
-//'@examples
-//' ATC_code <- c('A01AA30 A01AB03', 'A10AC30')
-//' ATCtoNumeric(ATC_code, ATC_Tree_UpperBound_2024)
-//'@export
+//' @examples
+//'  ATC_code <- c('A01AA30 A01AB03', 'A10AC30')
+//'  ATCtoNumeric(ATC_code, ATC_Tree_UpperBound_2024)
+//'
+//' @return a matrix of the same size as patientATC but containing integer 
+//' that are the index of the corresponding ATC code.
+//' @export
 // [[Rcpp::export]]
 std::vector<std::vector<int>> ATCtoNumeric(const std::vector<std::string>&
   patientATC,const DataFrame& tree) {
@@ -75,7 +78,7 @@ std::vector<std::vector<int>> ATCtoNumeric(const std::vector<std::string>&
 //'
 //'@return A vector containing sampled risk during the MCMC algorithm 
 //'@examples
-//'\dontrun{
+//'\donttest{
 //'   DistributionApproximationResults = DistributionApproximation(epochs = 1000, ...)
 //'   histogramToDitribution(DistributionApproximationResults$Distribution)
 //' }
@@ -103,7 +106,7 @@ Rcpp::NumericVector histogramToDitribution(const std::vector<int>& vec){
 //' 
 //' @return outstanding_score in a format compatible with MCMC algorithm output
 //' @examples
-//' \dontrun{
+//' \donttest{
 //'   DistributionApproximationResults = DistributionApproximation(epochs = 1000, ..., max_score = 100)
 //'   OutsandingScoreToDistribution(DistributionApproximationResults$OutstandingScore, max_score = 100)
 //' }
@@ -199,7 +202,7 @@ std::vector<std::vector<std::string>> check_extension_and_read_csv(
 //' 
 //'@return RR score among "cocktails" parameters
 //'@examples
-//'\dontrun{
+//'\donttest{
 //' data("ATC_Tree_UpperBound_2024")
 //' data("FAERS_myopathy")
 //' 
@@ -245,7 +248,7 @@ std::vector<double> compute_RR_on_list(const std::vector<std::vector<int>> &cock
 //' 
 //'@return Hypergeometric score among "cocktails" parameters
 //'@examples
-//'\dontrun{
+//'\donttest{
 //' data("ATC_Tree_UpperBound_2024")
 //' data("FAERS_myopathy")
 //' 
@@ -294,13 +297,15 @@ std::vector<double> compute_hypergeom_on_list(const std::vector<std::vector<int>
 //' @param sep The separator used in the csv file (';' by default)
 //' 
 //' @examples
-//' \dontrun{
+//' \donttest{
 //'   DistributionApproximationResults_size2 = DistributionApproximation(epochs = 1000, ..., Smax = 2)
 //'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 1000, ..., Smax = 3)
 //'   score_distribtuion_list = c(DistributionApproximationResults_size2,
 //'                               DistributionApproximationResults_size3)
 //'   p_value_csv_file(score_distribution_list, "path/to/output.csv", ..)
 //' }
+//' @return A real valued number vector representing the p-value of the inputed
+//' csv file filename, computed on the distribution_outputs List.
 //' @export
 //[[Rcpp::export]]
 void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const std::string& filename,
@@ -360,16 +365,19 @@ void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const
 //' or normal distribution (filtered distribution by default)
 //' 
 //' @examples
-//' \dontrun{
+//' \donttest{
 //'   DistributionApproximationResults_size2 = DistributionApproximation(epochs = 1000, ..., Smax = 2)
 //'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 1000, ..., Smax = 3)
 //'   score_distribtuion_list = c(DistributionApproximationResults_size2,
 //'                               DistributionApproximationResults_size3)
-//'.  genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, 
+//'   genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, 
 //'             ATCtree = ATC_Tree_UpperBound_2024,
 //'             observations = FAERS_myopathy, ...)
 //'   p_value_genetic_results(score_distribution_list, genetic_results, ..)
 //' }
+//' @return A real valued number vector representing the p-value of the inputed
+//' genetic algorithm results (genetic_results) computed on the 
+//' distribution_outputs List.
 //' @export
 //[[Rcpp::export]]
 std::vector<double> p_value_genetic_results(const std::vector<Rcpp::List>& distribution_outputs, 
@@ -411,7 +419,7 @@ std::vector<double> p_value_genetic_results(const std::vector<Rcpp::List>& distr
 //' or normal distribution (filtered distribution by default)
 //' @param num_thread Number of thread to run in parallel if openMP is available, 1 by default
 //' @examples
-//' \dontrun{
+//' \donttest{
 //'   DistributionApproximationResults_size2 = DistributionApproximation(epochs = 1000, ..., Smax = 2)
 //'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 1000, ..., Smax = 3)
 //'   score_distribtuion_list = c(DistributionApproximationResults_size2,
@@ -422,6 +430,8 @@ std::vector<double> p_value_genetic_results(const std::vector<Rcpp::List>& distr
 //'.  
 //'   p_value_cocktails(score_distribution_list, cocktails, ..)
 //' }
+//' @return A real valued number vector representing the p-value of the inputed
+//' cocktails computed on the distribution_outputs List.
 //' @export
 //[[Rcpp::export]]
 std::vector<double> p_value_cocktails(const std::vector<Rcpp::List>& distribution_outputs, 
@@ -461,7 +471,8 @@ std::vector<double> p_value_cocktails(const std::vector<Rcpp::List>& distributio
 //' @param sep the separator to use when opening the csv file (';' by default)
 //' @return An R List that can be used by other algorithms (e.g. clustering algorithm)
 //' @examples
-//' \dontrun{
+//' \donttest{
+//'   data("ATC_Tree_UpperBound_2024")
 //'   genetic_results = csv_to_population(ATC_Tree_UpperBound_2024$Name,
 //'                     "path/to/output.csv", ..)
 //' }
@@ -505,7 +516,8 @@ Rcpp::List csv_to_population(const std::vector<std::string>& ATC_name,
 //' @param lines A string vector of drugs cocktail in the form "drug1:drug2:...:drug_n"
 //' @return An R List that can be used by other algorithms (e.g. clustering algorithm)
 //' @examples
-//' \dontrun{
+//' \donttest{
+//'   data("ATC_Tree_UpperBound_2024")
 //'   string_list = c('hmg coa reductase inhibitors:nervous system',
 //'                   'metformin:prasugrel')
 //'   string_list_to_int_cocktails(ATC_Tree_UpperBound_2024$Name,
@@ -545,7 +557,8 @@ Rcpp::List string_list_to_int_cocktails(const std::vector<std::string>& ATC_name
 //' 
 //' @return The name of integer cocktails in cocktails
 //' @examples
-//' \dontrun{
+//' \donttest{
+//'   data("ATC_Tree_UpperBound_2024")
 //'   int_list = list(c(561, 904),
 //'                c(1902, 4585))
 //'   int_cocktail_to_string_cocktail(int_list, ATC_Tree_UpperBound_2024$Name)

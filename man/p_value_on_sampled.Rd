@@ -7,8 +7,8 @@
 p_value_on_sampled(
   empirical_distribution,
   sampled_values,
-  isFiltered = F,
-  includeZeroValue = F
+  isFiltered = FALSE,
+  includeZeroValue = FALSE
 )
 }
 \arguments{
@@ -27,7 +27,7 @@ A numeric value representing the empirical p-value
 Calculate p-value of sampled value
 }
 \examples{
-\dontrun{
+\donttest{
 data("ATC_Tree_UpperBound_2024")
 data("FAERS_myopathy")
 

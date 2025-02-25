@@ -6,7 +6,7 @@
 #' @param dist.normalize Do we normalize the distance (so it bellongs to [0;1])
 #' @return the hierarchical clustering of the results of the genetic algorithm
 #' @examples
-#'\dontrun{
+#'\donttest{
 #' data("ATC_Tree_UpperBound_2024")
 #' data("FAERS_myopathy")
 #' 
@@ -18,7 +18,7 @@
 #'                  ATCtree = ATC_Tree_UpperBound_2024, ...)
 #'}
 #' @export
-hclust_genetic_solution <- function(genetic_results,ATCtree, dist.normalize = T,
+hclust_genetic_solution <- function(genetic_results,ATCtree, dist.normalize = TRUE,
                                     method = "complete"){
   requireNamespace("stats")
   
@@ -42,7 +42,7 @@ hclust_genetic_solution <- function(genetic_results,ATCtree, dist.normalize = T,
 #' @param umap_config The configuration to use in order to project the cocktails in a smaller space (umap::umap.defaults by default)
 #' @return A dataframe containing UMAP 1/2 the two coordinates of each cocktails in the plane as well as the cluster number of each cocktails
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'  data("ATC_Tree_UpperBound_2024")
 #' 
 #'  results = GeneticAlgorithm(epochs = 10, nbIndividuals = 100, 
@@ -53,7 +53,7 @@ hclust_genetic_solution <- function(genetic_results,ATCtree, dist.normalize = T,
 #'                  ATCtree = ATC_Tree_UpperBound_2024, ...)
 #'}
 #' @export
-clustering_genetic_algorithm <- function(genetic_results,ATCtree,dist.normalize = T,
+clustering_genetic_algorithm <- function(genetic_results,ATCtree,dist.normalize = TRUE,
                                          umap_config=NULL){
   requireNamespace("umap")
   requireNamespace("dbscan")

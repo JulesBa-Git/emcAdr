@@ -6,7 +6,7 @@
 #' @param includeZeroValue A boolean that indicate if you want to take into account the null score (False by default)
 #' @return A numeric value representing the empirical p-value
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data("ATC_Tree_UpperBound_2024")
 #' data("FAERS_myopathy")
 #' 
@@ -25,7 +25,8 @@
 #'       sampled_values = Hypergeom_of_cocktails, ...)
 #'}
 #' @export
-p_value_on_sampled <- function(empirical_distribution, sampled_values, isFiltered = F, includeZeroValue = F) {
+p_value_on_sampled <- function(empirical_distribution, sampled_values, isFiltered = FALSE,
+                               includeZeroValue = FALSE) {
   # Sort empirical distribution in ascending order (if the distribution comes. from 
   # the histogramToDitribution function it should already be sorted)
   if(isFiltered){
@@ -70,7 +71,7 @@ p_value_on_sampled <- function(empirical_distribution, sampled_values, isFiltere
 #' @param Filtered Should we use the filtered distribution or the normal one
 #' @return A numeric value representing the divergence of the 2 distributions
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data("ATC_Tree_UpperBound_2024")
 #' data("FAERS_myopathy")
 #' 
@@ -85,7 +86,7 @@ p_value_on_sampled <- function(empirical_distribution, sampled_values, isFiltere
 #'                 true_distribution = true_score_distribution, ...)
 #'}
 #' @export
-calculate_divergence <- function(empirical_distribution, true_distribution, method = "TV", Filtered = F){
+calculate_divergence <- function(empirical_distribution, true_distribution, method = "TV", Filtered = FALSE){
   RRmax <- (length(empirical_distribution$ScoreDistribution) - 1) / 10
   
   if(RRmax > 30){

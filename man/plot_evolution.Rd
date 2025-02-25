@@ -23,11 +23,15 @@ plot_evolution(
 
 \item{ylab}{A string specifying the label for the y-axis}
 }
+\value{
+no returned value, should plot the evolution of the genetic algorithm
+results (mean/max score for each epoch).
+}
 \description{
 Plot the evolution of the mean and the best value of the population used by the GeneticAlgorithm
 }
 \examples{
-\dontrun{
+\donttest{
 data("ATC_Tree_UpperBound_2024")
 data("FAERS_myopathy")
 

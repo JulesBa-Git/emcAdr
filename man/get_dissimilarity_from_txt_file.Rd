@@ -24,7 +24,7 @@ of the matrix is the distance between cocktails i and j in the csv file containi
 results of genetic algorithm
 }
 \examples{
-\dontrun{
+\donttest{
  data("ATC_Tree_UpperBound_2024")
  
  distance_matrix = get_dissimilarity_from_txt_file(filename = '250e_700ind_0.2mr_0ne_2alpha.txt',

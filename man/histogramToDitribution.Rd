@@ -18,7 +18,7 @@ Convert the histogram returned by the DistributionApproximation function, to a r
 (that can be used in a test for example)
 }
 \examples{
-\dontrun{
+\donttest{
   DistributionApproximationResults = DistributionApproximation(epochs = 1000, ...)
   histogramToDitribution(DistributionApproximationResults$Distribution)
 }

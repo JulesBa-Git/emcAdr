@@ -46,6 +46,12 @@ on which we want to compute the risk distribution}
 
 \item{num_thread}{: Number of thread to run in parallel if openMP is available, 1 by default}
 }
+\value{
+No return value, this function should output results of the runs of the 
+genetic algorithm in a specific format supported by function print_csv
+and p_value_csv_file. The files are outputed in path which is current 
+directory by default.
+}
 \description{
 This function can be used in order to try different set of parameters for the genetic
 algorithm in a convenient way. This will run each combination of mutation_rate,
@@ -56,7 +62,7 @@ specifying the names of each file that needs to be treated and the number of
 performed runs on each parameter set
 }
 \examples{
-\dontrun{
+\donttest{
 data("ATC_Tree_UpperBound_2024")
 data("FAERS_myopathy")
 

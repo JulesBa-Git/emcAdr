@@ -64,7 +64,7 @@ encountered during the run.
 The MCMC method that runs the random walk on a single cocktail in order to estimate the distribution of score among cocktails of size Smax.
 }
 \examples{
-\dontrun{
+\donttest{
 data("ATC_Tree_UpperBound_2024")
 data("FAERS_myopathy")
 

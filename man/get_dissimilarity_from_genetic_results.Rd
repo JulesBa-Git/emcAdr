@@ -24,7 +24,7 @@ of the matrix is the distance between cocktails i and j in the genetic_results
 list.
 }
 \examples{
-\dontrun{
+\donttest{
  data("ATC_Tree_UpperBound_2024")
  data("FAERS_myopathy")
  

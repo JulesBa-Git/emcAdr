@@ -18,12 +18,16 @@ computation function}
 
 \item{color}{The color of the dashed line of the qq-plot}
 }
+\value{
+no returned value, should plot the quantile-quantile plot
+of the estimated distribution (estimated) vs the true distribution (true).
+}
 \description{
 Make a Quantile-Quantile diagram from the output of the MCMC algorithm (DistributionAproximation)
 and the algorithm that exhaustively calculates the distribution
 }
 \examples{
-\dontrun{
+\donttest{
 data("ATC_Tree_UpperBound_2024")
 data("FAERS_myopathy")
 

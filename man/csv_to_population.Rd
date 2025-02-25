@@ -22,7 +22,8 @@ Function used to convert your genetic algorithm results that are stored into
 a .csv file to a Data structure that can be used by the clustering algorithm
 }
 \examples{
-\dontrun{
+\donttest{
+  data("ATC_Tree_UpperBound_2024")
   genetic_results = csv_to_population(ATC_Tree_UpperBound_2024$Name,
                     "path/to/output.csv", ..)
 }

@@ -20,7 +20,8 @@ Function used to convert integer cocktails (like the one outputed by the distrib
 to string cocktail in order to make them more readable
 }
 \examples{
-\dontrun{
+\donttest{
+  data("ATC_Tree_UpperBound_2024")
   int_list = list(c(561, 904),
                c(1902, 4585))
   int_cocktail_to_string_cocktail(int_list, ATC_Tree_UpperBound_2024$Name)

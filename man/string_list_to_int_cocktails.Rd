@@ -20,7 +20,8 @@ Function used to convert a string vector of drugs in form "drug1:drug2" to
 a vector of index of the ATC tree ex: c(ATC_index(drug1), ATC_index(drugs2))
 }
 \examples{
-\dontrun{
+\donttest{
+  data("ATC_Tree_UpperBound_2024")
   string_list = c('hmg coa reductase inhibitors:nervous system',
                   'metformin:prasugrel')
   string_list_to_int_cocktails(ATC_Tree_UpperBound_2024$Name,

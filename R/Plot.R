@@ -12,7 +12,7 @@
 #' @importFrom rlang .data
 #' 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data("ATC_Tree_UpperBound_2024")
 #' data("FAERS_myopathy")
 #' 
@@ -22,6 +22,8 @@
 #' 
 #' plot_evolution(list = results, ...)
 #'}
+#' @return no returned value, should plot the evolution of the genetic algorithm
+#' results (mean/max score for each epoch).
 #' @export
 #'
 plot_evolution <- function(list, mean_color = "#F2A900", best_color = "#008080", xlab = "Epochs", ylab = "Score") {
@@ -70,7 +72,7 @@ plot_evolution <- function(list, mean_color = "#F2A900", best_color = "#008080",
 #' 
 #' @importFrom ggplot2 ggplot aes geom_point geom_abline theme_minimal labs
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data("ATC_Tree_UpperBound_2024")
 #' data("FAERS_myopathy")
 #' 
@@ -84,6 +86,8 @@ plot_evolution <- function(list, mean_color = "#F2A900", best_color = "#008080",
 #' qq_plot_output(estimated = estimated_score_distribution,
 #'                 true = true_score_distribution, ...)
 #'}
+#' @return no returned value, should plot the quantile-quantile plot
+#' of the estimated distribution (estimated) vs the true distribution (true).
 #' @export
 qq_plot_output <- function(estimated, true, filtered = FALSE, color = "steelblue") {
   
@@ -113,38 +117,41 @@ qq_plot_output <- function(estimated, true, filtered = FALSE, color = "steelblue
 }
 
 #' Plot the histogram of the approximation of the RR distribution 
-#' @param freq_array The returned value of DistributionApproximation function
+#' @param estimated The ScoreDistribution element in the list 
+#' returned by the DistributionApproximation function
 #' @param binwidth The width of the histogram bins
 #' @param hist_color The fill color for the histogram bars
 #' @param density_color The color for the density curve
-#' @param sqrt A Boolean to specify whether we normalize the freq_array or not, it is recommended on large random walk.
+#' @param sqrt A Boolean to specify whether we normalize the estimated or not, it is recommended on large random walk.
 #' @param xlab Label of X axis
 #'
 #' @importFrom ggplot2 ggplot aes geom_histogram labs theme_minimal after_stat
 #' @importFrom dplyr data_frame
 #' @importFrom rlang .data
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data("ATC_Tree_UpperBound_2024")
 #' data("FAERS_myopathy")
 #' 
 #' estimation = DistributionApproximation(epochs = 10, ATCtree = ATC_Tree_UpperBound_2024,
 #'             observations = FAERS_myopathy, ...)
 #' 
-#' plot_frequency(freq_array = estimation$ScoreDistribution, ...)
+#' plot_frequency(estimated = estimation$ScoreDistribution, ...)
 #'}
+#' @return no returned value, should plot the histogram of the estimated distribution
+#' (estimated).
 #' @export
-plot_frequency <- function(freq_array, sqrt = FALSE, binwidth = 0.1, hist_color = "#69b3a2", density_color = "#FF5733",
+plot_frequency <- function(estimated, sqrt = FALSE, binwidth = 0.1, hist_color = "#69b3a2", density_color = "#FF5733",
                            xlab = "Score") {
   requireNamespace("dplyr")
   requireNamespace("ggplot2")
   
   # Create a data frame from the returned value array
   if (sqrt) {
-    df <- data.frame(x = histogramToDitribution(sqrt(freq_array)))
+    df <- data.frame(x = histogramToDitribution(sqrt(estimated)))
     y_lab <- "sqrt(frequency)"
   } else {
-    df <- data.frame(x = histogramToDitribution(freq_array))
+    df <- data.frame(x = histogramToDitribution(estimated))
     y_lab <- "frequency"
   }
   

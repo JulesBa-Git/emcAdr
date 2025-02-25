@@ -5,7 +5,7 @@
 \title{Plot the histogram of the approximation of the RR distribution}
 \usage{
 plot_frequency(
-  freq_array,
+  estimated,
   sqrt = FALSE,
   binwidth = 0.1,
   hist_color = "#69b3a2",
@@ -14,9 +14,10 @@ plot_frequency(
 )
 }
 \arguments{
-\item{freq_array}{The returned value of DistributionApproximation function}
+\item{estimated}{The ScoreDistribution element in the list 
+returned by the DistributionApproximation function}
 
-\item{sqrt}{A Boolean to specify whether we normalize the freq_array or not, it is recommended on large random walk.}
+\item{sqrt}{A Boolean to specify whether we normalize the estimated or not, it is recommended on large random walk.}
 
 \item{binwidth}{The width of the histogram bins}
 
@@ -26,17 +27,21 @@ plot_frequency(
 
 \item{xlab}{Label of X axis}
 }
+\value{
+no returned value, should plot the histogram of the estimated distribution
+(estimated).
+}
 \description{
 Plot the histogram of the approximation of the RR distribution
 }
 \examples{
-\dontrun{
+\donttest{
 data("ATC_Tree_UpperBound_2024")
 data("FAERS_myopathy")
 
 estimation = DistributionApproximation(epochs = 10, ATCtree = ATC_Tree_UpperBound_2024,
             observations = FAERS_myopathy, ...)
 
-plot_frequency(freq_array = estimation$ScoreDistribution, ...)
+plot_frequency(estimated = estimation$ScoreDistribution, ...)
 }
 }

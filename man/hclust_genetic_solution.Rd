@@ -7,7 +7,7 @@
 hclust_genetic_solution(
   genetic_results,
   ATCtree,
-  dist.normalize = T,
+  dist.normalize = TRUE,
   method = "complete"
 )
 }
@@ -27,7 +27,7 @@ the hierarchical clustering of the results of the genetic algorithm
 Clustering of the solutions of the genetic algorithm using the hclust algorithm
 }
 \examples{
-\dontrun{
+\donttest{
 data("ATC_Tree_UpperBound_2024")
 data("FAERS_myopathy")
 

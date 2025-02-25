@@ -24,7 +24,7 @@ of the matrix is the distance between cocktails i and j in an arbitrary
 cocktail list
 }
 \examples{
-\dontrun{
+\donttest{
 data("ATC_Tree_UpperBound_2024")
 
 cocktails = list(c(561, 904),

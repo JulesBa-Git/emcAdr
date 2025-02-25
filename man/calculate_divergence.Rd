@@ -8,7 +8,7 @@ calculate_divergence(
   empirical_distribution,
   true_distribution,
   method = "TV",
-  Filtered = F
+  Filtered = FALSE
 )
 }
 \arguments{
@@ -27,7 +27,7 @@ A numeric value representing the divergence of the 2 distributions
 Calculate the divergence between 2 distributions (the true Distribution and the learned one)
 }
 \examples{
-\dontrun{
+\donttest{
 data("ATC_Tree_UpperBound_2024")
 data("FAERS_myopathy")
 

@@ -30,11 +30,15 @@ on which we want to compute the risk distribution}
 \item{filtred_distribution}{Does the p-values have to be computed using filtered distribution
 or normal distribution (filtered distribution by default)}
 }
+\value{
+A real valued number vector representing the p-value of the inputed
+cocktails computed on the distribution_outputs List.
+}
 \description{
 Used to add the p_value to each cocktail of cocktail list
 }
 \examples{
-\dontrun{
+\donttest{
   DistributionApproximationResults_size2 = DistributionApproximation(epochs = 1000, ..., Smax = 2)
   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 1000, ..., Smax = 3)
   score_distribtuion_list = c(DistributionApproximationResults_size2,

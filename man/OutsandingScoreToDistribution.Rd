@@ -21,7 +21,7 @@ Output the outstanding score (Outstanding_score) outputed by the MCMC algorithm
 in a special format
 }
 \examples{
-\dontrun{
+\donttest{
   DistributionApproximationResults = DistributionApproximation(epochs = 1000, ..., max_score = 100)
   OutsandingScoreToDistribution(DistributionApproximationResults$OutstandingScore, max_score = 100)
 }

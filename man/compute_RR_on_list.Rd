@@ -24,7 +24,7 @@ RR score among "cocktails" parameters
 Function used to compute the Relative Risk on a list of cocktails
 }
 \examples{
-\dontrun{
+\donttest{
 data("ATC_Tree_UpperBound_2024")
 data("FAERS_myopathy")
 

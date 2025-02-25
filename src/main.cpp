@@ -53,7 +53,7 @@ using Rcpp::DataFrame;
 //'; Otherwise the list is empty
 //'
 //'@examples
-//'\dontrun{
+//'\donttest{
 //' data("ATC_Tree_UpperBound_2024")
 //' data("FAERS_myopathy")
 //' 
@@ -342,7 +342,7 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
 //' - FinalPopulation : The final population of the algorithm when finished (medications
 //' and corresponding scores)
 //'@examples
-//'\dontrun{
+//'\donttest{
 //' data("ATC_Tree_UpperBound_2024")
 //' data("FAERS_myopathy")
 //' 
@@ -521,7 +521,7 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
 //' - Best_scores : Score corresponding to the Best_cocktails.
 //' - Best_scores_beta : Score corresponding to the Best_cocktails_beta.
 //'@examples
-//'\dontrun{
+//'\donttest{
 //' data("ATC_Tree_UpperBound_2024")
 //' data("FAERS_myopathy")
 //' 
@@ -671,7 +671,7 @@ Rcpp::List trueDistributionDrugs(const DataFrame& ATCtree, const DataFrame& obse
 //' - Best_scores : Score corresponding to the Best_cocktails.
 //' - Best_scores_beta : Score corresponding to the Best_cocktails_beta.
 //'@examples
-//'\dontrun{
+//'\donttest{
 //' data("ATC_Tree_UpperBound_2024")
 //' data("FAERS_myopathy")
 //' 
@@ -971,7 +971,7 @@ std::vector<double> MetricCalc_2(const std::vector<int> &cocktail,
 //'
 //'@return Multiple DA metrics computed on CocktailList cocktails
 //'@examples
-//'\dontrun{
+//'\donttest{
 //' data("ATC_Tree_UpperBound_2024")
 //' data("FAERS_myopathy")
 //' 
@@ -1088,8 +1088,12 @@ void print_list_in_file(const Rcpp::List& resultsGeneticAlgorithm,
 //' @param alphas : a vector with each alphas to be tested
 //' @param path : the path where the resulting files should be written
 //' @param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
+//' @return No return value, this function should output results of the runs of the 
+//' genetic algorithm in a specific format supported by function print_csv
+//' and p_value_csv_file. The files are outputed in path which is current 
+//' directory by default.
 //'@examples
-//'\dontrun{
+//'\donttest{
 //' data("ATC_Tree_UpperBound_2024")
 //' data("FAERS_myopathy")
 //' 
@@ -1175,7 +1179,7 @@ std::pair<double, std::vector<int>> recup_solution(const std::string& line){
 //' @param ATCtree : ATC tree with upper bound of the DFS (without the root)
 //' @param csv_filename : Name of the output file, "solutions.csv" by default
 //' @examples
-//' \dontrun{
+//' \donttest{
 //'  data("ATC_Tree_UpperBound_2024")
 //'  data("FAERS_myopathy")
 //'  files = c('250e_700ind_0.2mr_0ne_2alpha.txt',..) # results of hyperparam_test_genetic_algorithm
@@ -1183,6 +1187,10 @@ std::pair<double, std::vector<int>> recup_solution(const std::string& line){
 //'  print_csv(input_filenames = files, observations = FAERS_myopathy,
 //'           repetition = 5, ATCtree = ATC_Tree_UpperBound_2024, ...)
 //' }
+//' @return No return value, should process the output of the genetic algorithm in 
+//' files produced by hyperparam_test_genetic_algorithm and output a summary csv file.
+//' The csv file is outputed in current directory and named after the csv_filename
+//' variable (solutions.csv by default).
 //' @export
 //[[Rcpp::export]]
 void print_csv(const std::vector<std::string>& input_filenames,
@@ -1286,7 +1294,7 @@ std::vector<std::vector<double>> dissim(const Population& pop,
 //' 
 //' @return The square matrix of distances between cocktails
 //' @examples
-//' \dontrun{
+//' \donttest{
 //'  data("ATC_Tree_UpperBound_2024")
 //'  data("FAERS_myopathy")
 //'  
@@ -1322,7 +1330,7 @@ std::vector<std::vector<double>> get_dissimilarity_from_genetic_results(const Rc
 //' 
 //' @return The square matrix of distances between cocktails
 //' @examples
-//' \dontrun{
+//' \donttest{
 //'  data("ATC_Tree_UpperBound_2024")
 //'  
 //'  distance_matrix = get_dissimilarity_from_txt_file(filename = '250e_700ind_0.2mr_0ne_2alpha.txt',
@@ -1385,7 +1393,7 @@ std::vector<std::vector<double>> get_dissimilarity_from_genetic_results(const Rc
 //' 
 //' @return The square matrix of distances between cocktails
 //'@examples
-//'\dontrun{
+//'\donttest{
 //' data("ATC_Tree_UpperBound_2024")
 //' 
 //' cocktails = list(c(561, 904),

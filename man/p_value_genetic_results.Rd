@@ -19,16 +19,21 @@ in order to compute the p_value for multiple cocktail sizes}
 \item{filtred_distribution}{Does the p-values have to be computed using filtered distribution
 or normal distribution (filtered distribution by default)}
 }
+\value{
+A real valued number vector representing the p-value of the inputed
+genetic algorithm results (genetic_results) computed on the 
+distribution_outputs List.
+}
 \description{
 Used to add the p_value to each cocktail of an output of the genetic algorithm
 }
 \examples{
-\dontrun{
+\donttest{
   DistributionApproximationResults_size2 = DistributionApproximation(epochs = 1000, ..., Smax = 2)
   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 1000, ..., Smax = 3)
   score_distribtuion_list = c(DistributionApproximationResults_size2,
                               DistributionApproximationResults_size3)
-.  genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, 
+  genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, 
             ATCtree = ATC_Tree_UpperBound_2024,
             observations = FAERS_myopathy, ...)
   p_value_genetic_results(score_distribution_list, genetic_results, ..)

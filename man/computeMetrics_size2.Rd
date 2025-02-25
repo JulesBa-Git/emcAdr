@@ -24,7 +24,7 @@ Multiple DA metrics computed on CocktailList cocktails
 Function used in the reference article to compare diverse Disproportionality Analysis metrics
 }
 \examples{
-\dontrun{
+\donttest{
 data("ATC_Tree_UpperBound_2024")
 data("FAERS_myopathy")
 
