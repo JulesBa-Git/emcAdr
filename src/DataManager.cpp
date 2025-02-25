@@ -79,8 +79,12 @@ std::vector<std::vector<int>> ATCtoNumeric(const std::vector<std::string>&
 //'@return A vector containing sampled risk during the MCMC algorithm 
 //'@examples
 //'\donttest{
-//'   DistributionApproximationResults = DistributionApproximation(epochs = 1000, ...)
-//'   histogramToDitribution(DistributionApproximationResults$Distribution)
+//' data("ATC_Tree_UpperBound_2024")
+//' data("FAERS_myopathy")
+//' 
+//'  DistributionApproximationResults = DistributionApproximation(epochs = 10,
+//'             ATCtree = ATC_Tree_UpperBound_2024, observations = FAERS_myopathy)
+//'   histogramToDitribution(DistributionApproximationResults$ScoreDistribution)
 //' }
 //'@export
 // [[Rcpp::export]]
@@ -107,8 +111,12 @@ Rcpp::NumericVector histogramToDitribution(const std::vector<int>& vec){
 //' @return outstanding_score in a format compatible with MCMC algorithm output
 //' @examples
 //' \donttest{
-//'   DistributionApproximationResults = DistributionApproximation(epochs = 1000, ..., max_score = 100)
-//'   OutsandingScoreToDistribution(DistributionApproximationResults$OutstandingScore, max_score = 100)
+//'  data("ATC_Tree_UpperBound_2024")
+//'  data("FAERS_myopathy")
+//' 
+//'   DistributionApproximationResults = DistributionApproximation(epochs = 10,
+//'             ATCtree = ATC_Tree_UpperBound_2024, observations = FAERS_myopathy)
+//'   OutsandingScoreToDistribution(DistributionApproximationResults$Outstanding_score, max_score = 100)
 //' }
 //' @export
 // [[Rcpp::export]]
@@ -211,7 +219,7 @@ std::vector<std::vector<std::string>> check_extension_and_read_csv(
 //' 
 //' RR_of_cocktails = compute_RR_on_list(cocktails = cocktails,
 //'                               ATCtree = ATC_Tree_UpperBound_2024, 
-//'                               observations = FAERS_myopathy, ...)
+//'                               observations = FAERS_myopathy)
 //'}
 //'@export
 //[[Rcpp::export]]
@@ -257,7 +265,7 @@ std::vector<double> compute_RR_on_list(const std::vector<std::vector<int>> &cock
 //' 
 //' Hypergeom_of_cocktails = compute_hypergeom_on_list(cocktails = cocktails,
 //'                               ATCtree = ATC_Tree_UpperBound_2024, 
-//'                               observations = FAERS_myopathy, ...)
+//'                               observations = FAERS_myopathy)
 //'}
 //'@export
 //[[Rcpp::export]]
@@ -298,11 +306,18 @@ std::vector<double> compute_hypergeom_on_list(const std::vector<std::vector<int>
 //' 
 //' @examples
 //' \donttest{
-//'   DistributionApproximationResults_size2 = DistributionApproximation(epochs = 1000, ..., Smax = 2)
-//'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 1000, ..., Smax = 3)
-//'   score_distribtuion_list = c(DistributionApproximationResults_size2,
+//'  data("ATC_Tree_UpperBound_2024")
+//'  data("FAERS_myopathy")
+//' 
+//'   DistributionApproximationResults_size2 = DistributionApproximation(epochs = 10,
+//'             ATCtree = ATC_Tree_UpperBound_2024, observations = FAERS_myopathy, Smax = 2)
+//'             
+//'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 10,
+//'             ATCtree = ATC_Tree_UpperBound_2024, observations = FAERS_myopathy, Smax = 3)
+//'             
+//'   score_distribution_list = c(DistributionApproximationResults_size2,
 //'                               DistributionApproximationResults_size3)
-//'   p_value_csv_file(score_distribution_list, "path/to/output.csv", ..)
+//'   p_value_csv_file(score_distribution_list, "path/to/output.csv")
 //' }
 //' @return A real valued number vector representing the p-value of the inputed
 //' csv file filename, computed on the distribution_outputs List.
@@ -366,14 +381,20 @@ void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const
 //' 
 //' @examples
 //' \donttest{
-//'   DistributionApproximationResults_size2 = DistributionApproximation(epochs = 1000, ..., Smax = 2)
-//'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 1000, ..., Smax = 3)
-//'   score_distribtuion_list = c(DistributionApproximationResults_size2,
+//'  data("ATC_Tree_UpperBound_2024")
+//'  data("FAERS_myopathy")
+//'   DistributionApproximationResults_size2 = DistributionApproximation(epochs = 10,
+//'             ATCtree = ATC_Tree_UpperBound_2024, observations = FAERS_myopathy, Smax = 2)
+//'             
+//'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 10,
+//'             ATCtree = ATC_Tree_UpperBound_2024, observations = FAERS_myopathy, Smax = 3)
+//'             
+//'   score_distribution_list = c(DistributionApproximationResults_size2,
 //'                               DistributionApproximationResults_size3)
 //'   genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, 
 //'             ATCtree = ATC_Tree_UpperBound_2024,
-//'             observations = FAERS_myopathy, ...)
-//'   p_value_genetic_results(score_distribution_list, genetic_results, ..)
+//'             observations = FAERS_myopathy)
+//'   p_value_genetic_results(score_distribution_list, genetic_results)
 //' }
 //' @return A real valued number vector representing the p-value of the inputed
 //' genetic algorithm results (genetic_results) computed on the 
@@ -420,15 +441,23 @@ std::vector<double> p_value_genetic_results(const std::vector<Rcpp::List>& distr
 //' @param num_thread Number of thread to run in parallel if openMP is available, 1 by default
 //' @examples
 //' \donttest{
-//'   DistributionApproximationResults_size2 = DistributionApproximation(epochs = 1000, ..., Smax = 2)
-//'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 1000, ..., Smax = 3)
-//'   score_distribtuion_list = c(DistributionApproximationResults_size2,
+//'  data("ATC_Tree_UpperBound_2024")
+//'  data("FAERS_myopathy")
+//'  
+//'   DistributionApproximationResults_size2 = DistributionApproximation(epochs = 10,
+//'             ATCtree = ATC_Tree_UpperBound_2024, observations = FAERS_myopathy, Smax = 2)
+//'             
+//'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 10,
+//'             ATCtree = ATC_Tree_UpperBound_2024, observations = FAERS_myopathy, Smax = 3)
+//'             
+//'   score_distribution_list = c(DistributionApproximationResults_size2,
 //'                               DistributionApproximationResults_size3)
 //' 
 //'   cocktails = list(c(561, 904),
 //'                c(1902, 4585))
 //'.  
-//'   p_value_cocktails(score_distribution_list, cocktails, ..)
+//'   p_value_cocktails(score_distribution_list, cocktails, ATC_Tree_UpperBound_2024,
+//'                     FAERS_myopathy)
 //' }
 //' @return A real valued number vector representing the p-value of the inputed
 //' cocktails computed on the distribution_outputs List.
@@ -474,7 +503,7 @@ std::vector<double> p_value_cocktails(const std::vector<Rcpp::List>& distributio
 //' \donttest{
 //'   data("ATC_Tree_UpperBound_2024")
 //'   genetic_results = csv_to_population(ATC_Tree_UpperBound_2024$Name,
-//'                     "path/to/output.csv", ..)
+//'                     "path/to/output.csv")
 //' }
 //' @export
 // [[Rcpp::export]]

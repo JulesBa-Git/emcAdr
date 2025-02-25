@@ -19,7 +19,11 @@ Convert the histogram returned by the DistributionApproximation function, to a r
 }
 \examples{
 \donttest{
-  DistributionApproximationResults = DistributionApproximation(epochs = 1000, ...)
-  histogramToDitribution(DistributionApproximationResults$Distribution)
+data("ATC_Tree_UpperBound_2024")
+data("FAERS_myopathy")
+
+ DistributionApproximationResults = DistributionApproximation(epochs = 10,
+            ATCtree = ATC_Tree_UpperBound_2024, observations = FAERS_myopathy)
+  histogramToDitribution(DistributionApproximationResults$ScoreDistribution)
 }
 }

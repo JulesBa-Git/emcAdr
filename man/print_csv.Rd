@@ -42,9 +42,9 @@ found in each files by collapsing similar cocktail in a single row by cocktail.
 \donttest{
  data("ATC_Tree_UpperBound_2024")
  data("FAERS_myopathy")
- files = c('250e_700ind_0.2mr_0ne_2alpha.txt',..) # results of hyperparam_test_genetic_algorithm
+ files = c('250e_700ind_0.2mr_0ne_2alpha.txt') # results of hyperparam_test_genetic_algorithm
 
  print_csv(input_filenames = files, observations = FAERS_myopathy,
-          repetition = 5, ATCtree = ATC_Tree_UpperBound_2024, ...)
+          repetition = 5, ATCtree = ATC_Tree_UpperBound_2024)
 }
 }

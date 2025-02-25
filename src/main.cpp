@@ -58,7 +58,7 @@ using Rcpp::DataFrame;
 //' data("FAERS_myopathy")
 //' 
 //' estimation = DistributionApproximation(epochs = 10, ATCtree = ATC_Tree_UpperBound_2024,
-//'             observations = FAERS_myopathy, ...)
+//'             observations = FAERS_myopathy)
 //'}
 //'@export
 //[[Rcpp::export]]
@@ -348,7 +348,7 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
 //' 
 //' results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, 
 //'             ATCtree = ATC_Tree_UpperBound_2024,
-//'             observations = FAERS_myopathy, ...)
+//'             observations = FAERS_myopathy)
 //'}
 //'@export
 //[[Rcpp::export]]
@@ -526,7 +526,7 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
 //' data("FAERS_myopathy")
 //' 
 //' size_1_score_distribution = trueDistributionDrugs(ATCtree = ATC_Tree_UpperBound_2024,
-//'             observations = FAERS_myopathy, beta = 4, ...)
+//'             observations = FAERS_myopathy, beta = 4)
 //'}
 //'@export
 //[[Rcpp::export]]
@@ -676,7 +676,7 @@ Rcpp::List trueDistributionDrugs(const DataFrame& ATCtree, const DataFrame& obse
 //' data("FAERS_myopathy")
 //' 
 //' size_2_score_distribution = trueDistributionSizeTwoCocktail(ATCtree = ATC_Tree_UpperBound_2024,
-//'             observations = FAERS_myopathy, beta = 4, ...)
+//'             observations = FAERS_myopathy, beta = 4)
 //'}
 //'@export
 //[[Rcpp::export]]
@@ -980,7 +980,7 @@ std::vector<double> MetricCalc_2(const std::vector<int> &cocktail,
 //' 
 //' scores_of_cocktails = computeMetrics_size2(cocktails = cocktails,
 //'                               ATCtree = ATC_Tree_UpperBound_2024, 
-//'                               observations = FAERS_myopathy, ...)
+//'                               observations = FAERS_myopathy)
 //'}
 //'@export
 //[[Rcpp::export]]
@@ -1105,8 +1105,7 @@ void print_list_in_file(const Rcpp::List& resultsGeneticAlgorithm,
 //'                               ATCtree = ATC_Tree_UpperBound_2024, 
 //'                               observations = FAERS_myopathy,
 //'                               nb_test_desired = 5, mutation_rate = mutation_rate,
-//'                               nb_elite = nb_elite, alphas = alphas,
-//'                                ...)
+//'                               nb_elite = nb_elite, alphas = alphas)
 //'}
 //[[Rcpp::export]]
 void hyperparam_test_genetic_algorithm(int epochs, int nb_individuals, 
@@ -1182,10 +1181,10 @@ std::pair<double, std::vector<int>> recup_solution(const std::string& line){
 //' \donttest{
 //'  data("ATC_Tree_UpperBound_2024")
 //'  data("FAERS_myopathy")
-//'  files = c('250e_700ind_0.2mr_0ne_2alpha.txt',..) # results of hyperparam_test_genetic_algorithm
+//'  files = c('250e_700ind_0.2mr_0ne_2alpha.txt') # results of hyperparam_test_genetic_algorithm
 //' 
 //'  print_csv(input_filenames = files, observations = FAERS_myopathy,
-//'           repetition = 5, ATCtree = ATC_Tree_UpperBound_2024, ...)
+//'           repetition = 5, ATCtree = ATC_Tree_UpperBound_2024)
 //' }
 //' @return No return value, should process the output of the genetic algorithm in 
 //' files produced by hyperparam_test_genetic_algorithm and output a summary csv file.
@@ -1300,9 +1299,9 @@ std::vector<std::vector<double>> dissim(const Population& pop,
 //'  
 //'  genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200,
 //'             ATCtree = ATC_Tree_UpperBound_2024,
-//'             observations = FAERS_myopathy, ...)
+//'             observations = FAERS_myopathy)
 //'  distance_matrix = get_dissimilarity_from_genetic_results(genetic_results = genetic_results,
-//'                         ATCtree = ATC_Tree_UpperBound_2024, normalization = T)
+//'                         ATCtree = ATC_Tree_UpperBound_2024, normalization = TRUE)
 //' }
 //' @export
 //[[Rcpp::export]]
@@ -1334,7 +1333,7 @@ std::vector<std::vector<double>> get_dissimilarity_from_genetic_results(const Rc
 //'  data("ATC_Tree_UpperBound_2024")
 //'  
 //'  distance_matrix = get_dissimilarity_from_txt_file(filename = '250e_700ind_0.2mr_0ne_2alpha.txt',
-//'                         ATCtree = ATC_Tree_UpperBound_2024, normalization = T)
+//'                         ATCtree = ATC_Tree_UpperBound_2024, normalization = TRUE)
 //' }
 //' @export
 //[[Rcpp::export]]
@@ -1401,7 +1400,7 @@ std::vector<std::vector<double>> get_dissimilarity_from_genetic_results(const Rc
 //' 
 //' distance_matrix = get_dissimilarity_from_cocktail_list(cocktails = cocktails,
 //'                               ATCtree = ATC_Tree_UpperBound_2024, 
-//'                               normalization = T)
+//'                               normalization = TRUE)
 //'}
 //[[Rcpp::export]]
 std::vector<std::vector<double>> get_dissimilarity_from_cocktail_list(const std::vector<std::vector<int>>& cocktails,

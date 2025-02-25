@@ -25,6 +25,6 @@ a .csv file to a Data structure that can be used by the clustering algorithm
 \donttest{
   data("ATC_Tree_UpperBound_2024")
   genetic_results = csv_to_population(ATC_Tree_UpperBound_2024$Name,
-                    "path/to/output.csv", ..)
+                    "path/to/output.csv")
 }
 }

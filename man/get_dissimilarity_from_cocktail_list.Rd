@@ -32,6 +32,6 @@ cocktails = list(c(561, 904),
 
 distance_matrix = get_dissimilarity_from_cocktail_list(cocktails = cocktails,
                               ATCtree = ATC_Tree_UpperBound_2024, 
-                              normalization = T)
+                              normalization = TRUE)
 }
 }

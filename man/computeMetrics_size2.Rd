@@ -33,6 +33,6 @@ cocktails = list(c(561, 904),
 
 scores_of_cocktails = computeMetrics_size2(cocktails = cocktails,
                               ATCtree = ATC_Tree_UpperBound_2024, 
-                              observations = FAERS_myopathy, ...)
+                              observations = FAERS_myopathy)
 }
 }

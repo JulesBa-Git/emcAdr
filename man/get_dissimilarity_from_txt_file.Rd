@@ -28,6 +28,6 @@ results of genetic algorithm
  data("ATC_Tree_UpperBound_2024")
  
  distance_matrix = get_dissimilarity_from_txt_file(filename = '250e_700ind_0.2mr_0ne_2alpha.txt',
-                        ATCtree = ATC_Tree_UpperBound_2024, normalization = T)
+                        ATCtree = ATC_Tree_UpperBound_2024, normalization = TRUE)
 }
 }

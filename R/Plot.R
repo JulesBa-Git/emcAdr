@@ -18,9 +18,9 @@
 #' 
 #' results = GeneticAlgorithm(epochs = 10, nbIndividuals = 100, 
 #'             ATCtree = ATC_Tree_UpperBound_2024,
-#'             observations = FAERS_myopathy, ...)
+#'             observations = FAERS_myopathy)
 #' 
-#' plot_evolution(list = results, ...)
+#' plot_evolution(list = results)
 #'}
 #' @return no returned value, should plot the evolution of the genetic algorithm
 #' results (mean/max score for each epoch).
@@ -78,13 +78,13 @@ plot_evolution <- function(list, mean_color = "#F2A900", best_color = "#008080",
 #' 
 #' estimated_score_distribution = DistributionApproximation(epochs = 10,
 #'             ATCtree = ATC_Tree_UpperBound_2024,
-#'             observations = FAERS_myopathy, Smax =2, ...)
+#'             observations = FAERS_myopathy, Smax =2)
 #'             
 #' true_score_distribution = trueDistributionSizeTwoCocktail(ATCtree = ATC_Tree_UpperBound_2024,
-#'             observations = FAERS_myopathy, beta = 4, ...)
+#'             observations = FAERS_myopathy, beta = 4)
 #' 
 #' qq_plot_output(estimated = estimated_score_distribution,
-#'                 true = true_score_distribution, ...)
+#'                 true = true_score_distribution)
 #'}
 #' @return no returned value, should plot the quantile-quantile plot
 #' of the estimated distribution (estimated) vs the true distribution (true).
@@ -134,9 +134,9 @@ qq_plot_output <- function(estimated, true, filtered = FALSE, color = "steelblue
 #' data("FAERS_myopathy")
 #' 
 #' estimation = DistributionApproximation(epochs = 10, ATCtree = ATC_Tree_UpperBound_2024,
-#'             observations = FAERS_myopathy, ...)
+#'             observations = FAERS_myopathy)
 #' 
-#' plot_frequency(estimated = estimation$ScoreDistribution, ...)
+#' plot_frequency(estimated = estimation$ScoreDistribution)
 #'}
 #' @return no returned value, should plot the histogram of the estimated distribution
 #' (estimated).

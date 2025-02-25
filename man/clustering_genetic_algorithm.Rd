@@ -32,9 +32,9 @@ Clustering of the solutions of the genetic algorithm using the hclust algorithm
 
  results = GeneticAlgorithm(epochs = 10, nbIndividuals = 100, 
             ATCtree = ATC_Tree_UpperBound_2024,
-            observations = FAERS_myopathy, ...)
+            observations = FAERS_myopathy)
 
  hclust_genetic_solution(genetic_results = results,
-                 ATCtree = ATC_Tree_UpperBound_2024, ...)
+                 ATCtree = ATC_Tree_UpperBound_2024)
 }
 }

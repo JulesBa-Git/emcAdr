@@ -12,10 +12,10 @@
 #' 
 #' results = GeneticAlgorithm(epochs = 10, nbIndividuals = 100, 
 #'             ATCtree = ATC_Tree_UpperBound_2024,
-#'             observations = FAERS_myopathy, ...)
+#'             observations = FAERS_myopathy)
 #' 
 #' hclust_genetic_solution(genetic_results = results,
-#'                  ATCtree = ATC_Tree_UpperBound_2024, ...)
+#'                  ATCtree = ATC_Tree_UpperBound_2024)
 #'}
 #' @export
 hclust_genetic_solution <- function(genetic_results,ATCtree, dist.normalize = TRUE,
@@ -47,10 +47,10 @@ hclust_genetic_solution <- function(genetic_results,ATCtree, dist.normalize = TR
 #' 
 #'  results = GeneticAlgorithm(epochs = 10, nbIndividuals = 100, 
 #'             ATCtree = ATC_Tree_UpperBound_2024,
-#'             observations = FAERS_myopathy, ...)
+#'             observations = FAERS_myopathy)
 #' 
 #'  hclust_genetic_solution(genetic_results = results,
-#'                  ATCtree = ATC_Tree_UpperBound_2024, ...)
+#'                  ATCtree = ATC_Tree_UpperBound_2024)
 #'}
 #' @export
 clustering_genetic_algorithm <- function(genetic_results,ATCtree,dist.normalize = TRUE,

@@ -33,10 +33,17 @@ output of the genetic algorithm
 }
 \examples{
 \donttest{
-  DistributionApproximationResults_size2 = DistributionApproximation(epochs = 1000, ..., Smax = 2)
-  DistributionApproximationResults_size3 = DistributionApproximation(epochs = 1000, ..., Smax = 3)
-  score_distribtuion_list = c(DistributionApproximationResults_size2,
+ data("ATC_Tree_UpperBound_2024")
+ data("FAERS_myopathy")
+
+  DistributionApproximationResults_size2 = DistributionApproximation(epochs = 10,
+            ATCtree = ATC_Tree_UpperBound_2024, observations = FAERS_myopathy, Smax = 2)
+            
+  DistributionApproximationResults_size3 = DistributionApproximation(epochs = 10,
+            ATCtree = ATC_Tree_UpperBound_2024, observations = FAERS_myopathy, Smax = 3)
+            
+  score_distribution_list = c(DistributionApproximationResults_size2,
                               DistributionApproximationResults_size3)
-  p_value_csv_file(score_distribution_list, "path/to/output.csv", ..)
+  p_value_csv_file(score_distribution_list, "path/to/output.csv")
 }
 }

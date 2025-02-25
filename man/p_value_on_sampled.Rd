@@ -36,13 +36,13 @@ cocktails = list(c(561, 904),
                
 estimated_score_distribution = DistributionApproximation(epochs = 10,
             ATCtree = ATC_Tree_UpperBound_2024,
-            observations = FAERS_myopathy, ...)
+            observations = FAERS_myopathy)
             
 Hypergeom_of_cocktails = compute_hypergeom_on_list(cocktails = cocktails,
                               ATCtree = ATC_Tree_UpperBound_2024, 
-                              observations = FAERS_myopathy, ...)
+                              observations = FAERS_myopathy)
             
 p_value = p_value_on_sampled(empirical_distribution = estimated_score_distribution,
-      sampled_values = Hypergeom_of_cocktails, ...)
+      sampled_values = Hypergeom_of_cocktails)
 }
 }

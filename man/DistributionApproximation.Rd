@@ -69,6 +69,6 @@ data("ATC_Tree_UpperBound_2024")
 data("FAERS_myopathy")
 
 estimation = DistributionApproximation(epochs = 10, ATCtree = ATC_Tree_UpperBound_2024,
-            observations = FAERS_myopathy, ...)
+            observations = FAERS_myopathy)
 }
 }

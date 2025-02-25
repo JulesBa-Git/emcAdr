@@ -15,14 +15,14 @@
 #'                
 #' estimated_score_distribution = DistributionApproximation(epochs = 10,
 #'             ATCtree = ATC_Tree_UpperBound_2024,
-#'             observations = FAERS_myopathy, ...)
+#'             observations = FAERS_myopathy)
 #'             
 #' Hypergeom_of_cocktails = compute_hypergeom_on_list(cocktails = cocktails,
 #'                               ATCtree = ATC_Tree_UpperBound_2024, 
-#'                               observations = FAERS_myopathy, ...)
+#'                               observations = FAERS_myopathy)
 #'             
 #' p_value = p_value_on_sampled(empirical_distribution = estimated_score_distribution,
-#'       sampled_values = Hypergeom_of_cocktails, ...)
+#'       sampled_values = Hypergeom_of_cocktails)
 #'}
 #' @export
 p_value_on_sampled <- function(empirical_distribution, sampled_values, isFiltered = FALSE,
@@ -77,13 +77,13 @@ p_value_on_sampled <- function(empirical_distribution, sampled_values, isFiltere
 #' 
 #' estimated_score_distribution = DistributionApproximation(epochs = 10,
 #'             ATCtree = ATC_Tree_UpperBound_2024,
-#'             observations = FAERS_myopathy, Smax =2, ...)
+#'             observations = FAERS_myopathy, Smax =2)
 #'             
 #' true_score_distribution = trueDistributionSizeTwoCocktail(ATCtree = ATC_Tree_UpperBound_2024,
-#'             observations = FAERS_myopathy, beta = 4, ...)
+#'             observations = FAERS_myopathy, beta = 4)
 #' 
 #' divergence <- calculate_divergence(empirical_distribution = estimated_score_distribution,
-#'                 true_distribution = true_score_distribution, ...)
+#'                 true_distribution = true_score_distribution)
 #'}
 #' @export
 calculate_divergence <- function(empirical_distribution, true_distribution, method = "TV", Filtered = FALSE){

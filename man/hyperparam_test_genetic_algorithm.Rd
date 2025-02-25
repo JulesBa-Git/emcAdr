@@ -74,7 +74,6 @@ hyperparam_test_genetic_algorithm(epochs = 1000, nb_individuals = 100,
                               ATCtree = ATC_Tree_UpperBound_2024, 
                               observations = FAERS_myopathy,
                               nb_test_desired = 5, mutation_rate = mutation_rate,
-                              nb_elite = nb_elite, alphas = alphas,
-                               ...)
+                              nb_elite = nb_elite, alphas = alphas)
 }
 }

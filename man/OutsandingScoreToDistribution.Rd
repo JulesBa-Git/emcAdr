@@ -22,7 +22,11 @@ in a special format
 }
 \examples{
 \donttest{
-  DistributionApproximationResults = DistributionApproximation(epochs = 1000, ..., max_score = 100)
-  OutsandingScoreToDistribution(DistributionApproximationResults$OutstandingScore, max_score = 100)
+ data("ATC_Tree_UpperBound_2024")
+ data("FAERS_myopathy")
+
+  DistributionApproximationResults = DistributionApproximation(epochs = 10,
+            ATCtree = ATC_Tree_UpperBound_2024, observations = FAERS_myopathy)
+  OutsandingScoreToDistribution(DistributionApproximationResults$Outstanding_score, max_score = 100)
 }
 }

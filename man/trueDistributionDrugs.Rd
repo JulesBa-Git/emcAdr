@@ -53,6 +53,6 @@ data("ATC_Tree_UpperBound_2024")
 data("FAERS_myopathy")
 
 size_1_score_distribution = trueDistributionDrugs(ATCtree = ATC_Tree_UpperBound_2024,
-            observations = FAERS_myopathy, beta = 4, ...)
+            observations = FAERS_myopathy, beta = 4)
 }
 }

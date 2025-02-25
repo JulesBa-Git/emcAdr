@@ -33,6 +33,6 @@ cocktails = list(c(561, 904),
 
 RR_of_cocktails = compute_RR_on_list(cocktails = cocktails,
                               ATCtree = ATC_Tree_UpperBound_2024, 
-                              observations = FAERS_myopathy, ...)
+                              observations = FAERS_myopathy)
 }
 }

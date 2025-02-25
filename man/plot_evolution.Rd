@@ -37,8 +37,8 @@ data("FAERS_myopathy")
 
 results = GeneticAlgorithm(epochs = 10, nbIndividuals = 100, 
             ATCtree = ATC_Tree_UpperBound_2024,
-            observations = FAERS_myopathy, ...)
+            observations = FAERS_myopathy)
 
-plot_evolution(list = results, ...)
+plot_evolution(list = results)
 }
 }

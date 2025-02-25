@@ -33,12 +33,12 @@ data("FAERS_myopathy")
 
 estimated_score_distribution = DistributionApproximation(epochs = 10,
             ATCtree = ATC_Tree_UpperBound_2024,
-            observations = FAERS_myopathy, Smax =2, ...)
+            observations = FAERS_myopathy, Smax =2)
             
 true_score_distribution = trueDistributionSizeTwoCocktail(ATCtree = ATC_Tree_UpperBound_2024,
-            observations = FAERS_myopathy, beta = 4, ...)
+            observations = FAERS_myopathy, beta = 4)
 
 divergence <- calculate_divergence(empirical_distribution = estimated_score_distribution,
-                true_distribution = true_score_distribution, ...)
+                true_distribution = true_score_distribution)
 }
 }
