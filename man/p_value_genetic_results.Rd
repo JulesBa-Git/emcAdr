@@ -37,9 +37,9 @@ Used to add the p_value to each cocktail of an output of the genetic algorithm
   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 10,
             ATCtree = ATC_Tree_UpperBound_2024, observations = FAERS_myopathy, Smax = 3)
             
-  score_distribution_list = c(DistributionApproximationResults_size2,
+  score_distribution_list = list(DistributionApproximationResults_size2,
                               DistributionApproximationResults_size3)
-  genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, 
+  genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 20, 
             ATCtree = ATC_Tree_UpperBound_2024,
             observations = FAERS_myopathy)
   p_value_genetic_results(score_distribution_list, genetic_results)

@@ -48,12 +48,12 @@ Used to add the p_value to each cocktail of cocktail list
   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 10,
             ATCtree = ATC_Tree_UpperBound_2024, observations = FAERS_myopathy, Smax = 3)
             
-  score_distribution_list = c(DistributionApproximationResults_size2,
+  score_distribution_list = list(DistributionApproximationResults_size2,
                               DistributionApproximationResults_size3)
 
   cocktails = list(c(561, 904),
                c(1902, 4585))
-.  
+ 
   p_value_cocktails(score_distribution_list, cocktails, ATC_Tree_UpperBound_2024,
                     FAERS_myopathy)
 }

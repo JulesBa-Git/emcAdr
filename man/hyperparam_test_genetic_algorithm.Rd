@@ -70,7 +70,7 @@ data("FAERS_myopathy")
 mutation_rate = c(.1,.2,.3)
 nb_elite = c(0,1,2)
 alphas = c(0.5,1,2)
-hyperparam_test_genetic_algorithm(epochs = 1000, nb_individuals = 100,
+hyperparam_test_genetic_algorithm(epochs = 2, nb_individuals = 2,
                               ATCtree = ATC_Tree_UpperBound_2024, 
                               observations = FAERS_myopathy,
                               nb_test_desired = 5, mutation_rate = mutation_rate,

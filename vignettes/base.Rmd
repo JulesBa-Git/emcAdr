@@ -43,7 +43,7 @@ head(FAERS_myopathy) ## First column is "patientATC" containing vector of index 
 This data enables us to run the MCMC algorithm in order to estimate the score distribution among this dataset of patients.
 
 ```{r }
-estimated_distribution_size1_300ksteps_t500 <- DistributionApproximation(300000,
+estimated_distribution_size1_300ksteps_t500 <- DistributionApproximation(10,
                         ATC_Tree_UpperBound_2024, FAERS_myopathy,
                         temperature = 500, nbResults = 200,
                         Smax = 1,num_thread = 8)

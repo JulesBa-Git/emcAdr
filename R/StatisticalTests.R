@@ -77,10 +77,10 @@ p_value_on_sampled <- function(empirical_distribution, sampled_values, isFiltere
 #' 
 #' estimated_score_distribution = DistributionApproximation(epochs = 10,
 #'             ATCtree = ATC_Tree_UpperBound_2024,
-#'             observations = FAERS_myopathy, Smax =2)
+#'             observations = FAERS_myopathy[1:100,], Smax =2)
 #'             
 #' true_score_distribution = trueDistributionSizeTwoCocktail(ATCtree = ATC_Tree_UpperBound_2024,
-#'             observations = FAERS_myopathy, beta = 4)
+#'             observations = FAERS_myopathy[1:100,], beta = 4)
 #' 
 #' divergence <- calculate_divergence(empirical_distribution = estimated_score_distribution,
 #'                 true_distribution = true_score_distribution)
@@ -91,13 +91,13 @@ calculate_divergence <- function(empirical_distribution, true_distribution, meth
   
   if(RRmax > 30){
     if(Filtered){
-      dist_ouststandingRR <- OutsandingScoreToDistribution(true_distribution$OutstandingRR, RRmax)
+      dist_ouststandingRR <- OutsandingScoreToDistribution(true_distribution$Outstanding_score, RRmax)
       length(true_distribution$Filtered_score_distribution) <- length(dist_ouststandingRR)
       true_distribution$Filtered_score_distribution[is.na(true_distribution$Filtered_score_distribution)] <- 0
       true_distribution$Filtered_score_distribution <- true_distribution$Filtered_score_distribution + dist_ouststandingRR
     }
     else{
-      dist_ouststandingRR <- OutsandingScoreToDistribution(true_distribution$OutstandingRR, RRmax)
+      dist_ouststandingRR <- OutsandingScoreToDistribution(true_distribution$Outstanding_score, RRmax)
       length(true_distribution$ScoreDistribution) <- length(dist_ouststandingRR)
       true_distribution$ScoreDistribution[is.na(true_distribution$ScoreDistribution)] <- 0
       true_distribution$ScoreDistribution <- true_distribution$ScoreDistribution + dist_ouststandingRR
@@ -114,9 +114,9 @@ calculate_divergence <- function(empirical_distribution, true_distribution, meth
   }
   else{
     if (Filtered) {
-      true_distribution$Filtered_score_distribution[((RRmax*10)+1)] <- length(true_distribution$OutstandingRR)
+      true_distribution$Filtered_score_distribution[((RRmax*10)+1)] <- length(true_distribution$Outstanding_score)
     }else{
-      true_distribution$ScoreDistribution[((RRmax*10)+1)] <- length(true_distribution$OutstandingRR)
+      true_distribution$ScoreDistribution[((RRmax*10)+1)] <- length(true_distribution$Outstanding_score)
     }
   }
   

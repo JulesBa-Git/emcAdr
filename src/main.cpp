@@ -346,7 +346,7 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
 //' data("ATC_Tree_UpperBound_2024")
 //' data("FAERS_myopathy")
 //' 
-//' results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, 
+//' results = GeneticAlgorithm(epochs = 10, nbIndividuals = 10, 
 //'             ATCtree = ATC_Tree_UpperBound_2024,
 //'             observations = FAERS_myopathy)
 //'}
@@ -526,7 +526,7 @@ Rcpp::List GeneticAlgorithm(int epochs, int nbIndividuals, const DataFrame& ATCt
 //' data("FAERS_myopathy")
 //' 
 //' size_1_score_distribution = trueDistributionDrugs(ATCtree = ATC_Tree_UpperBound_2024,
-//'             observations = FAERS_myopathy, beta = 4)
+//'             observations = FAERS_myopathy[1:100,], beta = 4)
 //'}
 //'@export
 //[[Rcpp::export]]
@@ -676,7 +676,7 @@ Rcpp::List trueDistributionDrugs(const DataFrame& ATCtree, const DataFrame& obse
 //' data("FAERS_myopathy")
 //' 
 //' size_2_score_distribution = trueDistributionSizeTwoCocktail(ATCtree = ATC_Tree_UpperBound_2024,
-//'             observations = FAERS_myopathy, beta = 4)
+//'             observations = FAERS_myopathy[1:100,], beta = 4)
 //'}
 //'@export
 //[[Rcpp::export]]
@@ -792,7 +792,7 @@ Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataF
   
   return Rcpp::List::create(Rcpp::Named("ScoreDistribution") = score_distribution,
                             Rcpp::Named("Filtered_score_distribution") = score_distributionGreaterBeta,
-                            Rcpp::Named("outstanding_score") = outstanding_score,
+                            Rcpp::Named("Outstanding_score") = outstanding_score,
                             Rcpp::Named("Best_cocktails") = returnedMed,
                             Rcpp::Named("Best_cocktails_beta") = returnedMedBeta,
                             Rcpp::Named("Best_scores") = returned_score,
@@ -978,9 +978,9 @@ std::vector<double> MetricCalc_2(const std::vector<int> &cocktail,
 //' cocktails = list(c(561, 904),
 //'                c(1902, 4585)) # only size 2 cocktails allowed for this function
 //' 
-//' scores_of_cocktails = computeMetrics_size2(cocktails = cocktails,
+//' scores_of_cocktails = computeMetrics_size2(CocktailList = cocktails,
 //'                               ATCtree = ATC_Tree_UpperBound_2024, 
-//'                               observations = FAERS_myopathy)
+//'                               observations = FAERS_myopathy[1:100,])
 //'}
 //'@export
 //[[Rcpp::export]]
@@ -1101,7 +1101,7 @@ void print_list_in_file(const Rcpp::List& resultsGeneticAlgorithm,
 //' mutation_rate = c(.1,.2,.3)
 //' nb_elite = c(0,1,2)
 //' alphas = c(0.5,1,2)
-//' hyperparam_test_genetic_algorithm(epochs = 1000, nb_individuals = 100,
+//' hyperparam_test_genetic_algorithm(epochs = 2, nb_individuals = 2,
 //'                               ATCtree = ATC_Tree_UpperBound_2024, 
 //'                               observations = FAERS_myopathy,
 //'                               nb_test_desired = 5, mutation_rate = mutation_rate,
@@ -1297,7 +1297,7 @@ std::vector<std::vector<double>> dissim(const Population& pop,
 //'  data("ATC_Tree_UpperBound_2024")
 //'  data("FAERS_myopathy")
 //'  
-//'  genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200,
+//'  genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 10,
 //'             ATCtree = ATC_Tree_UpperBound_2024,
 //'             observations = FAERS_myopathy)
 //'  distance_matrix = get_dissimilarity_from_genetic_results(genetic_results = genetic_results,

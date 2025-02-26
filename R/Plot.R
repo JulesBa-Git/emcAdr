@@ -16,7 +16,7 @@
 #' data("ATC_Tree_UpperBound_2024")
 #' data("FAERS_myopathy")
 #' 
-#' results = GeneticAlgorithm(epochs = 10, nbIndividuals = 100, 
+#' results = GeneticAlgorithm(epochs = 10, nbIndividuals = 10, 
 #'             ATCtree = ATC_Tree_UpperBound_2024,
 #'             observations = FAERS_myopathy)
 #' 
@@ -78,10 +78,10 @@ plot_evolution <- function(list, mean_color = "#F2A900", best_color = "#008080",
 #' 
 #' estimated_score_distribution = DistributionApproximation(epochs = 10,
 #'             ATCtree = ATC_Tree_UpperBound_2024,
-#'             observations = FAERS_myopathy, Smax =2)
+#'             observations = FAERS_myopathy[1:100,], Smax =2)
 #'             
 #' true_score_distribution = trueDistributionSizeTwoCocktail(ATCtree = ATC_Tree_UpperBound_2024,
-#'             observations = FAERS_myopathy, beta = 4)
+#'             observations = FAERS_myopathy[1:100,], beta = 4)
 #' 
 #' qq_plot_output(estimated = estimated_score_distribution,
 #'                 true = true_score_distribution)

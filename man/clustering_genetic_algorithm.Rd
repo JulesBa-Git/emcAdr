@@ -30,7 +30,7 @@ Clustering of the solutions of the genetic algorithm using the hclust algorithm
 \donttest{
  data("ATC_Tree_UpperBound_2024")
 
- results = GeneticAlgorithm(epochs = 10, nbIndividuals = 100, 
+ results = GeneticAlgorithm(epochs = 10, nbIndividuals = 10, 
             ATCtree = ATC_Tree_UpperBound_2024,
             observations = FAERS_myopathy)
 

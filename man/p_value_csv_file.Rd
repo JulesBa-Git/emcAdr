@@ -42,7 +42,7 @@ output of the genetic algorithm
   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 10,
             ATCtree = ATC_Tree_UpperBound_2024, observations = FAERS_myopathy, Smax = 3)
             
-  score_distribution_list = c(DistributionApproximationResults_size2,
+  score_distribution_list = list(DistributionApproximationResults_size2,
                               DistributionApproximationResults_size3)
   p_value_csv_file(score_distribution_list, "path/to/output.csv")
 }

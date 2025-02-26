@@ -133,7 +133,7 @@ compute_hypergeom_on_list <- function(cocktails, ATCtree, observations, num_thre
 #'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 10,
 #'             ATCtree = ATC_Tree_UpperBound_2024, observations = FAERS_myopathy, Smax = 3)
 #'             
-#'   score_distribution_list = c(DistributionApproximationResults_size2,
+#'   score_distribution_list = list(DistributionApproximationResults_size2,
 #'                               DistributionApproximationResults_size3)
 #'   p_value_csv_file(score_distribution_list, "path/to/output.csv")
 #' }
@@ -161,9 +161,9 @@ p_value_csv_file <- function(distribution_outputs, filename, filtred_distributio
 #'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 10,
 #'             ATCtree = ATC_Tree_UpperBound_2024, observations = FAERS_myopathy, Smax = 3)
 #'             
-#'   score_distribution_list = c(DistributionApproximationResults_size2,
+#'   score_distribution_list = list(DistributionApproximationResults_size2,
 #'                               DistributionApproximationResults_size3)
-#'   genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, 
+#'   genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 20, 
 #'             ATCtree = ATC_Tree_UpperBound_2024,
 #'             observations = FAERS_myopathy)
 #'   p_value_genetic_results(score_distribution_list, genetic_results)
@@ -198,12 +198,12 @@ p_value_genetic_results <- function(distribution_outputs, genetic_results, filtr
 #'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 10,
 #'             ATCtree = ATC_Tree_UpperBound_2024, observations = FAERS_myopathy, Smax = 3)
 #'             
-#'   score_distribution_list = c(DistributionApproximationResults_size2,
+#'   score_distribution_list = list(DistributionApproximationResults_size2,
 #'                               DistributionApproximationResults_size3)
 #' 
 #'   cocktails = list(c(561, 904),
 #'                c(1902, 4585))
-#'.  
+#'  
 #'   p_value_cocktails(score_distribution_list, cocktails, ATC_Tree_UpperBound_2024,
 #'                     FAERS_myopathy)
 #' }
@@ -343,7 +343,7 @@ DistributionApproximation <- function(epochs, ATCtree, observations, temperature
 #' data("ATC_Tree_UpperBound_2024")
 #' data("FAERS_myopathy")
 #' 
-#' results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, 
+#' results = GeneticAlgorithm(epochs = 10, nbIndividuals = 10, 
 #'             ATCtree = ATC_Tree_UpperBound_2024,
 #'             observations = FAERS_myopathy)
 #'}
@@ -383,7 +383,7 @@ GeneticAlgorithm <- function(epochs, nbIndividuals, ATCtree, observations, num_t
 #' data("FAERS_myopathy")
 #' 
 #' size_1_score_distribution = trueDistributionDrugs(ATCtree = ATC_Tree_UpperBound_2024,
-#'             observations = FAERS_myopathy, beta = 4)
+#'             observations = FAERS_myopathy[1:100,], beta = 4)
 #'}
 #'@export
 trueDistributionDrugs <- function(ATCtree, observations, beta, max_score = 1000L, nbResults = 100L, num_thread = 1L) {
@@ -421,7 +421,7 @@ trueDistributionDrugs <- function(ATCtree, observations, beta, max_score = 1000L
 #' data("FAERS_myopathy")
 #' 
 #' size_2_score_distribution = trueDistributionSizeTwoCocktail(ATCtree = ATC_Tree_UpperBound_2024,
-#'             observations = FAERS_myopathy, beta = 4)
+#'             observations = FAERS_myopathy[1:100,], beta = 4)
 #'}
 #'@export
 trueDistributionSizeTwoCocktail <- function(ATCtree, observations, beta, max_score = 100L, nbResults = 100L, num_thread = 1L) {
@@ -446,9 +446,9 @@ trueDistributionSizeTwoCocktail <- function(ATCtree, observations, beta, max_sco
 #' cocktails = list(c(561, 904),
 #'                c(1902, 4585)) # only size 2 cocktails allowed for this function
 #' 
-#' scores_of_cocktails = computeMetrics_size2(cocktails = cocktails,
+#' scores_of_cocktails = computeMetrics_size2(CocktailList = cocktails,
 #'                               ATCtree = ATC_Tree_UpperBound_2024, 
-#'                               observations = FAERS_myopathy)
+#'                               observations = FAERS_myopathy[1:100,])
 #'}
 #'@export
 computeMetrics_size2 <- function(CocktailList, ATCtree, observations, num_thread = 1L) {
@@ -488,7 +488,7 @@ computeMetrics_size2 <- function(CocktailList, ATCtree, observations, num_thread
 #' mutation_rate = c(.1,.2,.3)
 #' nb_elite = c(0,1,2)
 #' alphas = c(0.5,1,2)
-#' hyperparam_test_genetic_algorithm(epochs = 1000, nb_individuals = 100,
+#' hyperparam_test_genetic_algorithm(epochs = 2, nb_individuals = 2,
 #'                               ATCtree = ATC_Tree_UpperBound_2024, 
 #'                               observations = FAERS_myopathy,
 #'                               nb_test_desired = 5, mutation_rate = mutation_rate,
@@ -541,7 +541,7 @@ print_csv <- function(input_filenames, observations, repetition, ATCtree, csv_fi
 #'  data("ATC_Tree_UpperBound_2024")
 #'  data("FAERS_myopathy")
 #'  
-#'  genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200,
+#'  genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 10,
 #'             ATCtree = ATC_Tree_UpperBound_2024,
 #'             observations = FAERS_myopathy)
 #'  distance_matrix = get_dissimilarity_from_genetic_results(genetic_results = genetic_results,

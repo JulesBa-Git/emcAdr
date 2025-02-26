@@ -315,7 +315,7 @@ std::vector<double> compute_hypergeom_on_list(const std::vector<std::vector<int>
 //'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 10,
 //'             ATCtree = ATC_Tree_UpperBound_2024, observations = FAERS_myopathy, Smax = 3)
 //'             
-//'   score_distribution_list = c(DistributionApproximationResults_size2,
+//'   score_distribution_list = list(DistributionApproximationResults_size2,
 //'                               DistributionApproximationResults_size3)
 //'   p_value_csv_file(score_distribution_list, "path/to/output.csv")
 //' }
@@ -389,9 +389,9 @@ void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const
 //'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 10,
 //'             ATCtree = ATC_Tree_UpperBound_2024, observations = FAERS_myopathy, Smax = 3)
 //'             
-//'   score_distribution_list = c(DistributionApproximationResults_size2,
+//'   score_distribution_list = list(DistributionApproximationResults_size2,
 //'                               DistributionApproximationResults_size3)
-//'   genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 200, 
+//'   genetic_results = GeneticAlgorithm(epochs = 10, nbIndividuals = 20, 
 //'             ATCtree = ATC_Tree_UpperBound_2024,
 //'             observations = FAERS_myopathy)
 //'   p_value_genetic_results(score_distribution_list, genetic_results)
@@ -450,12 +450,12 @@ std::vector<double> p_value_genetic_results(const std::vector<Rcpp::List>& distr
 //'   DistributionApproximationResults_size3 = DistributionApproximation(epochs = 10,
 //'             ATCtree = ATC_Tree_UpperBound_2024, observations = FAERS_myopathy, Smax = 3)
 //'             
-//'   score_distribution_list = c(DistributionApproximationResults_size2,
+//'   score_distribution_list = list(DistributionApproximationResults_size2,
 //'                               DistributionApproximationResults_size3)
 //' 
 //'   cocktails = list(c(561, 904),
 //'                c(1902, 4585))
-//'.  
+//'  
 //'   p_value_cocktails(score_distribution_list, cocktails, ATC_Tree_UpperBound_2024,
 //'                     FAERS_myopathy)
 //' }

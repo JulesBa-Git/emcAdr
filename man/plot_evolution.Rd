@@ -35,7 +35,7 @@ Plot the evolution of the mean and the best value of the population used by the 
 data("ATC_Tree_UpperBound_2024")
 data("FAERS_myopathy")
 
-results = GeneticAlgorithm(epochs = 10, nbIndividuals = 100, 
+results = GeneticAlgorithm(epochs = 10, nbIndividuals = 10, 
             ATCtree = ATC_Tree_UpperBound_2024,
             observations = FAERS_myopathy)
 

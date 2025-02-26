@@ -31,8 +31,8 @@ data("FAERS_myopathy")
 cocktails = list(c(561, 904),
                c(1902, 4585)) # only size 2 cocktails allowed for this function
 
-scores_of_cocktails = computeMetrics_size2(cocktails = cocktails,
+scores_of_cocktails = computeMetrics_size2(CocktailList = cocktails,
                               ATCtree = ATC_Tree_UpperBound_2024, 
-                              observations = FAERS_myopathy)
+                              observations = FAERS_myopathy[1:100,])
 }
 }
