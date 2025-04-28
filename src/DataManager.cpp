@@ -278,12 +278,13 @@ std::vector<double> compute_hypergeom_on_list(const std::vector<std::vector<int>
  Phyper.reserve(cocktails.size());
  Rcpp::LogicalVector observationsADR = observations["patientADR"];
  std::vector<std::vector<int>> observationsMedication = observations["patientATC"];
- 
  std::vector<int> upperBounds = ATCtree["upperBound"];
  int ADRCount = std::count(observationsADR.begin(), observationsADR.end(), true);
  int patient_number = observationsMedication.size();
- 
+ int i = 0;
  for(const auto& cocktail : cocktails){
+   
+   std::cout << ++i << '\n';
    Phyper.push_back(Individual(cocktail).
                       computePHypergeom(observationsMedication, observationsADR,
                                         upperBounds, ADRCount, 
