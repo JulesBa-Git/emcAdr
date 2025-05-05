@@ -281,10 +281,8 @@ std::vector<double> compute_hypergeom_on_list(const std::vector<std::vector<int>
  std::vector<int> upperBounds = ATCtree["upperBound"];
  int ADRCount = std::count(observationsADR.begin(), observationsADR.end(), true);
  int patient_number = observationsMedication.size();
- int i = 0;
  for(const auto& cocktail : cocktails){
    
-   std::cout << ++i << '\n';
    Phyper.push_back(Individual(cocktail).
                       computePHypergeom(observationsMedication, observationsADR,
                                         upperBounds, ADRCount, 
@@ -295,6 +293,46 @@ std::vector<double> compute_hypergeom_on_list(const std::vector<std::vector<int>
  return Phyper;
 }
 
+//'Function used to compute the Hypergeometric score on a cocktail
+//'
+//'@param cocktail : A cocktail in the form of vector of integers (ATC index)
+//'@param upperBounds : ATC tree  upper bound of the DFS (without the root)
+//'@param ADRcount : number of patient experiencing ADR in dataset
+//'@param observationsADR : observation of the ADR for each patients
+//'(a vector containing the ADR on which we want to compute the risk distribution)
+//'@param observationsMedication : observation of the drug intake for each patients
+//' on which we want to compute the risk distribution
+//'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
+//' 
+//'@return Hypergeometric score of the "cocktail" parameter
+//'@examples
+//'\donttest{
+//' data("ATC_Tree_UpperBound_2024")
+//' data("FAERS_myopathy")
+//' 
+//' ADRCount = sum(FAERS_myopathy$patientADR)
+//' cocktail = c(561, 904)
+//' 
+//' Hypergeom_of_cocktail = compute_hypergeom_cocktail(cocktail = cocktail,
+//'                               upperBounds = ATC_Tree_UpperBound_2024$upperBound,
+//'                               ADRCount =  ADRCount,
+//'                               observationsADR = FAERS_myopathy$patientADR,
+//'                               observationsMedication = FAERS_myopathy$patientATC,
+//'                               num_thread=8)
+//'}
+//'@export
+//[[Rcpp::export]]
+double compute_hypergeom_cocktail(const std::vector<int>& cocktail,
+                                  const std::vector<int>& upperBounds,
+                                  int ADRCount,
+                                  const Rcpp::LogicalVector& observationsADR,
+                                  const std::vector<std::vector<int>>& observationsMedication,
+                                  int num_thread = 1){
+  return Individual(cocktail).computePHypergeom(observationsMedication, observationsADR,
+                    upperBounds, ADRCount, 
+                    observationsMedication.size() - ADRCount,
+                    10000, num_thread).first;
+}
 
 //' Used to add the p_value to each cocktail of a csv_file that is an
 //' output of the genetic algorithm

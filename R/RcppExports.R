@@ -113,6 +113,38 @@ compute_hypergeom_on_list <- function(cocktails, ATCtree, observations, num_thre
     .Call(`_emcAdr_compute_hypergeom_on_list`, cocktails, ATCtree, observations, num_thread)
 }
 
+#'Function used to compute the Hypergeometric score on a cocktail
+#'
+#'@param cocktail : A cocktail in the form of vector of integers (ATC index)
+#'@param upperBounds : ATC tree  upper bound of the DFS (without the root)
+#'@param ADRcount : number of patient experiencing ADR in dataset
+#'@param observationsADR : observation of the ADR for each patients
+#'(a vector containing the ADR on which we want to compute the risk distribution)
+#'@param observationsMedication : observation of the drug intake for each patients
+#' on which we want to compute the risk distribution
+#'@param num_thread : Number of thread to run in parallel if openMP is available, 1 by default
+#' 
+#'@return Hypergeometric score of the "cocktail" parameter
+#'@examples
+#'\donttest{
+#' data("ATC_Tree_UpperBound_2024")
+#' data("FAERS_myopathy")
+#' 
+#' ADRCount = sum(FAERS_myopathy$patientADR)
+#' cocktail = c(561, 904)
+#' 
+#' Hypergeom_of_cocktail = compute_hypergeom_cocktail(cocktail = cocktail,
+#'                               upperBounds = ATC_Tree_UpperBound_2024$upperBound,
+#'                               ADRCount =  ADRCount,
+#'                               observationsADR = FAERS_myopathy$patientADR,
+#'                               observationsMedication = FAERS_myopathy$patientATC,
+#'                               num_thread=8)
+#'}
+#'@export
+compute_hypergeom_cocktail <- function(cocktail, upperBounds, ADRCount, observationsADR, observationsMedication, num_thread = 1L) {
+    .Call(`_emcAdr_compute_hypergeom_cocktail`, cocktail, upperBounds, ADRCount, observationsADR, observationsMedication, num_thread)
+}
+
 #' Used to add the p_value to each cocktail of a csv_file that is an
 #' output of the genetic algorithm
 #' @param distribution_outputs A list of distribution of cocktails of different sizes

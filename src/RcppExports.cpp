@@ -74,6 +74,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// compute_hypergeom_cocktail
+double compute_hypergeom_cocktail(const std::vector<int>& cocktail, const std::vector<int>& upperBounds, int ADRCount, const Rcpp::LogicalVector& observationsADR, const std::vector<std::vector<int>>& observationsMedication, int num_thread);
+RcppExport SEXP _emcAdr_compute_hypergeom_cocktail(SEXP cocktailSEXP, SEXP upperBoundsSEXP, SEXP ADRCountSEXP, SEXP observationsADRSEXP, SEXP observationsMedicationSEXP, SEXP num_threadSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type cocktail(cocktailSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type upperBounds(upperBoundsSEXP);
+    Rcpp::traits::input_parameter< int >::type ADRCount(ADRCountSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::LogicalVector& >::type observationsADR(observationsADRSEXP);
+    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type observationsMedication(observationsMedicationSEXP);
+    Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_hypergeom_cocktail(cocktail, upperBounds, ADRCount, observationsADR, observationsMedication, num_thread));
+    return rcpp_result_gen;
+END_RCPP
+}
 // p_value_csv_file
 void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const std::string& filename, bool filtred_distribution, const std::string& sep);
 RcppExport SEXP _emcAdr_p_value_csv_file(SEXP distribution_outputsSEXP, SEXP filenameSEXP, SEXP filtred_distributionSEXP, SEXP sepSEXP) {
@@ -321,6 +337,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_OutsandingScoreToDistribution", (DL_FUNC) &_emcAdr_OutsandingScoreToDistribution, 2},
     {"_emcAdr_compute_RR_on_list", (DL_FUNC) &_emcAdr_compute_RR_on_list, 4},
     {"_emcAdr_compute_hypergeom_on_list", (DL_FUNC) &_emcAdr_compute_hypergeom_on_list, 4},
+    {"_emcAdr_compute_hypergeom_cocktail", (DL_FUNC) &_emcAdr_compute_hypergeom_cocktail, 6},
     {"_emcAdr_p_value_csv_file", (DL_FUNC) &_emcAdr_p_value_csv_file, 4},
     {"_emcAdr_p_value_genetic_results", (DL_FUNC) &_emcAdr_p_value_genetic_results, 3},
     {"_emcAdr_p_value_cocktails", (DL_FUNC) &_emcAdr_p_value_cocktails, 6},
