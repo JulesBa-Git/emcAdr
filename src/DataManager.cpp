@@ -384,6 +384,32 @@ Rcpp::List tmp_verif_null(const DataFrame& ATCtree,
                             Rcpp::Named("score") = scores);
 }
 
+//'Function to remove
+//'@export
+//[[Rcpp::export]]
+Rcpp::List tmp_cocktail_match(const std::vector<std::vector<int>>& H_1_cocktails,
+                              const std::vector<std::vector<int>>& non_zero_cocktails,
+                              const std::vector<double>& non_zero_scores,
+                              const std::vector<int>& upperBounds,
+                              int ADRCount){
+  std::vector<std::vector<int>> return_cocktails;
+  return_cocktails.reserve(non_zero_cocktails.size());
+  std::vector<double> scores;
+  scores.reserve(non_zero_cocktails.size());
+  
+  for(const auto& C_0 : H_1_cocktails){
+    Individual ind_0{C_0};
+    for(int i = 0; i < non_zero_cocktails.size() ; ++i){
+      if(!ind_0.matches(non_zero_cocktails[i], upperBounds)){
+        return_cocktails.push_back(non_zero_cocktails[i]);
+        scores.push_back(non_zero_scores[i]);
+      }
+    }
+  }
+  return Rcpp::List::create(Rcpp::Named("cocktails") = return_cocktails,
+                            Rcpp::Named("scores") = scores);
+}
+
 //' Used to add the p_value to each cocktail of a csv_file that is an
 //' output of the genetic algorithm
 //' @param distribution_outputs A list of distribution of cocktails of different sizes
