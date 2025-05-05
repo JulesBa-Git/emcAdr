@@ -90,6 +90,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// tmp_verif_null
+Rcpp::List tmp_verif_null(const DataFrame& ATCtree, const DataFrame& observations, int num_thread);
+RcppExport SEXP _emcAdr_tmp_verif_null(SEXP ATCtreeSEXP, SEXP observationsSEXP, SEXP num_threadSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const DataFrame& >::type ATCtree(ATCtreeSEXP);
+    Rcpp::traits::input_parameter< const DataFrame& >::type observations(observationsSEXP);
+    Rcpp::traits::input_parameter< int >::type num_thread(num_threadSEXP);
+    rcpp_result_gen = Rcpp::wrap(tmp_verif_null(ATCtree, observations, num_thread));
+    return rcpp_result_gen;
+END_RCPP
+}
 // p_value_csv_file
 void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const std::string& filename, bool filtred_distribution, const std::string& sep);
 RcppExport SEXP _emcAdr_p_value_csv_file(SEXP distribution_outputsSEXP, SEXP filenameSEXP, SEXP filtred_distributionSEXP, SEXP sepSEXP) {
@@ -338,6 +351,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_compute_RR_on_list", (DL_FUNC) &_emcAdr_compute_RR_on_list, 4},
     {"_emcAdr_compute_hypergeom_on_list", (DL_FUNC) &_emcAdr_compute_hypergeom_on_list, 4},
     {"_emcAdr_compute_hypergeom_cocktail", (DL_FUNC) &_emcAdr_compute_hypergeom_cocktail, 6},
+    {"_emcAdr_tmp_verif_null", (DL_FUNC) &_emcAdr_tmp_verif_null, 3},
     {"_emcAdr_p_value_csv_file", (DL_FUNC) &_emcAdr_p_value_csv_file, 4},
     {"_emcAdr_p_value_genetic_results", (DL_FUNC) &_emcAdr_p_value_genetic_results, 3},
     {"_emcAdr_p_value_cocktails", (DL_FUNC) &_emcAdr_p_value_cocktails, 6},

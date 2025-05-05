@@ -145,6 +145,12 @@ compute_hypergeom_cocktail <- function(cocktail, upperBounds, ADRCount, observat
     .Call(`_emcAdr_compute_hypergeom_cocktail`, cocktail, upperBounds, ADRCount, observationsADR, observationsMedication, num_thread)
 }
 
+#'Function to remove
+#'@export
+tmp_verif_null <- function(ATCtree, observations, num_thread = 1L) {
+    .Call(`_emcAdr_tmp_verif_null`, ATCtree, observations, num_thread)
+}
+
 #' Used to add the p_value to each cocktail of a csv_file that is an
 #' output of the genetic algorithm
 #' @param distribution_outputs A list of distribution of cocktails of different sizes

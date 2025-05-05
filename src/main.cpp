@@ -729,10 +729,12 @@ Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataF
   indiv.setTemperature(1);
   std::vector<int> med;
   med.resize(2);
+  int a = 1;
   for(int i = 0 ; i < ATCtree.nrow() - 1 ; ++i){
     med[0] = i;
     for(int j = i+1 ; j < ATCtree.nrow(); ++j){
       med[1] = j;
+      std::cout << a++ << '\n';
       indiv.setMedications(med);
       //computeRROutput = indiv.computeRR(observationsMedication, observationsADR, upperBounds, 8000, num_thread);
       computePhyperOutput = indiv.computePHypergeom(observationsMedication, observationsADR,

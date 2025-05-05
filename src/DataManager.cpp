@@ -334,6 +334,56 @@ double compute_hypergeom_cocktail(const std::vector<int>& cocktail,
                     10000, num_thread).first;
 }
 
+//'Function to remove
+//'@export
+//[[Rcpp::export]]
+Rcpp::List tmp_verif_null(const DataFrame& ATCtree, 
+                          const DataFrame& observations,
+                          int num_thread = 1){
+  
+  Rcpp::LogicalVector observationsADR = observations["patientADR"];
+  std::vector<std::vector<int>> observationsMedication = observations["patientATC"];
+  std::vector<int> upperBounds = ATCtree["upperBound"];
+  int ADRCount = std::count(observationsADR.begin(), observationsADR.end(), true);
+  int notADRCount = observationsMedication.size() - ADRCount;
+  
+  std::vector<int> cocktail{};
+  cocktail.resize(2);
+  
+  std::vector<double> scores;
+  scores.reserve(100000);
+  std::vector<std::vector<int>>solutions;
+  solutions.reserve(100000);
+  
+  int p =1;
+  std::cout << "la1\n";
+  for(int i = 0; i < ATCtree.nrow() -1; ++i){
+    cocktail[0] = i;
+    for(int j = i+1 ; j < ATCtree.nrow(); ++j){
+      cocktail[1] = j;
+      std::cout << p++;
+      Individual ind{cocktail};
+      double score = ind.computePHypergeom(observationsMedication,
+                                           observationsADR,
+                                           upperBounds,
+                                           ADRCount, notADRCount,
+                                           8000, num_thread).first;
+      if(score > 0){
+        scores.push_back(score);
+        solutions.push_back(cocktail);
+      }
+    }
+  }
+  
+  std::cout << "la2\n";
+  solutions.shrink_to_fit();
+  std::cout << "la3\n";
+  
+  
+  return Rcpp::List::create(Rcpp::Named("cocktails") = solutions,
+                            Rcpp::Named("score") = scores);
+}
+
 //' Used to add the p_value to each cocktail of a csv_file that is an
 //' output of the genetic algorithm
 //' @param distribution_outputs A list of distribution of cocktails of different sizes
