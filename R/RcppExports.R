@@ -153,8 +153,8 @@ tmp_verif_null <- function(ATCtree, observations, num_thread = 1L) {
 
 #'Function to remove
 #'@export
-tmp_cocktail_match <- function(H_1_cocktails, non_zero_cocktails, non_zero_scores, upperBounds, ADRCount) {
-    .Call(`_emcAdr_tmp_cocktail_match`, H_1_cocktails, non_zero_cocktails, non_zero_scores, upperBounds, ADRCount)
+tmp_cocktail_match <- function(H_1_cocktails, non_zero_cocktails, non_zero_scores, upperBounds) {
+    .Call(`_emcAdr_tmp_cocktail_match`, H_1_cocktails, non_zero_cocktails, non_zero_scores, upperBounds)
 }
 
 #' Used to add the p_value to each cocktail of a csv_file that is an

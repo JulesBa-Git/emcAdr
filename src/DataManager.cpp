@@ -390,22 +390,25 @@ Rcpp::List tmp_verif_null(const DataFrame& ATCtree,
 Rcpp::List tmp_cocktail_match(const std::vector<std::vector<int>>& H_1_cocktails,
                               const std::vector<std::vector<int>>& non_zero_cocktails,
                               const std::vector<double>& non_zero_scores,
-                              const std::vector<int>& upperBounds,
-                              int ADRCount){
+                              const std::vector<int>& upperBounds){
   std::vector<std::vector<int>> return_cocktails;
   return_cocktails.reserve(non_zero_cocktails.size());
   std::vector<double> scores;
   scores.reserve(non_zero_cocktails.size());
   
-  for(const auto& C_0 : H_1_cocktails){
-    Individual ind_0{C_0};
-    for(int i = 0; i < non_zero_cocktails.size() ; ++i){
-      if(!ind_0.matches(non_zero_cocktails[i], upperBounds)){
-        return_cocktails.push_back(non_zero_cocktails[i]);
-        scores.push_back(non_zero_scores[i]);
-      }
+  for(int i = 0; i < non_zero_cocktails.size(); ++i){
+    int j =0;
+    Individual ind_0{H_1_cocktails[j]};
+    while(j < H_1_cocktails.size() && !ind_0.matches(non_zero_cocktails[i], upperBounds)){
+      j++;
+      Individual ind_0{H_1_cocktails[j]};
+    }
+    if(j == H_1_cocktails.size()){
+      return_cocktails.push_back(non_zero_cocktails[i]);
+      scores.push_back(non_zero_scores[i]);
     }
   }
+  
   return Rcpp::List::create(Rcpp::Named("cocktails") = return_cocktails,
                             Rcpp::Named("scores") = scores);
 }
