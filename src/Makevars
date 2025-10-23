@@ -2,6 +2,15 @@ CXX_STD = CXX17
 
 PKG_CXXFLAGS += $(SHLIB_OPENMP_CXXFLAGS)
 PKG_LIBS     += $(SHLIB_OPENMP_LDFLAGS)
+ 
+ifndef SHLIB_OPENMP_CXXFLAGS
+ SHLIB_OPENMP_CXXFLAGS = -Xpreprocessor $(OMP_FLAGS) -I$(OMP_INCLUDE) $(FPICFLAGS)
+endif
+
+ifndef SHLIB_OPENMP_LDFLAGS
+	SHLIB_OPENMP_LDFLAGS = -L$(OMP_LIBS) -lomp
+endif
+
 
 ## Previous Makevars
 ## With R 3.1.0 or later, you can uncomment the following line to tell R to 
