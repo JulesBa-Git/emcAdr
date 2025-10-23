@@ -105,7 +105,6 @@ std::pair<double, std::pair<int,int>> Individual::computePHypergeom(const std::v
   if(this->medications_.size() == 0)
     return std::make_pair(0.0, std::make_pair(0,0));
 #ifdef _OPENMP
-  std::cout << "la openmp\n";
   omp_set_num_threads(num_thread);
 #pragma omp parallel for reduction(+:takingCocktail) reduction(+:takingCocktailHavingADR)
 #endif

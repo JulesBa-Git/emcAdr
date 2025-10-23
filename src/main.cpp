@@ -44,7 +44,7 @@ using Rcpp::DataFrame;
 //' - Outstanding_score : An array of the score greater than max_score,
 //' - Best_cocktails : the nbResults bests cocktails encountered during the run.
 //' - Best_scores : Score corresponding to the bestCocktails.
-//' - FilteredDistribution : Distribution containing score for cocktails taken by at
+//' - Filtered_score_distribution : Distribution containing score for cocktails taken by at
 //' least beta patients.
 //' - Best_cocktails_beta : the nbResults bests cocktails taken by at least beta patients
 //' encountered during the run.
@@ -1207,20 +1207,21 @@ void print_csv(const std::vector<std::string>& input_filenames,
   
   Rcpp::LogicalVector observationsADR = observations["patientADR"];
 
-  
   std::vector<std::pair<double, std::vector<int>>> solutions;
   
-  for(const auto& filename : input_filenames){
+  for(auto& filename : input_filenames){
     std::ifstream input(filename);
     if(!input.is_open()){
       Rcpp::Rcerr << "erreur ouverture du fichier " << filename << "\n";
       return;
     }
     
-    int epochs = std::stoi(filename.substr(filename.find('/')+1,
-                                           filename.find('e')).data());
-    int nb_individuals = std::stoi(filename.substr(filename.find('_')+1,
-                                                   filename.find('i')).data());
+    auto cut_filename = std::filesystem::path(filename).filename().string();
+    
+    int epochs = std::stoi(cut_filename.substr(0,
+                                           cut_filename.find('e')).data());
+    int nb_individuals = std::stoi(cut_filename.substr(cut_filename.find('_')+1,
+                                                       cut_filename.find('i')).data());
     
     std::string line;
     solutions.reserve(solutions.capacity() + repetition*nb_individuals);
@@ -1229,8 +1230,12 @@ void print_csv(const std::vector<std::string>& input_filenames,
       for(int j = 0; j < nb_individuals;++j){
         std::getline(input, line);
         auto tmp = recup_solution(line);
-        if(tmp.first > 0)
-          solutions.push_back(tmp);
+        if(tmp.first > 0){
+          std::sort(tmp.second.begin(), tmp.second.end());
+          tmp.second.erase(std::unique(tmp.second.begin(), tmp.second.end()),
+                           tmp.second.end());
+          solutions.push_back(std::move(tmp));
+        }
       } 
       
       for(int j = 0; j < epochs; ++j){

@@ -157,6 +157,12 @@ tmp_cocktail_match <- function(H_1_cocktails, non_zero_cocktails, non_zero_score
     .Call(`_emcAdr_tmp_cocktail_match`, H_1_cocktails, non_zero_cocktails, non_zero_scores, upperBounds)
 }
 
+#'Function to remove
+#'@export
+tmp_cocktail_match_reverse <- function(H_1_cocktails, non_zero_cocktails, non_zero_scores, upperBounds) {
+    .Call(`_emcAdr_tmp_cocktail_match_reverse`, H_1_cocktails, non_zero_cocktails, non_zero_scores, upperBounds)
+}
+
 #' Used to add the p_value to each cocktail of a csv_file that is an
 #' output of the genetic algorithm
 #' @param distribution_outputs A list of distribution of cocktails of different sizes
@@ -337,7 +343,7 @@ int_cocktail_to_string_cocktail <- function(cocktails, ATC_name) {
 #' - Outstanding_score : An array of the score greater than max_score,
 #' - Best_cocktails : the nbResults bests cocktails encountered during the run.
 #' - Best_scores : Score corresponding to the bestCocktails.
-#' - FilteredDistribution : Distribution containing score for cocktails taken by at
+#' - Filtered_score_distribution : Distribution containing score for cocktails taken by at
 #' least beta patients.
 #' - Best_cocktails_beta : the nbResults bests cocktails taken by at least beta patients
 #' encountered during the run.

@@ -117,6 +117,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// tmp_cocktail_match_reverse
+Rcpp::List tmp_cocktail_match_reverse(const std::vector<std::vector<int>>& H_1_cocktails, const std::vector<std::vector<int>>& non_zero_cocktails, const std::vector<double>& non_zero_scores, const std::vector<int>& upperBounds);
+RcppExport SEXP _emcAdr_tmp_cocktail_match_reverse(SEXP H_1_cocktailsSEXP, SEXP non_zero_cocktailsSEXP, SEXP non_zero_scoresSEXP, SEXP upperBoundsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type H_1_cocktails(H_1_cocktailsSEXP);
+    Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type non_zero_cocktails(non_zero_cocktailsSEXP);
+    Rcpp::traits::input_parameter< const std::vector<double>& >::type non_zero_scores(non_zero_scoresSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int>& >::type upperBounds(upperBoundsSEXP);
+    rcpp_result_gen = Rcpp::wrap(tmp_cocktail_match_reverse(H_1_cocktails, non_zero_cocktails, non_zero_scores, upperBounds));
+    return rcpp_result_gen;
+END_RCPP
+}
 // p_value_csv_file
 void p_value_csv_file(const std::vector<Rcpp::List>& distribution_outputs, const std::string& filename, bool filtred_distribution, const std::string& sep);
 RcppExport SEXP _emcAdr_p_value_csv_file(SEXP distribution_outputsSEXP, SEXP filenameSEXP, SEXP filtred_distributionSEXP, SEXP sepSEXP) {
@@ -367,6 +381,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_emcAdr_compute_hypergeom_cocktail", (DL_FUNC) &_emcAdr_compute_hypergeom_cocktail, 6},
     {"_emcAdr_tmp_verif_null", (DL_FUNC) &_emcAdr_tmp_verif_null, 3},
     {"_emcAdr_tmp_cocktail_match", (DL_FUNC) &_emcAdr_tmp_cocktail_match, 4},
+    {"_emcAdr_tmp_cocktail_match_reverse", (DL_FUNC) &_emcAdr_tmp_cocktail_match_reverse, 4},
     {"_emcAdr_p_value_csv_file", (DL_FUNC) &_emcAdr_p_value_csv_file, 4},
     {"_emcAdr_p_value_genetic_results", (DL_FUNC) &_emcAdr_p_value_genetic_results, 3},
     {"_emcAdr_p_value_cocktails", (DL_FUNC) &_emcAdr_p_value_cocktails, 6},

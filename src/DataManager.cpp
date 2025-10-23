@@ -56,7 +56,7 @@ std::vector<std::vector<int>> ATCtoNumeric(const std::vector<std::string>&
       }
       
       if(posTree == cppTree.size()){
-        Rcpp::Rcerr<<"error : a patient take a medication that is not in the tree" << '\n';
+        Rcpp::Rcerr<<"error : a patient take a medication that is not in the tree" << code << '\n';
         return {};
       }
       //+1 because of the cpp indexes (starting at 0)
@@ -391,27 +391,70 @@ Rcpp::List tmp_cocktail_match(const std::vector<std::vector<int>>& H_1_cocktails
                               const std::vector<std::vector<int>>& non_zero_cocktails,
                               const std::vector<double>& non_zero_scores,
                               const std::vector<int>& upperBounds){
+  
   std::vector<std::vector<int>> return_cocktails;
   return_cocktails.reserve(non_zero_cocktails.size());
+  
   std::vector<double> scores;
-  scores.reserve(non_zero_cocktails.size());
+  scores.reserve(non_zero_scores.size());
+  Individual ind_0;
   
   for(int i = 0; i < non_zero_cocktails.size(); ++i){
-    int j =0;
-    Individual ind_0{H_1_cocktails[j]};
-    while(j < H_1_cocktails.size() && !ind_0.matches(non_zero_cocktails[i], upperBounds)){
-      j++;
-      Individual ind_0{H_1_cocktails[j]};
+    bool match = false;
+    for(const auto& C1 : H_1_cocktails){
+      ind_0.setMedications(C1);
+      if(ind_0.matches(non_zero_cocktails[i],upperBounds)){
+        match = true;
+        break;
+      }
     }
-    if(j == H_1_cocktails.size()){
-      return_cocktails.push_back(non_zero_cocktails[i]);
-      scores.push_back(non_zero_scores[i]);
+    if(!match){
+    return_cocktails.push_back(non_zero_cocktails[i]);
+    scores.push_back(non_zero_scores[i]);
     }
   }
   
+  return_cocktails.shrink_to_fit();
+  scores.shrink_to_fit();
   return Rcpp::List::create(Rcpp::Named("cocktails") = return_cocktails,
                             Rcpp::Named("scores") = scores);
 }
+
+//'Function to remove
+//'@export
+//[[Rcpp::export]]
+Rcpp::List tmp_cocktail_match_reverse(const std::vector<std::vector<int>>& H_1_cocktails,
+                             const std::vector<std::vector<int>>& non_zero_cocktails,
+                             const std::vector<double>& non_zero_scores,
+                             const std::vector<int>& upperBounds){
+ 
+ std::vector<std::vector<int>> return_cocktails;
+ return_cocktails.reserve(non_zero_cocktails.size());
+ 
+ std::vector<double> scores;
+ scores.reserve(non_zero_scores.size());
+ Individual ind_0;
+ 
+ for(int i = 0; i < non_zero_cocktails.size(); ++i){
+   bool match = false;
+   ind_0.setMedications(non_zero_cocktails[i]);
+   for(const auto& C1 : H_1_cocktails){
+     if(ind_0.matches(C1,upperBounds)){
+       match = true;
+       break;
+     }
+   }
+   if(!match){
+     return_cocktails.push_back(non_zero_cocktails[i]);
+     scores.push_back(non_zero_scores[i]);
+   }
+ }
+ 
+ return_cocktails.shrink_to_fit();
+ scores.shrink_to_fit();
+ return Rcpp::List::create(Rcpp::Named("cocktails") = return_cocktails,
+                           Rcpp::Named("scores") = scores);
+ }
 
 //' Used to add the p_value to each cocktail of a csv_file that is an
 //' output of the genetic algorithm
