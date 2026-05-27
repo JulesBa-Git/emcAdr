@@ -741,7 +741,7 @@ Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataF
       computePhyperOutput = indiv.computePHypergeom(observationsMedication, observationsADR,
                                                     upperBounds, ADRCount, notADRCount,
                                                     8000, num_thread);
-      if(computePhyperOutput.second.second > 0){ // if the cocktail belongs to F
+      if(computePhyperOutput.second.second > 0 && indiv.isTrueCocktail(upperBounds)){ // if the cocktail belongs to F
         if(computePhyperOutput.first < max_score){
           int index = 10 * computePhyperOutput.first;
           ++score_distribution[index];
