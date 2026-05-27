@@ -2,12 +2,13 @@
 % Please edit documentation in R/Clustering.R
 \name{clustering_genetic_algorithm}
 \alias{clustering_genetic_algorithm}
-\title{Clustering of the solutions of the genetic algorithm using the hclust algorithm}
+\title{Clustering of the solutions of the genetic algorithm using the dbscan algorithm}
 \usage{
 clustering_genetic_algorithm(
   genetic_results,
   ATCtree,
   dist.normalize = TRUE,
+  eps = 0.3,
   umap_config = NULL
 )
 }
@@ -24,7 +25,7 @@ clustering_genetic_algorithm(
 A dataframe containing UMAP 1/2 the two coordinates of each cocktails in the plane as well as the cluster number of each cocktails
 }
 \description{
-Clustering of the solutions of the genetic algorithm using the hclust algorithm
+Clustering of the solutions of the genetic algorithm using the dbscan algorithm
 }
 \examples{
 \donttest{

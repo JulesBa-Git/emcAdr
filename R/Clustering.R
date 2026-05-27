@@ -34,7 +34,7 @@ hclust_genetic_solution <- function(genetic_results,ATCtree, dist.normalize = TR
   return (hc)
 }
 
-#' Clustering of the solutions of the genetic algorithm using the hclust algorithm
+#' Clustering of the solutions of the genetic algorithm using the dbscan algorithm
 #' 
 #' @param genetic_results A list of cocktails in the form of integer vector
 #' @param ATCtree ATC tree with upper bound of the DFS
@@ -54,6 +54,7 @@ hclust_genetic_solution <- function(genetic_results,ATCtree, dist.normalize = TR
 #'}
 #' @export
 clustering_genetic_algorithm <- function(genetic_results,ATCtree,dist.normalize = TRUE,
+                                         eps = .3,
                                          umap_config=NULL){
   requireNamespace("umap")
   requireNamespace("dbscan")
@@ -68,7 +69,7 @@ clustering_genetic_algorithm <- function(genetic_results,ATCtree,dist.normalize 
   
   umap_results <- umap::umap(divergence, config = umap_config)
   layout <- umap_results$layout
-  dbscan_results <- dbscan::dbscan(layout)
+  dbscan_results <- dbscan::dbscan(layout, eps = eps)
   return (data.frame(cocktails = genetic_results,
                      UMAP1 = umap_results$layout[,1],
                      UMAP2 = umap_results$layout[,2],

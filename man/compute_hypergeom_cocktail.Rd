@@ -18,6 +18,8 @@ compute_hypergeom_cocktail(
 
 \item{upperBounds}{: ATC tree  upper bound of the DFS (without the root)}
 
+\item{ADRCount}{: number of patient experiencing ADR in dataset}
+
 \item{observationsADR}{: observation of the ADR for each patients
 (a vector containing the ADR on which we want to compute the risk distribution)}
 
@@ -25,8 +27,6 @@ compute_hypergeom_cocktail(
 on which we want to compute the risk distribution}
 
 \item{num_thread}{: Number of thread to run in parallel if openMP is available, 1 by default}
-
-\item{ADRcount}{: number of patient experiencing ADR in dataset}
 }
 \value{
 Hypergeometric score of the "cocktail" parameter

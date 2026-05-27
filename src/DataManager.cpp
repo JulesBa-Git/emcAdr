@@ -297,7 +297,7 @@ std::vector<double> compute_hypergeom_on_list(const std::vector<std::vector<int>
 //'
 //'@param cocktail : A cocktail in the form of vector of integers (ATC index)
 //'@param upperBounds : ATC tree  upper bound of the DFS (without the root)
-//'@param ADRcount : number of patient experiencing ADR in dataset
+//'@param ADRCount : number of patient experiencing ADR in dataset
 //'@param observationsADR : observation of the ADR for each patients
 //'(a vector containing the ADR on which we want to compute the risk distribution)
 //'@param observationsMedication : observation of the drug intake for each patients
@@ -333,128 +333,6 @@ double compute_hypergeom_cocktail(const std::vector<int>& cocktail,
                     observationsMedication.size() - ADRCount,
                     10000, num_thread).first;
 }
-
-//'Function to remove
-//'@export
-//[[Rcpp::export]]
-Rcpp::List tmp_verif_null(const DataFrame& ATCtree, 
-                          const DataFrame& observations,
-                          int num_thread = 1){
-  
-  Rcpp::LogicalVector observationsADR = observations["patientADR"];
-  std::vector<std::vector<int>> observationsMedication = observations["patientATC"];
-  std::vector<int> upperBounds = ATCtree["upperBound"];
-  int ADRCount = std::count(observationsADR.begin(), observationsADR.end(), true);
-  int notADRCount = observationsMedication.size() - ADRCount;
-  
-  std::vector<int> cocktail{};
-  cocktail.resize(2);
-  
-  std::vector<double> scores;
-  scores.reserve(100000);
-  std::vector<std::vector<int>>solutions;
-  solutions.reserve(100000);
-  
-  int p =1;
-  std::cout << "la1\n";
-  for(int i = 0; i < ATCtree.nrow() -1; ++i){
-    cocktail[0] = i;
-    for(int j = i+1 ; j < ATCtree.nrow(); ++j){
-      cocktail[1] = j;
-      std::cout << p++;
-      Individual ind{cocktail};
-      double score = ind.computePHypergeom(observationsMedication,
-                                           observationsADR,
-                                           upperBounds,
-                                           ADRCount, notADRCount,
-                                           8000, num_thread).first;
-      if(score > 0){
-        scores.push_back(score);
-        solutions.push_back(cocktail);
-      }
-    }
-  }
-  
-  std::cout << "la2\n";
-  solutions.shrink_to_fit();
-  std::cout << "la3\n";
-  
-  
-  return Rcpp::List::create(Rcpp::Named("cocktails") = solutions,
-                            Rcpp::Named("score") = scores);
-}
-
-//'Function to remove
-//'@export
-//[[Rcpp::export]]
-Rcpp::List tmp_cocktail_match(const std::vector<std::vector<int>>& H_1_cocktails,
-                              const std::vector<std::vector<int>>& non_zero_cocktails,
-                              const std::vector<double>& non_zero_scores,
-                              const std::vector<int>& upperBounds){
-  
-  std::vector<std::vector<int>> return_cocktails;
-  return_cocktails.reserve(non_zero_cocktails.size());
-  
-  std::vector<double> scores;
-  scores.reserve(non_zero_scores.size());
-  Individual ind_0;
-  
-  for(int i = 0; i < non_zero_cocktails.size(); ++i){
-    bool match = false;
-    for(const auto& C1 : H_1_cocktails){
-      ind_0.setMedications(C1);
-      if(ind_0.matches(non_zero_cocktails[i],upperBounds)){
-        match = true;
-        break;
-      }
-    }
-    if(!match){
-    return_cocktails.push_back(non_zero_cocktails[i]);
-    scores.push_back(non_zero_scores[i]);
-    }
-  }
-  
-  return_cocktails.shrink_to_fit();
-  scores.shrink_to_fit();
-  return Rcpp::List::create(Rcpp::Named("cocktails") = return_cocktails,
-                            Rcpp::Named("scores") = scores);
-}
-
-//'Function to remove
-//'@export
-//[[Rcpp::export]]
-Rcpp::List tmp_cocktail_match_reverse(const std::vector<std::vector<int>>& H_1_cocktails,
-                             const std::vector<std::vector<int>>& non_zero_cocktails,
-                             const std::vector<double>& non_zero_scores,
-                             const std::vector<int>& upperBounds){
- 
- std::vector<std::vector<int>> return_cocktails;
- return_cocktails.reserve(non_zero_cocktails.size());
- 
- std::vector<double> scores;
- scores.reserve(non_zero_scores.size());
- Individual ind_0;
- 
- for(int i = 0; i < non_zero_cocktails.size(); ++i){
-   bool match = false;
-   ind_0.setMedications(non_zero_cocktails[i]);
-   for(const auto& C1 : H_1_cocktails){
-     if(ind_0.matches(C1,upperBounds)){
-       match = true;
-       break;
-     }
-   }
-   if(!match){
-     return_cocktails.push_back(non_zero_cocktails[i]);
-     scores.push_back(non_zero_scores[i]);
-   }
- }
- 
- return_cocktails.shrink_to_fit();
- scores.shrink_to_fit();
- return Rcpp::List::create(Rcpp::Named("cocktails") = return_cocktails,
-                           Rcpp::Named("scores") = scores);
- }
 
 //' Used to add the p_value to each cocktail of a csv_file that is an
 //' output of the genetic algorithm
@@ -704,6 +582,8 @@ Rcpp::List csv_to_population(const std::vector<std::string>& ATC_name,
 //' a vector of index of the ATC tree ex: c(ATC_index(drug1), ATC_index(drugs2))
 //' @param ATC_name the ATC_name column of the ATC tree
 //' @param lines A string vector of drugs cocktail in the form "drug1:drug2:...:drug_n"
+//' @param last_element A boolean to indicate whether we are matching the drug to 
+//' the first matching occurrence in the tree or the last one. Default is false
 //' @return An R List that can be used by other algorithms (e.g. clustering algorithm)
 //' @examples
 //' \donttest{
@@ -716,7 +596,8 @@ Rcpp::List csv_to_population(const std::vector<std::string>& ATC_name,
 //' @export
 // [[Rcpp::export]]
 Rcpp::List string_list_to_int_cocktails(const std::vector<std::string>& ATC_name,
-                                        const std::vector<std::string>& lines){
+                                        const std::vector<std::string>& lines,
+                                        bool last_element = false){
   std::vector<std::vector<int>> cocktails;
   cocktails.reserve(lines.size());
   
@@ -727,12 +608,22 @@ Rcpp::List string_list_to_int_cocktails(const std::vector<std::string>& ATC_name
     std::vector<int> rowth_cocktail;
     rowth_cocktail.reserve(7);
     
-    while(std::getline(ss, drug, ':')){
-      auto it = std::find(ATC_name.begin(), ATC_name.end(), drug);
-      if(it != ATC_name.end()){
+    while (std::getline(ss, drug, ':')) {
+      auto it = ATC_name.end();
+      
+      if (last_element) {
+        auto rit = std::find(ATC_name.rbegin(), ATC_name.rend(), drug);
+        if (rit != ATC_name.rend())
+          it = rit.base() - 1; // convert reverse iterator
+      } else {
+        it = std::find(ATC_name.begin(), ATC_name.end(), drug);
+      }
+      
+      if (it != ATC_name.end()) {
         rowth_cocktail.push_back(std::distance(ATC_name.begin(), it));
-      } 
+      }
     }
+    
     rowth_cocktail.shrink_to_fit();
     cocktails.push_back(rowth_cocktail);
   }
@@ -772,5 +663,89 @@ std::vector<std::vector<std::string>> int_cocktail_to_string_cocktail(
   return string_cocktails;
 }
 
-
+//' Filter out drug cocktails with high-level ATC classifications
+//' 
+//' This function iterates through a collection of drug combinations (cocktails) and filters out 
+//' those that have a ratio of "high-level" nodes (ATC codes with length <= 3) exceeding 
+//' the specified threshold. This is useful for removing overly generic drug categories 
+//' from results.
+//'
+//' @param solutions A \code{Rcpp::DataFrame} containing the results to filter. Must include columns: 
+//'   "score", "RR", "p_value", "n.patient.taking.C", "n.patient.taking.C.and.having.AE", and "Cocktail".
+//' @param ATC_name A vector of strings containing the ATC codes/names used for mapping.
+//' @param ATC_length An integer vector where each element represents the length (hierarchy level) 
+//'   of the corresponding ATC code in \code{ATC_name}.
+//' @param find_last_occurence Logical. If \code{true} (default), the mapping logic will look for 
+//'   the last occurrence of a drug name in the reference list.
+//' @param max_height_ratio A double (default 0.5) representing the maximum allowable proportion 
+//'   of high-level nodes (length <= 3) in a cocktail. Cocktails exceeding this ratio are removed.
+//'
+//' @return A \code{Rcpp::DataFrame} with the same columns as \code{solutions}, containing only 
+//'   the cocktails that met the \code{max_height_ratio} criteria.
+//' @export
+// [[Rcpp::export]]
+Rcpp::DataFrame remove_higher_cocktails(const Rcpp::DataFrame& solutions,
+                                        const std::vector<std::string>& ATC_name,
+                                        const std::vector<int>& ATC_length,
+                                        const bool find_last_occurence = true,
+                                        const double max_height_ratio = .5){
+  Rcpp::NumericVector prev_hyper = solutions["score"];
+  Rcpp::NumericVector prev_RR = solutions["RR"];
+  Rcpp::NumericVector prev_p_value = solutions["p_value"];
+  Rcpp::IntegerVector prev_n_C = solutions["n.patient.taking.C"];
+  Rcpp::IntegerVector prev_n_C_AE = solutions["n.patient.taking.C.and.having.AE"];
+  Rcpp::StringVector prev_string_cocktails = solutions["Cocktail"];
+  
+  const auto prev_cocktails = string_list_to_int_cocktails(ATC_name, 
+                                                           solutions["Cocktail"],
+                                                           find_last_occurence);
+  const std::size_t n = prev_cocktails.size();
+  
+  if (prev_hyper.size() != n || prev_RR.size() != n ||
+      prev_n_C.size() != n || prev_n_C_AE.size() != n || 
+      prev_string_cocktails.size() != n || prev_p_value.size() != n) {
+    Rcpp::stop("Column lengths in `solutions` do not match cocktail list length.");
+  }
+  
+  std::vector<double> hyper_score; hyper_score.reserve(n);
+  std::vector<double> RR_score;    RR_score.reserve(n);
+  std::vector<double> p_value;   p_value.reserve(n);
+  std::vector<std::string> cocktails; cocktails.reserve(n);
+  std::vector<int> n_C;      n_C.reserve(n);
+  std::vector<int> n_C_AE;   n_C_AE.reserve(n);
+  
+  for(size_t i = 0; i < n; ++i){
+    const std::vector<int>& cocktail = prev_cocktails[i];
+    
+    int high_node = 0;
+    for(const auto node : cocktail){
+      if (node < 0 || static_cast<std::size_t>(node) >= ATC_length.size())
+        Rcpp::stop("Index out of bounds in ATC_length for node=%d", node);
+      
+      if(ATC_length[node] <= 3)
+        ++high_node;
+    }
+    
+    double height_node_ratio = 1;
+    if(!cocktail.empty())
+      height_node_ratio = static_cast<double>(high_node) / static_cast<double>(cocktail.size());
+    
+    if(height_node_ratio <= max_height_ratio ){
+      hyper_score.push_back(prev_hyper[i]);
+      RR_score.push_back(prev_RR[i]);
+      cocktails.push_back(Rcpp::as<std::string>(prev_string_cocktails[i]));
+      n_C.push_back(prev_n_C[i]);
+      n_C_AE.push_back(prev_n_C_AE[i]);
+      p_value.push_back(prev_p_value[i]);
+    }
+  }
+  
+  return Rcpp::DataFrame::create(Rcpp::Named("score") = hyper_score,
+                         Rcpp::Named("Cocktail") = cocktails,
+                         Rcpp::Named("n.patient.taking.C") = n_C,
+                         Rcpp::Named("n.patient.taking.C.and.having.AE") = n_C_AE,
+                         Rcpp::Named("RR") = RR_score,
+                         Rcpp::Named("p_value") = p_value);
+  
+}
 

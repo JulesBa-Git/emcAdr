@@ -138,8 +138,9 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
   std::pair<Individual, double> currentResult;
   
   //if p.second is greater than 0, it means that the cocktail correspond to at least one person
-  auto belongToF = [](const std::pair<double,std::pair<int,int>>& p){
-    return (p.second.second > 0);
+  auto belongToF = [&](const std::pair<double,std::pair<int,int>>& p,
+                      const Individual& ind){
+    return ((p.second.second > 0) && (ind.isTrueCocktail(upperBounds)));
   };
 
   //initialization (every cocktail has to contain Smax medication)
@@ -148,7 +149,7 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
     computeGeomOutput = cocktail.computePHypergeom(observationsMedication, observationsADR,
                                                    upperBounds, ADRCount, notADRCount,
                                                    max_score, num_thread);
-  } while (!belongToF(computeGeomOutput));
+  } while (!belongToF(computeGeomOutput, cocktail));
   currentGeom = computeGeomOutput;
   
 #ifdef _OPENMP
@@ -183,7 +184,7 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
         //to have an overview of the explored space (not in this method for the moment)
         //addPairToSet(mutatedIndividual_k, exploredPairs);
         
-        if(belongToF(computeGeomOutput)){
+        if(belongToF(computeGeomOutput, mutatedIndividual)){
           // with this mutation, our ration q(X|Y) / q(Y|X) = 1
           pAcceptation = exp(((RRy_k - RRx_k)/static_cast<double>(cocktail.getTemperature()))); 
           pDraw = Rcpp::runif(1,0,1)[0];
@@ -226,7 +227,7 @@ Rcpp::List DistributionApproximation(int epochs, const DataFrame& ATCtree, const
         //to have an overview of the explored space
         //addPairToSet(mutatedIndividual_k, exploredPairs);
         
-        if(belongToF(computeGeomOutput)){
+        if(belongToF(computeGeomOutput, mutatedIndividual)){
           pAcceptation = (exp(((RRy_k - RRx_k) / cocktail.getTemperature()))) * 
             (static_cast<double>(vertexX.size())/static_cast<double>(vertexY.size()));
           
@@ -734,7 +735,7 @@ Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataF
     med[0] = i;
     for(int j = i+1 ; j < ATCtree.nrow(); ++j){
       med[1] = j;
-      std::cout << a++ << '\n';
+      Rcpp::Rcout << a++ << '\n';
       indiv.setMedications(med);
       //computeRROutput = indiv.computeRR(observationsMedication, observationsADR, upperBounds, 8000, num_thread);
       computePhyperOutput = indiv.computePHypergeom(observationsMedication, observationsADR,
@@ -800,8 +801,6 @@ Rcpp::List trueDistributionSizeTwoCocktail(const DataFrame& ATCtree, const DataF
                             Rcpp::Named("Best_scores") = returned_score,
                             Rcpp::Named("Best_scores_beta") = returned_scoreBeta);
 }
-
-
 
 std::vector<double> MetricCalc_2(const std::vector<int> &cocktail, 
                                   const std::vector<int>& ATClength,
@@ -944,7 +943,8 @@ std::vector<double> MetricCalc_2(const std::vector<int> &cocktail,
    if(n111 > 0)
      lower_bound_omegaIC = omega - (Rcpp::qnorm(tmp)[0] / (std::log(2) * std::sqrt(n111)));
    
-   
+   //double lower_bound_omegaIC = get_omega_shrinkage(n001, n00, n101, n10,
+     //                                               n011, n01, n111, n11);
    //phyper
    double phyper = ind.computePHypergeom(observationsMedication, observationsADR,
                                          upperBounds, ADRCount, 
@@ -1257,8 +1257,8 @@ void print_csv(const std::vector<std::string>& input_filenames,
     return;
   }
   std::vector<std::string> ATCName = ATCtree["Name"];
-  
-  output << "score ; Cocktail ; n patient taking C ; n patient taking C and having AE ; RR \n";
+  std::vector<std::string> ATCCode = ATCtree["ATCCode"];
+  output << "score ; Cocktail ; ATC Code ; n patient taking C ; n patient taking C and having AE ; RR \n";
   
   for(const auto& sol : set_sol){
     Individual c{sol.second};
@@ -1272,6 +1272,12 @@ void print_csv(const std::vector<std::string>& input_filenames,
       output << ATCName[*ite] << ":"; 
     }
     output << ATCName[*(sol.second.end()-1)] << ";";
+    
+    for(auto ite = sol.second.begin(); ite != sol.second.end()-1; ++ite){
+      output << ATCCode[*ite] << ":"; 
+    }
+    output << ATCCode[*(sol.second.end()-1)] << ";";
+    
     output << pair.second << ";" << pair.first << ";" << RR.first << "\n";
   }
   
@@ -1422,3 +1428,110 @@ std::vector<std::vector<double>> get_dissimilarity_from_cocktail_list(const std:
   return dissim(population, depth, father, normalization);
 }
 
+std::vector<std::vector<int>> generate_sub_combination(const std::vector<int>& cocktail){
+  int n = cocktail.size();
+  // we want 2^n -1 in long long format for large cocktails
+  long long subset_cardinal = (1LL << n) -1;
+  std::vector<std::vector<int>> sub_combinations;
+  sub_combinations.reserve(subset_cardinal);
+  //we don't want the null bitset so we start at 1
+  for(long long i = 1; i <= subset_cardinal; ++i){
+    std::vector<int> current_combo;
+    
+    for(int j = 0; j < n; ++j){
+      if((i >> j) & 1){ //if the last bit is one
+        current_combo.push_back(cocktail[j]);
+      } 
+    }
+    sub_combinations.push_back(current_combo);
+  }
+  return sub_combinations;
+}
+
+std::vector<bool> get_indicator_cocktail(const std::vector<int>& cocktail, 
+                                         const std::vector<int>& upperBound,
+                                         const std::vector<std::vector<int>>& patient_drug){
+  std::vector<bool> solution;
+  solution.reserve(patient_drug.size());
+  
+  Individual current_cocktail{cocktail};
+  
+  for(const auto& vec : patient_drug){
+    solution.push_back(current_cocktail.matches(vec, upperBound));
+  }
+  
+  return solution;
+}
+
+//' Generate Matrix for Drug Combinations
+//' 
+//' This function creates a logical data frame where each column represents a 
+//' specific sub-combination of drugs derived from a given "cocktail." For each 
+//' patient in the input data, it indicates (TRUE/FALSE) whether they were 
+//' taking that specific combination based on the ATC hierarchy.
+//'
+//' @param cocktail An integer vector of drug indices representing the full 
+//'   combination to be analyzed.
+//' @param upperBound An integer vector defining the ATC tree hierarchy bounds.
+//' @param data A \code{Rcpp::DataFrame} containing patient records. It must 
+//'   include a column \code{"patientATC"} which is a list of integer vectors 
+//'   representing the drugs each patient is taking.
+//'
+//' @return A \code{Rcpp::DataFrame} where:
+//' \itemize{
+//'   \item Each column corresponds to a sub-combination of the input \code{cocktail}.
+//'   \item Each row corresponds to a patient in the input \code{data}.
+//'   \item Values are boolean indicators (represented as integers/logicals in R).
+//' }
+//' 
+//' @details 
+//' The function first generates all possible non-empty power-set combinations of the 
+//' \code{cocktail} (e.g., for \eqn{\{1, 2\}}, it generates \eqn{\{1\}, \{2\}, \{1, 2\}}). 
+//'
+//' @note The column names of the resulting data frame are strings of comma-separated 
+//' drug indices (e.g., "888,659,").
+//'
+//' @export
+//[[Rcpp::export]]
+Rcpp::DataFrame combination_data_frame(const std::vector<int>& cocktail, 
+                                        const std::vector<int>& upperBound,
+                                        const Rcpp::DataFrame& data){
+  
+  Rcpp::List observationsMedicationTmp = data["patientATC"];
+  std::vector<std::vector<int>> patient_drug;
+  patient_drug.reserve(observationsMedicationTmp.size());
+  
+  
+  for(int i =0; i < observationsMedicationTmp.size(); ++i){
+    patient_drug.push_back(observationsMedicationTmp[i]);
+  }
+  
+  auto sub_combinations = generate_sub_combination(cocktail);
+
+  std::vector<std::vector<bool>> sub_comb_indicator;
+  sub_comb_indicator.reserve(std::pow(2,cocktail.size())-1);
+  
+  for(const auto& sub_comb : sub_combinations){
+    sub_comb_indicator.push_back(
+      get_indicator_cocktail(sub_comb, upperBound, patient_drug)
+    );
+  }
+  
+  std::vector<std::string> colnames;
+  colnames.reserve(sub_comb_indicator.size());
+  
+  for(const auto& vec : sub_combinations){
+    std::string current_name = "";
+    for(const auto& number : vec){
+      current_name += std::to_string(number) +",";
+    }
+    colnames.push_back(current_name);
+  }
+  
+  Rcpp::DataFrame df;
+  for(int i = 0; i < colnames.size(); ++i){
+    df.push_back(sub_comb_indicator.at(i), colnames[i]);
+  }
+  
+  return df;
+}
